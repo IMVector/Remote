@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>newProject</class>
+ <widget class="QMainWindow" name="newProject">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>39</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>newProject</string>
+  </property>
+  <widget class="QWidget" name="centralWidget"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1000</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="openFileImage"/>
+    <addaction name="separator"/>
+    <addaction name="openDatabaseImage"/>
+   </widget>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>海岸线提取</string>
+    </property>
+    <addaction name="findSeaLine"/>
+   </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>联合海岸线</string>
+    </property>
+    <addaction name="firstLine"/>
+    <addaction name="separator"/>
+    <addaction name="secondLine"/>
+    <addaction name="separator"/>
+    <addaction name="combine"/>
+   </widget>
+   <widget class="QMenu" name="menu_4">
+    <property name="title">
+     <string>设置</string>
+    </property>
+    <addaction name="action"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="menu_2"/>
+   <addaction name="menu_3"/>
+   <addaction name="menu_4"/>
+  </widget>
+  <action name="openFileImage">
+   <property name="text">
+    <string>文件打开图像</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从数据库获取图像文件&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="openDatabaseImage">
+   <property name="text">
+    <string>数据库图像</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;从文件路径打开图像&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </action>
+  <action name="findSeaLine">
+   <property name="text">
+    <string>海岸线提取</string>
+   </property>
+  </action>
+  <action name="firstLine">
+   <property name="text">
+    <string>打开第一海岸线</string>
+   </property>
+  </action>
+  <action name="secondLine">
+   <property name="text">
+    <string>打开第二海岸线</string>
+   </property>
+  </action>
+  <action name="combine">
+   <property name="text">
+    <string>合并海岸线</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>数据库设置</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources/>
+ <connections/>
+ <slots>
+  <signal>openFileImage()</signal>
+  <signal>openDatabeseImage()</signal>
+ </slots>
+</ui>

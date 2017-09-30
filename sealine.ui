@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>Vector</author>
+ <class>sealine</class>
+ <widget class="QWidget" name="sealine">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>360</width>
+    <height>205</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_5">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="0">
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色一：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色二：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色三：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色四：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>颜色五：</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>海的颜色： </string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>陆地的颜色：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QComboBox" name="comboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="comboBox_7">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QComboBox" name="comboBox_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="comboBox_6">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QComboBox" name="comboBox_3">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="comboBox_5">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QComboBox" name="comboBox_4">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QComboBox" name="comboBox_8">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QComboBox" name="comboBox_9">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QComboBox" name="comboBox_10">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>红色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黄色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>蓝色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>绿色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>紫色</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>黑色</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="pushButton">
+       <property name="text">
+        <string>寻找海岸线</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ <designerdata>
+  <property name="gridDeltaX">
+   <number>10</number>
+  </property>
+  <property name="gridDeltaY">
+   <number>10</number>
+  </property>
+  <property name="gridSnapX">
+   <bool>true</bool>
+  </property>
+  <property name="gridSnapY">
+   <bool>true</bool>
+  </property>
+  <property name="gridVisible">
+   <bool>true</bool>
+  </property>
+ </designerdata>
+</ui>

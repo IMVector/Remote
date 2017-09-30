@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>database</class>
+ <widget class="QWidget" name="database">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>650</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="1">
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="text">
+      <string>查询已提取海岸线</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QPushButton" name="pushButton_4">
+     <property name="text">
+      <string>打开所选文件</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="pushButton_5">
+     <property name="text">
+      <string>删除所选项</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="text">
+      <string>查询区分规则</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" rowspan="7">
+    <widget class="QTableWidget" name="tableWidget"/>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="pushButton">
+     <property name="text">
+      <string>查询数据库图像</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>规则质量</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QPushButton" name="pushButton_6">
+        <property name="text">
+         <string>设置规则质量</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QComboBox" name="comboBox">
+        <item>
+         <property name="text">
+          <string>选择质量</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>好</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>中</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>差</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

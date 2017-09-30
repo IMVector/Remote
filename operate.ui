@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>operate</class>
+ <widget class="QWidget" name="operate">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>320</width>
+    <height>520</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tabImage">
+      <attribute name="title">
+       <string>显示图片</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="0" column="0">
+        <widget class="QSplitter" name="splitter_8">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <widget class="QLabel" name="label_5">
+          <property name="text">
+           <string>图像波段信息</string>
+          </property>
+         </widget>
+         <widget class="QTableWidget" name="fileBandWidget"/>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>显示波段</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QTableWidget" name="showBandWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>15777094</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QSplitter" name="splitter_10">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QPushButton" name="loadImage">
+          <property name="text">
+           <string>显示图像</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBox_3">
+          <item>
+           <property name="text">
+            <string/>
+           </property>
+          </item>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabSort">
+      <attribute name="title">
+       <string>地物区分</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>样本</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QComboBox" name="comboBox">
+            <item>
+             <property name="text">
+              <string>要区分的地物数量：</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>2种地物</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3种地物</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4种地物</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5种地物</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6种地物</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="openFromFileBtn">
+            <property name="text">
+             <string>从文件打开样本</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="getSampleBtn">
+            <property name="text">
+             <string>新建样本区域</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_2">
+         <property name="title">
+          <string>地物区分</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QCheckBox" name="checkBox">
+            <property name="text">
+             <string>开启加强波段</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="startSortBtn">
+            <property name="text">
+             <string>开始地物区分</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3">
+         <property name="title">
+          <string>图像降噪</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QPushButton" name="lowPointsBtn">
+            <property name="text">
+             <string>图片降噪</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabOutTree">
+      <attribute name="title">
+       <string>决策树</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>区分查看</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="showRule">
+            <property name="text">
+             <string>查看区分地物</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="saveTif">
+            <property name="text">
+             <string>保存tif图像</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="saveBinary">
+            <property name="text">
+             <string>保存二进制图像</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>决策树</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_4">
+          <item row="0" column="0">
+           <widget class="QTextEdit" name="textEdit"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
