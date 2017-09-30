@@ -66,6 +66,7 @@ private:
     int pToLminIndex(point alonePoint, point *Line, int number);
     int ptpMinDisIndex(int count, int index, point *p, int pNumber, point *indexSet);
     bool judgeExist(int number, int index1, int index2, point *indexSet);
+    void printPointSet(int number, point *line);
 private slots:
     void openPathFile(QString fileName);
     void getRGB(int r,int g,int b);
