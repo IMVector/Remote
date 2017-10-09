@@ -66,6 +66,11 @@ private:
     int pToLminIndex(point alonePoint, point *Line, int number);
     int ptpMinDisIndex(int count, int index, point *p, int pNumber, point *indexSet);
     bool judgeExist(int number, int index1, int index2, point *indexSet);
+
+    QImage ddaLinkLine(QImage image, point p1, point p2);
+    QImage OnBresenhamline(QImage image, point p1, point p2);
+
+    QImage midPointLink(QImage image, point p1, point p2);
 private slots:
     void openPathFile(QString fileName);
     void getRGB(int r,int g,int b);
@@ -83,8 +88,6 @@ private slots:
     void saveSample(QString name);
     void simpleInfo(QString name,int *number);
     void lineMouse(int x, int y);
-
-
 signals:
     void sendVisiualP(int x,int y);
     void bandToUi(int band);

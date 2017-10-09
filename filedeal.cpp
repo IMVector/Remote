@@ -85,7 +85,27 @@ void filedeal::getRGB(int r, int g, int b)
     point p;
     p.x=0;
     p.y=0;
-    visiualdraw(p,500,500,rawImage);
+    if(Samples>500&&Lines>500)
+    {
+        visiualdraw(p,500,500,rawImage);
+    }
+    else if(Samples>500&&Lines<500)
+    {
+        currentWidth=Lines;
+        visiualdraw(p,500,Lines,rawImage);
+    }
+    else if(Samples<500&&Lines>500)
+    {
+        currentWidth=Samples;
+        visiualdraw(p,Samples,500,rawImage);
+    }
+    else
+    {
+        currentWidth=Samples;
+        currentHeight=Lines;
+        visiualdraw(p,Samples,Lines,rawImage);
+    }
+
     sorted=false;
 }
 ////得到鼠标位置画框并刷新
@@ -2821,53 +2841,11 @@ void filedeal::averageLine(QImage image, int width, int height)
             }
         }
     }
+
     rawImage=newImage;
     partImage=newImage;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,newImage);
     linkPoint(newImage,Samples,Lines);
-}
-void filedeal::printPointSet(int number,point *line)
-{
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
-
-    point *indexSet=new point[number];
-    //先找最左边的点
-    point mostLeft;
-    mostLeft.x=line[0].x;
-    int mostLeftIndex=0;
-    for(int i=0;i<number;i++)
-    {
-        if(line[i].x<mostLeft.x)
-        {
-            mostLeft.x=line[i].x;
-            mostLeft.y=line[i].y;
-            mostLeftIndex=i;
-        }
-    }
-
-    //第二个坐标
-    int index=mostLeftIndex;
-    for(int i=0;i<number;i++)
-    {
-        //未更改前的index
-        indexSet[i].x=index;
-        index=ptpMinDisIndex(i,index,line,number,indexSet);
-        //更改后的index
-        indexSet[i].y=index;
-    }
-    QImage image(Samples, Lines, QImage::Format_RGB32);
-    image.fill(Qt::white);
-    for(int i=0;i<number-1;i++)
-    {
-        //        qDebug()<<"point1"<<line[indexSet[i].x].x<<" "<<line[indexSet[i].x].y;
-        //        qDebug()<<"point2"<<line[indexSet[i+1].y].x<<" "<<line[indexSet[i+1].y].y;
-        image=linkLine(image,line[indexSet[i].x],line[indexSet[i+1].y]);
-    }
-    //    qDebug()<<"number"<<number;
-    partImage=image;
-    rawImage=image;
-    visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
 }
 
 void filedeal::linkPoint(QImage image,int width,int height)
@@ -2884,21 +2862,20 @@ void filedeal::linkPoint(QImage image,int width,int height)
                     QColor(image.pixel(w,h)).green()==0&&
                     QColor(image.pixel(w,h)).blue()==0)
             {
+                //                image.setPixel(w,h,valueF);
                 tempPoint[count].x=w;
                 tempPoint[count].y=h;
                 count++;
             }
         }
     }
-    qDebug()<<count;
+    qDebug()<<"found point numebr is "<<count;
     //    printPointSet(count,tempPoint);
     //判断点是否在线段上
     //或者过定点的曲线
     //先找最小范围
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-
+    //////////////////////////////////////找图中最左边的点////////////////////////////////////////////////////
     //先找最左边的点
     point mostLeft;
     mostLeft.x=tempPoint[0].x;
@@ -2916,7 +2893,6 @@ void filedeal::linkPoint(QImage image,int width,int height)
     //第二个坐标
     int currentIndex=mostLeftIndex;
 
-
     /////////////////////////////////////////////////////////////////////
 
 
@@ -2929,7 +2905,8 @@ void filedeal::linkPoint(QImage image,int width,int height)
         indexSet.insert(i);
     }
 
-
+    //    count=3;////////测试专用要删掉
+    count--;
     for(int i=0;i<count;i++)
     {
         //        int index1=i;
@@ -2937,16 +2914,24 @@ void filedeal::linkPoint(QImage image,int width,int height)
         //        int index2=ptpMinDisIndex(i,tempPoint,count,index);//最近点下标
 
         index[i].x=currentIndex;
+        indexSet.remove(currentIndex);//去重复点
         currentIndex=ptpMinDisIndex(currentIndex,tempPoint,count,indexSet);//最近点下标
         index[i].y=currentIndex;
-        image=linkLine(image,tempPoint[index[i].x],tempPoint[index[i].y]);
-        indexSet.erase(indexSet.find(index[i].x));//去重复点
-        qDebug()<<"  ";
-        qDebug()<<index[i].x;
-        qDebug()<<index[i].y;
-        qDebug()<<"  ";
-        qDebug()<<tempPoint[index[i].x].x<<tempPoint[index[i].x].y;
-        qDebug()<<tempPoint[index[i].y].x<<tempPoint[index[i].y].y;
+        indexSet.remove(currentIndex);//去重复点
+        if(distance(tempPoint[index[i].x],tempPoint[index[i].y])<100)
+        {
+//            image=linkLine(image,tempPoint[index[i].x],tempPoint[index[i].y]);
+            image=midPointLink(image,tempPoint[index[i].x],tempPoint[index[i].y]);
+        }
+
+        partImage=image;
+        rawImage=image;
+        visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
+        //        qDebug()<<index[i].x;
+        //        qDebug()<<index[i].y;
+        //        qDebug()<<tempPoint[index[i].x].x<<tempPoint[index[i].x].y;
+        //        qDebug()<<tempPoint[index[i].y].x<<tempPoint[index[i].y].y;
+        //        qDebug()<<"\n";
     }
     QImage image1(Samples, Lines, QImage::Format_RGB32);
     image1.fill(Qt::white);
@@ -2959,38 +2944,20 @@ void filedeal::linkPoint(QImage image,int width,int height)
     }
     image1.save("D:\\averageline.tif");
 
-//    FILE *fp;
-//    fp=fopen("D:\\averageLine","wb");
-//    if(fp==NULL)
-//    {
-//        qDebug()<<"ERROR";
-//        return;
-//    }
-//    bool flag=false;
-//    int aaa=0;
-//    for(int h=0;h<Lines;h++)
-//    {
-//        for(int w=0;w<Samples;w++)
-//        {
-//             flag=false;
-//             for(int i=0;i<count;i++)
-//             {
-//                if(w==tempPoint[index[i].x].x&&h==tempPoint[index[i].x].y)
-//                {
-//                    aaa=1;
-//                    fwrite(&aaa,1,1,fp);
-//                    flag=true;
-//                }
-//             }
-//             if(!flag)
-//             {
-//                 aaa=0;
-//                 fwrite(&aaa,1,1,fp);
-//             }
-//        }
-//    }
-//    fclose(fp);
+    FILE *fp;
+    fp=fopen("D:\\binaryLine","wb");
+    if(fp==NULL)
+    {
+        qDebug()<<"ERROR";
+        return;
+    }
 
+    for(int i=0;i<count;i++)
+    {
+        fwrite(&tempPoint[index[i].x].x,2,1,fp);
+        fwrite(&tempPoint[index[i].x].y,2,1,fp);
+    }
+    fclose(fp);
 
     delete[] tempPoint;
     tempPoint=NULL;
@@ -3008,6 +2975,7 @@ void filedeal::linkPoint(QImage image,int width,int height)
  * @param indexSet
  * @return
  */
+////////暂时不用
 bool filedeal::judgeExist(int number,int index1,int index2,point *indexSet)
 {
     //查找是否用到过该组下标
@@ -3031,6 +2999,7 @@ bool filedeal::judgeExist(int number,int index1,int index2,point *indexSet)
  * @param indexSet
  * @return
  */
+////////暂时不用
 int filedeal::ptpMinDisIndex(int count,int index,point*p,int pNumber,point *indexSet)
 {
     int *dis=new int[pNumber];
@@ -3073,48 +3042,62 @@ int filedeal::ptpMinDisIndex(int count,int index,point*p,int pNumber,point *inde
  */
 int filedeal::ptpMinDisIndex(int index,point*p,int pNumber,QSet<int> indexSet)
 {
-    bool exist=false;
+    //    bool exist=false;
     QSet<int>::iterator it;
     int *dis=new int[pNumber];
     for(int i=0;i<pNumber;i++)
     {
-        if(i!=index)
+        it=indexSet.find(i);
+        if(it!=indexSet.end())
         {
-            dis[i]=distance(p[index],p[i]);
+            if(i!=index)
+            {
+                dis[i]=distance(p[index],p[i]);
+            }
+            else
+            {
+                dis[i]=65535;
+            }
         }
         else
         {
-            dis[i]=60000;
+            dis[i]=65535;
         }
+
     }
 
-    int  minDistance=60000;
+    int  minDistance=65535;
     int tempMin=0;
     int minIndex=0;
     for(int i=0;i<pNumber;i++)
     {
         tempMin=dis[i];
+        //        exist=false;
         if(tempMin<minDistance)
         {
-            it=indexSet.find(i);
-            if(it!=indexSet.end())
-            {
-                //还存在
-                exist=true;
-            }
-            else
-            {
-                //不存在
-                exist=false;
-            }
-            if(exist)
-            {
-                minDistance=tempMin;
-                minIndex=i;
-            }
+            //            it=indexSet.find(i);
+            //            if(it!=indexSet.end())
+            //            {
+            //                //还存在
+            //                exist=true;
+            //            }
+            //            else
+            //            {
+            //                //不存在
+            //                exist=false;
+            //            }
+            //            if(exist)
+            //            {
+            minDistance=tempMin;
+            minIndex=i;
+            //                qDebug()<<"mindistance is "<<distance(p[index],p[minIndex]);
+            //            }
 
         }
     }
+    //    qDebug()<<"mindistance is "<<distance(p[index],p[minIndex])<<"\n";
+
+
     delete[] dis;
     dis=NULL;
     return minIndex;
@@ -3165,4 +3148,139 @@ bool filedeal::judgePoint(point p1,point p2,point testPoint)
 //    puts((s1*t2-t1*s2)==0?"Yes":"No");        //二维点的×乘x1*y2-x2*y1
 //    return 0;
 //}
+QImage filedeal::ddaLinkLine(QImage image,point p1,point p2){
+    QRgb valueF;
+    valueF=qRgb(0,0,0);
+    float x,y;
+    float dx,dy,k;
+    dx=(float)(p2.x-p1.x);
+    dy=(float)(p2.y-p1.y);
+    k=dy/dx;//斜率
+    x=p1.x;
+    y=p1.y;
 
+    if (abs(k)<1)//斜率绝对值小于1时，以x步进
+    {
+        for (;x<=p2.x;++x)
+        {
+            image.setPixel(x,int(y+0.5),valueF);
+            y+=k;
+        }
+    }
+    if (abs(k)>=1)//斜率绝对值大于等于1时，以y步进
+
+    {
+        for (;y<p2.y;++y)
+        {
+            image.setPixel(int(x+0.5),y,valueF);
+            x+=1/k;
+        }
+    }
+    return image;
+}
+//Bresenham  算法
+QImage filedeal::OnBresenhamline(QImage image,point p1,point p2)
+{
+    QRgb valueF;
+    valueF=qRgb(0,0,0);
+    int x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
+    int i,s1,s2,interchange;
+    float x,y,deltax,deltay,f,temp;
+    x=x1;
+    y=y1;
+    deltax=abs(x2-x1);
+    deltay=abs(y2-y1);
+    if(x2-x1>=0) s1=1; else s1=-1;
+    if(y2-y1>=0) s2=1; else s2=-1;
+
+    if(deltay>deltax)
+    {
+        temp=deltax;
+        deltax=deltay;
+        deltay=temp;
+        interchange=1;
+    }
+    else interchange=0;
+    f=2*deltay-deltax;
+    image.setPixel(x,y,valueF);
+
+    for(i=1;i<=deltax;i++)
+    {
+
+        if(f>=0)
+        {
+            if(interchange==1) x+=s1;
+
+            else y+=s2;
+            image.setPixel(x,y,valueF);
+            f=f-2*deltax;
+        }
+        else
+        {
+            if(interchange==1) y+=s2;
+            else x+=s1;
+            f=f+2*deltay;
+        }
+    }
+    return image;
+}
+/**
+ * @brief filedeal::Line_Midpoint 生成直线的中点画法
+ * @param image
+ * @param p1
+ * @param p2
+ * @return
+ */
+QImage filedeal:: midPointLink(QImage image,point p1,point p2)
+{
+    QRgb valueF;
+    valueF=qRgb(0,0,0);
+
+    int x = p1.x, y = p1.y;
+    int a = p1.y - p2.y, b = p2.x - p1.x;
+    int cx = (b >= 0 ? 1 : (b = -b, -1));
+    int cy = (a <= 0 ? 1 : (a = -a, -1));
+
+    image.setPixel(x, y, valueF);
+
+    int d, d1, d2;
+    if (-a <= b)     // 斜率绝对值 <= 1
+    {
+        d = 2 * a + b;
+        d1 = 2 * a;
+        d2 = 2 * (a + b);
+        while(x != p2.x)
+        {
+            if (d < 0)
+            {
+                y += cy, d += d2;
+            }
+            else
+            {
+                d += d1;
+            }
+            x += cx;
+            image.setPixel(x, y, valueF);
+        }
+    }
+    else                // 斜率绝对值 > 1
+    {
+        d = 2 * b + a;
+        d1 = 2 * b;
+        d2 = 2 * (a + b);
+        while(y != p2.y)
+        {
+            if(d < 0)
+            {
+                d += d1;
+            }
+            else
+            {
+                x += cx, d += d2;
+            }
+            y += cy;
+           image.setPixel(x, y, valueF);
+        }
+    }
+    return image;
+}
