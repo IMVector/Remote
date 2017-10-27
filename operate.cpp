@@ -1,6 +1,5 @@
 ﻿#include "operate.h"
 #include "ui_operate.h"
-
 #include <QListView>
 double scale=1;//缩放比例
 int RGBselectCount=0;//已经选择波段的数目
@@ -41,6 +40,7 @@ operate::operate(QWidget *parent) :
     initCombox();//初始化combox控件
     choiceSample->setWindowFlags(Qt::WindowStaysOnTopHint);
 
+    imageFile *file=new imageFile;
 
     seaLine=new sealine;
 

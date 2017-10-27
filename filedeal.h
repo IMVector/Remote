@@ -91,6 +91,7 @@ private slots:
     void saveSample(QString name);
     void simpleInfo(QString name,int *number);
     void lineMouse(int x, int y);
+
     void slotSealine(int *seaColor, int *landColor);
 signals:
     void sendVisiualP(int x,int y);

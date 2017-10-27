@@ -36,7 +36,8 @@ SOURCES += main.cpp\
     dbsetting.cpp \
     MyDialog.cpp \
     showinfo.cpp \
-    progressbar.cpp
+    progressbar.cpp \
+    imagefile.cpp
 
 HEADERS  += newproject.h \
     emptychild.h \
@@ -50,7 +51,8 @@ HEADERS  += newproject.h \
     dbsetting.h \
     MyDialog.h \
     showinfo.h \
-    progressbar.h
+    progressbar.h \
+    imagefile.h
 
 FORMS    += newproject.ui \
     operate.ui \

@@ -22,6 +22,7 @@
 #include <showinfo.h>
 #include <progressbar.h>
 #include <showinfo.h>
+#include <imagefile.h>
 namespace Ui {
 class operate;
 }
