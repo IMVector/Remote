@@ -34,10 +34,6 @@ int B[7]={255,     0  ,  0,  255,   0,   139   ,0};
 //int xRoad[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
 //int yRoad[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
 
-int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
-                 1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
-int xRoad[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
-                 2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
 
 
 filedeal::filedeal()
@@ -917,6 +913,7 @@ void filedeal::parser(QString ruleName)
             geoNameCount++;
         }
     }
+    rawImage=partImage;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     for(int i=0;i<Band;i++)
     {
@@ -984,19 +981,39 @@ void filedeal::parser(QString ruleName)
     //    }
     //    fclose(fp);
 }
+/**
+ * @brief filedeal::slotSealine 提取海岸线信号
+ * @param seaColor
+ * @param landColor
+ */
 void filedeal::slotSealine(int *seaColor,int *landColor)
 {
     seaLineGet(partImage,seaColor,landColor);
-    //seaLineGet(seaColor,landColor);
 }
-
+/**
+ * @brief filedeal::seaLineGet 海岸线提取
+ * @param tempImage
+ * @param seaColor
+ * @param landColor
+ */
 void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 {
+
+    int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
+                     1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
+    int xRoad[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
+                     2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
+
+    QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+    QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+    QString fileStr=filePathName;
+    fileStr=fileStr+str;
 
     QImage image(Samples+1, Lines+1, QImage::Format_RGB32);
     image.fill(Qt::white);//将图片背景填充为白色
     QRgb valueA=qRgb(0,0,0);
     QRgb valueB=qRgb(255,0,0);
+
     bool gotoFlag=false;
     //线的下标
     int lineCount=0;
@@ -1010,25 +1027,13 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     int pointCount=0;
     point *line=NULL;
 
-    //    point **line=NULL;
-    //    line=new point*[10000];
     if(Samples>Lines)
     {
-        //        for(int i=0;i<10000;i++)
-        //        {
-        //            line[i]=new point[Samples*10];
-        //        }
         line=new point[Samples*100];
-        qDebug()<<"Stake max number is "<<Samples*100;
     }
     else
     {
-        //        for(int i=0;i<10000;i++)
-        //        {
-        //            line[i]=new point[Lines*10];
-        //        }
         line=new point[Lines*100];
-        qDebug()<<"Stake max number is "<<Lines*100;
     }
 
     unsigned short int *footFlag=new unsigned short int[Samples*Lines+1000];
@@ -1141,7 +1146,6 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
             }
         }
     }
-    qDebug()<<"normal1";
     //所有界限找出
     //进行降噪
     int flag=42;
@@ -1165,7 +1169,6 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
             }
         }
     }
-    qDebug()<<"normal2";
     for(int h=1;h<Lines-1;h++)
     {
         for(int w=1;w<Samples-1;w++)
@@ -1221,11 +1224,8 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                 if(orignImage[h*Samples+w]==1
                         &&footFlag[h*Samples+w]==0)
                 {
-                    //qDebug()<<"w:"<<w<<"h:"<<h;
                     line[currentMaxNum].x=w;
                     line[currentMaxNum].y=h;
-
-                    //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
                     footFlag[h*Samples+w]=1;
                     currentMaxNum++;
                     pointCount++;
@@ -1242,19 +1242,15 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                             {
                                 continue;
                             }
-                            //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
                             //满足条件跳往下一个移动点
                             if(orignImage[ny*Samples+nx]==1
                                     &&footFlag[ny*Samples+nx]==0)
                             {
                                 line[currentMaxNum].x=nx;
                                 line[currentMaxNum].y=ny;
-                                //image.setPixel(nx,ny,valueB);
-                                //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
                                 footFlag[ny*Samples+nx]=1;
                                 pointCount++;
                                 currentMaxNum++;
-                                //qDebug()<<"currentMaxNum"<<currentMaxNum;
                                 gotoFlag=true;
                                 break;
                             }
@@ -1277,14 +1273,12 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 
                     } while(gotoFlag);
 
-                    //qDebug()<<"current stake number is:"<<currentMaxNum;
-
                     if(currentMaxNum>maxPointNum)
                     {
                         maxLineIndex=lineCount;
                         maxPointNum=currentMaxNum;
-                        if(maxPointNum>100)
-                            qDebug()<<"maxPointNum"<<maxPointNum;
+//                        if(maxPointNum>100)
+//                            qDebug()<<"maxPointNum"<<maxPointNum;
                     }
                     lineCount++;
                     //qDebug()<<"-----------------------------------------";
@@ -1337,7 +1331,6 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                     {
                         nx=x+next[i][0];
                         ny=y+next[i][1];
-                        //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
                         if(nx<extends||nx>Samples-extends||ny<extends||ny>Lines-extends)
                         {
                             continue;
@@ -1346,12 +1339,6 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                         if(orignImage[ny*Samples+nx]==1
                                 &&footFlag[ny*Samples+nx]==0)
                         {
-                            //qDebug()<<lineCount;
-                            //if(lineCount==maxLineIndex)
-                            //{
-                            //    qDebug()<<"aaaaaaaaaaaaaaaa";
-                            //    qDebug()<<"i value is "<<i;
-                            //}
                             line[currentMaxNum].x=nx;
                             line[currentMaxNum].y=ny;
                             footFlag[ny*Samples+nx]=1;
@@ -1390,10 +1377,9 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 
         }
     }
-
+    //    qDebug()<<"lineCount"<<lineCount;
+    //    qDebug()<<"maxPointNum"<<maxPointNum;
     image.fill(Qt::white);
-    qDebug()<<"lineCount"<<lineCount;
-    qDebug()<<"maxPointNum"<<maxPointNum;
     for(int i=0;i<maxPointNum;i++)
     {
         image.setPixel(line[i].x,line[i].y,valueB);
@@ -1403,9 +1389,11 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     rawImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
 
-
-
-
+    fileStr.append(".tif");
+    image.save(fileStr);
+    QSqlQuery query;
+    QString sqlInsertStr=QString("insert into RemoteSensingSeaLine values('%1','%2')").arg(fileStr).arg(filePathName);
+    query.exec(sqlInsertStr);
     //    设定当前位置的初值为入口位置；
     //      do{
     //        若当前位置可通，
@@ -1438,484 +1426,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 
 
 //////////////////////////////////海岸线提取///////////////////////////////////////////////////////
-unsigned short int mark[10000][10000];   //count(max)=561875  有563行
-//定义了一个二维数组，将每一个点设成一个坐标。如第一个点为change[0][0] ,以此类推。
-unsigned short int longLineMark[10000][10000] ={0};//记录最长的海岸线
-// 去除噪点用的图像
-int flag = 12;
-int x_go[8] = {1,-1,0,0,1,1,-1,-1};
-int y_go[8] = {0,0,1,-1,1,-1,1,-1};
 
-int x1_go[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
-int y1_go[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
-
-int x2_go[48] = {-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,1,1,1,1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3};
-int y2_go[48] = {-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3};
-
-int x3_go[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
-                 1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
-int y3_go[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
-                 2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
-
-//定义一个方向数组
-int next[8][2]={{-1,1}, //右上
-                {0,1},//右
-                {1,1}, //右下
-                {1,0},//下
-                {1,-1},//左下
-                {0,-1},//左
-                {-1,-1},//左上
-                {-1,0}};//上
-
-long int count1,maxLine;
-int *sum=NULL;
-int *regist_x=NULL;
-int *regist_y=NULL;
-
-void filedeal:: seaLineGet(int *seaColor,int *landColor)
-{
-    sum=new int[Samples*Lines];
-    regist_x=new int[Samples*Lines];
-    regist_y=new int[Samples*Lines];
-
-    QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb value = qRgb(0, 0, 0);
-    image.fill(Qt::white);//将图片背景填充为白色
-    int final=0;
-    count1=0,maxLine=0;
-    memset(sum,0,Samples*Lines*sizeof(int));
-    memset(regist_x ,0,Samples*Lines*sizeof(int));
-    memset(regist_y ,0,Samples*Lines*sizeof(int));
-    memset(mark,0,Samples*Lines*sizeof(unsigned short int));
-    memset(longLineMark,0,Samples*Lines*sizeof(unsigned short int));
-    int i,j;
-    QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
-    QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
-    QString fileStr=filePathName;
-    fileStr=fileStr+str;
-
-    int areaAR=0,areaAG=0,areaAB=0,areaBR=0,areaBG=0,areaBB=0;
-    for(int k=0;k<5;k++)
-    {
-        switch(landColor[k])
-        {
-        case 1:
-            areaAR=255;
-            areaAG=0;
-            areaAB=0;
-            break;
-        case 2:
-            areaAR=255;
-            areaAG=255;
-            areaAB=0;
-            break;
-        case 3:
-            areaAR=0;
-            areaAG=0;
-            areaAB=255;
-            break;
-        case 4:
-            areaAR=0;
-            areaAG=255;
-            areaAB=0;
-            break;
-        case 5:
-            areaAR=139;
-            areaAG=0;
-            areaAB=139;
-            break;
-        case 6:
-            areaAR=0;
-            areaAG=0;
-            areaAB=0;
-            break;
-        default:
-            areaAR=300;
-            areaAG=300;
-            areaAB=300;
-            break;
-        }
-        switch(seaColor[k])
-        {
-        case 1:
-            areaBR=255;
-            areaBG=0;
-            areaBB=0;
-            break;
-        case 2:
-            areaBR=255;
-            areaBG=255;
-            areaBB=0;
-            break;
-        case 3:
-            areaBR=0;
-            areaBG=0;
-            areaBB=255;
-            break;
-        case 4:
-            areaBR=0;
-            areaBG=255;
-            areaBB=0;
-            break;
-        case 5:
-            areaBR=139;
-            areaBG=0;
-            areaBB=139;
-            break;
-        case 6:
-            areaBR=0;
-            areaBG=0;
-            areaBB=0;
-            break;
-            areaBR=300;
-            areaBG=300;
-            areaBB=300;
-        }
-        qDebug()<<areaAR<<"    "<<areaAG<<"   "<<areaAB<<"A";
-        qDebug()<<areaBR<<"    "<<areaBG<<"   "<<areaBB<<"B";
-        for(int h=0;h<Lines;h++)
-        {
-            for(int w=0;w<Samples;w++)
-            {
-                if(QColor(partImage.pixel(w,h)).red()==areaAR
-                        &&QColor(partImage.pixel(w,h)).green()==areaAG
-                        &&QColor(partImage.pixel(w,h)).blue()==areaAB)
-                {
-                    mark[h][w]=1;//长宽对调
-                }
-                else if(QColor(partImage.pixel(w,h)).red()==areaBR
-                        &&QColor(partImage.pixel(w,h)).green()==areaBG
-                        &&QColor(partImage.pixel(w,h)).blue()==areaBB)
-                {
-                    mark[h][w]=2;//长宽对调
-                }
-            }
-        }
-        //        for(i=0;i<Samples*Lines;i++)
-        //        {
-        //            if(data_copy[i].bands[changer]==areaAR&&data_copy[i].bands[changeg]==areaAG&&data_copy[i].bands[changeb]==areaAB)
-        //            {
-        //                mark[i/Samples][(i-1)%Samples]=1;
-        //            }
-        //            else if(data_copy[i].bands[changer]==areaBR&&data_copy[i].bands[changeg]==areaBG&&data_copy[i].bands[changeb]==areaBB)
-        //            {
-        //                mark[i/Samples][(i-1)%Samples]=2;
-        //            }
-        //            else
-        //            {
-        //                mark[i/Samples][(i-1)%Samples]=1;
-        //            }
-        //        }
-    }
-    //淤泥与养殖区的交界线是海岸线或海水与养殖区的交界线是海岸线
-    qDebug()<<"normal in mark";
-    /***************************去噪声点 9宫格*********************************************/
-    /* int time=0;
-     for(time=1;time<=5;time++) {
-      if(time<=2)flag=4;
-      else flag=5;
-    for(i=1123;i>=1;i--)
-        for(j=1994;j>=1;j--) {
-
-        int diw[4]={0,0,0,0},x_,y_,f;
-        for(int f=0 ; f<8 ; f++)
-        {
-            x_ = i+x_go[f];
-            y_ = j+y_go[f];
-            diw[change[x_][y_]]++;
-
-            if(diw[change[x_][y_]]==flag)
-            {
-                change[i][j] = change[x_][y_];
-
-            }
-        }
-            }
-           }        */
-    /*****************************25宫格**************************************/
-    //    int time=0;
-    //    for(time=1;time<=2;time++)
-    //    {
-    //        flag=13;
-    //        for(i=Lines-2;i>=1;i--)
-    //            for(j=Samples-2;j>=1;j--)
-    //            {
-    //                int diw[4]={0,0,0,0},x_,y_;
-    //                for(int f=0 ; f<24 ; f++)
-    //                {
-    //                    x_ = i+x1_go[f];
-    //                    y_ = j+y1_go[f];
-    //                    diw[mark[x_][y_]]++;
-    //                    if(diw[mark[x_][y_]]==flag)
-    //                    {
-    //                        mark[i][j] = mark[x_][y_];
-    //                    }
-    //                }
-    //            }
-    //    }
-    //    int time=0;
-    //    for(time=1;time<=1;time++)
-    //    {
-    //        flag=42;
-    //        for(i=Lines-5;i>=4;i--)
-    //            for(j=Samples-5;j>=4;j--)
-    //            {
-    //                int diw[4]={0,0,0,0},x_,y_;
-    //                for(int f=0 ; f<80 ; f++)
-    //                {
-    //                    x_ = i+x3_go[f];
-    //                    y_ = j+y3_go[f];
-    //                    diw[mark[x_][y_]]++;
-
-    //                    if(diw[mark[x_][y_]]==flag)
-    //                    {
-    //                        mark[i][j] = mark[x_][y_];
-    //                    }
-    //                }
-    //            }
-    //    }
-    int flag=42;
-    for(int time=0;time<=1;time++)
-    {
-        for(int i=5;i<Lines-5;i++)
-        {
-            for(int j=5;j<Samples-5;j++)
-            {
-                int diw[4]={0,0,0,0},x_,y_;
-                for(int f=0 ; f<80 ; f++)
-                {
-                    x_ = i+x3_go[f];
-                    y_ = j+y3_go[f];
-                    diw[mark[x_][y_]]++;
-
-                    if(diw[mark[x_][y_]]==flag)
-                    {
-                        mark[i][j] = mark[x_][y_];
-                    }
-                }
-            }
-        }
-    }
-
-
-    qDebug()<<"normal in down point";
-    /******************************************49宫格***************************************/
-    //    int time=0;
-    //    for(time=1;time<=1;time++)
-    //    {
-    //        flag=24;
-    //        for(i=1121;i>=3;i--)
-    //            for(j=1992;j>=3;j--)
-    //            {
-
-    //                int diw[4]={0,0,0,0},x_,y_;
-    //                for(int f=0 ; f<48 ; f++)
-    //                {
-    //                    x_ = i+x2_go[f];
-    //                    y_ = j+y2_go[f];
-    //                    diw[mark[x_][y_]]++;
-
-    //                    if(diw[mark[x_][y_]]==flag)
-    //                    {
-    //                        mark[i][j] = mark[x_][y_];
-    //                    }
-    //                }
-    //            }
-
-    //    }
-
-    /****************************修改数据（寻找符合规则的线）************************************************/
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            if((mark[i][j]==2&&mark[i-1][j-1]==1)||
-                    (mark[i][j]==2&&mark[i-1][j+1]==1)||
-                    (mark[i][j]==2&&mark[i-1][j]==1)||
-                    (mark[i][j]==2&&mark[i+1][j-1]==1)||
-                    (mark[i][j]==2&&mark[i+1][j]==1)||
-                    (mark[i][j]==2&&mark[i+1][j+1]==1)||
-                    (mark[i][j]==2&&mark[i][j-1]==1)||
-                    (mark[i][j]==2&&mark[i][j+1]==1) )
-            {
-                longLineMark[i][j]=1;           //   chang1=1记录的是符合规则的线
-                //                value = qRgb(0, 0, 0);
-                //                image.setPixel(j,i, value);
-            }
-        }
-    }//for
-    //    fileStr.append(".tif");
-    //    image.save(fileStr);
-
-    //    for(i=2;i<=Lines-2;i++)
-    //    {
-    //        for(j=2;j<=Samples-2;j++)
-    //        {
-    //            if((mark[i][j]==2&&mark[i-1][j-1]==1)||
-    //                    (mark[i][j]==2&&mark[i-1][j+1]==1)||
-    //                    (mark[i][j]==2&&mark[i-1][j]==1)||
-    //                    (mark[i][j]==2&&mark[i+1][j-1]==1)||
-    //                    (mark[i][j]==2&&mark[i+1][j]==1)||
-    //                    (mark[i][j]==2&&mark[i+1][j+1]==1)||
-    //                    (mark[i][j]==2&&mark[i][j-1]==1)||
-    //                    (mark[i][j]==2&&mark[i][j+1]==1)||//以后为新加
-    //                    (mark[i][j]==2&&mark[i-2][j-2]==1)||
-    //                    (mark[i][j]==2&&mark[i-2][j-1]==1)||
-    //                    (mark[i][j]==2&&mark[i-2][j]==1)||
-    //                    (mark[i][j]==2&&mark[i-2][j+1]==1)||
-    //                    (mark[i][j]==2&&mark[i-2][j+1]==1)||
-    //                    (mark[i][j]==2&&mark[i-2][j+2]==1)||
-    //                    (mark[i][j]==2&&mark[i-1][j+2]==1)||
-    //                    (mark[i][j]==2&&mark[i][j+2]==1)||
-    //                    (mark[i][j]==2&&mark[i+1][j+2]==1)||
-    //                    (mark[i][j]==2&&mark[i+2][j+2]==1)||
-    //                    (mark[i][j]==2&&mark[i+2][j+1]==1)||
-    //                    (mark[i][j]==2&&mark[i+2][j]==1)||
-    //                    (mark[i][j]==2&&mark[i+2][j-1]==1)||
-    //                    (mark[i][j]==2&&mark[i+2][j-2]==1)||
-    //                    (mark[i][j]==2&&mark[i+1][j-2]==1)||
-    //                    (mark[i][j]==2&&mark[i][j-2]==1)||
-    //                    (mark[i][j]==2&&mark[i-1][j-2]==1) )
-    //            {
-    //                longLineMark[i][j]=1;           //   chang1=1记录的是符合规则的线
-    //            }
-    //        }
-    //    }
-    qDebug()<<"longLineMark complete";
-
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            mark[i][j]=0;
-        }
-        //此时的change是book
-    }   //寻找最长的线
-
-
-    /******************************************修改数据************************************************************************/
-    qDebug()<<"before dfs";
-
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            count1++;//用作计数的
-            regist_x[count1]=i;//记录x坐标
-            regist_y[count1]=j;//记录y坐标
-            mark[i][j]=1;   //此时的change是book
-            dfs(i,j);
-        }
-    }
-
-    qDebug()<<count1<<"count1";
-    qDebug()<< regist_x[count1]<<"regist_x[count1]";
-    qDebug()<< regist_y[count1]<<"regist_x[count1]";
-    qDebug()<<maxLine<<"max";
-
-    maxLine=0;
-    for(i=1;i<=count1;i++)
-    {
-        if(maxLine<sum[i])
-        {
-            maxLine=sum[i];
-            final=i;
-        }
-    }
-
-    qDebug()<<final<<"final";
-
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            mark[i][j]=0;//change重置为0，在画最长的过程中依旧为book
-        }
-    }
-
-    qDebug()<<regist_x[final]<<"regist_x[final]";
-    qDebug()<<regist_y[final]<<"regist_y[final]";
-
-    mark[regist_x[final]][regist_y[final]]=1;
-    longLineMark[regist_x[final]][regist_y[final]]=2;     //change1=2记录的是最长的线
-    redfs(regist_x[final],regist_y[final]);
-
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            if(longLineMark[i][j]!=2)
-            {
-                longLineMark[i][j]=0;
-            }
-        }
-    }
-
-
-    for(i=1;i<=Lines-2;i++)
-    {
-        for(j=1;j<=Samples-2;j++)
-        {
-            if(longLineMark[i][j]==2 )
-            {
-                image.setPixel(j,i, value);
-            }
-        }
-    }
-    partImage=image;
-    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
-    fileStr.append(".tif");
-    image.save(fileStr);
-    QSqlQuery query;
-    QString sqlInsertStr=QString("insert into RemoteSensingSeaLine values('%1','%2')").arg(fileStr).arg(filePathName);
-    query.exec(sqlInsertStr);
-    delete[] sum;
-    delete[] regist_x;
-    delete[] regist_y;
-}
-void filedeal::dfs(int x,int y)
-{
-
-    int k,tx,ty;
-
-    for(k=0;k<=7;k++)
-    {
-        tx=x+next[k][0];
-        ty=y+next[k][1];
-        //判断是否越界
-        if(tx<1||tx>Lines-1||ty<1||ty>Samples-1)
-            continue;
-        if(longLineMark[tx][ty]==1&&mark[tx][ty]==0)   //此时的change是book
-        {
-            sum[count1]++;	//将每根线的线长存到sum数组中
-            mark[tx][ty]=1;
-            dfs(tx,ty);
-        }
-    }
-    return;
-
-}
-void filedeal:: redfs(int x,int y)
-{
-    int k,tx,ty;
-
-    for(k=0;k<=7;k++)
-    {
-        tx=x+next[k][0];
-        ty=y+next[k][1];
-        //判断是否越界
-        if(tx<1||tx>Lines-1||ty<1||ty>Samples-1)
-            continue;
-        if(longLineMark[tx][ty]>0&&mark[tx][ty]==0)   //此时的change是book
-        {
-            mark[tx][ty]=1;
-            longLineMark[tx][ty]=2;
-            redfs(tx,ty);
-        }
-    }
-    return;
-
-}
 ///////////////////////////////////////////////海岸线完/////////////////////////////////////////////////
 ////开始降噪
 void filedeal::lowPointsStart()
@@ -3949,4 +3460,486 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //    }
 //    //该组下标还未用过
 //    return false;
+//}
+
+
+
+///原海岸线提取
+//unsigned short int mark[10000][10000];   //count(max)=561875  有563行
+//定义了一个二维数组，将每一个点设成一个坐标。如第一个点为change[0][0] ,以此类推。
+//unsigned short int longLineMark[10000][10000] ={0};//记录最长的海岸线
+// 去除噪点用的图像
+//int flag = 12;
+//int x_go[8] = {1,-1,0,0,1,1,-1,-1};
+//int y_go[8] = {0,0,1,-1,1,-1,1,-1};
+
+//int x1_go[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
+//int y1_go[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
+
+//int x2_go[48] = {-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,1,1,1,1,1,1,1,2,2,2,2,2,2,2,3,3,3,3,3,3,3};
+//int y2_go[48] = {-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3,-3,-2,-1,0,1,2,3};
+
+//int x3_go[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
+//                 1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
+//int y3_go[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
+//                 2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
+
+//定义一个方向数组
+//int next[8][2]={{-1,1}, //右上
+//                {0,1},//右
+//                {1,1}, //右下
+//                {1,0},//下
+//                {1,-1},//左下
+//                {0,-1},//左
+//                {-1,-1},//左上
+//                {-1,0}};//上
+
+//long int count1,maxLine;
+//int *sum=NULL;
+//int *regist_x=NULL;
+//int *regist_y=NULL;
+
+//void filedeal:: seaLineGet(int *seaColor,int *landColor)
+//{
+//    sum=new int[Samples*Lines];
+//    regist_x=new int[Samples*Lines];
+//    regist_y=new int[Samples*Lines];
+
+//    QImage image(Samples, Lines, QImage::Format_RGB32);
+//    QRgb value = qRgb(0, 0, 0);
+//    image.fill(Qt::white);//将图片背景填充为白色
+//    int final=0;
+//    count1=0,maxLine=0;
+//    memset(sum,0,Samples*Lines*sizeof(int));
+//    memset(regist_x ,0,Samples*Lines*sizeof(int));
+//    memset(regist_y ,0,Samples*Lines*sizeof(int));
+//    memset(mark,0,Samples*Lines*sizeof(unsigned short int));
+//    memset(longLineMark,0,Samples*Lines*sizeof(unsigned short int));
+//    int i,j;
+//    QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+//    QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+//    QString fileStr=filePathName;
+//    fileStr=fileStr+str;
+
+//    int areaAR=0,areaAG=0,areaAB=0,areaBR=0,areaBG=0,areaBB=0;
+//    for(int k=0;k<5;k++)
+//    {
+//        switch(landColor[k])
+//        {
+//        case 1:
+//            areaAR=255;
+//            areaAG=0;
+//            areaAB=0;
+//            break;
+//        case 2:
+//            areaAR=255;
+//            areaAG=255;
+//            areaAB=0;
+//            break;
+//        case 3:
+//            areaAR=0;
+//            areaAG=0;
+//            areaAB=255;
+//            break;
+//        case 4:
+//            areaAR=0;
+//            areaAG=255;
+//            areaAB=0;
+//            break;
+//        case 5:
+//            areaAR=139;
+//            areaAG=0;
+//            areaAB=139;
+//            break;
+//        case 6:
+//            areaAR=0;
+//            areaAG=0;
+//            areaAB=0;
+//            break;
+//        default:
+//            areaAR=300;
+//            areaAG=300;
+//            areaAB=300;
+//            break;
+//        }
+//        switch(seaColor[k])
+//        {
+//        case 1:
+//            areaBR=255;
+//            areaBG=0;
+//            areaBB=0;
+//            break;
+//        case 2:
+//            areaBR=255;
+//            areaBG=255;
+//            areaBB=0;
+//            break;
+//        case 3:
+//            areaBR=0;
+//            areaBG=0;
+//            areaBB=255;
+//            break;
+//        case 4:
+//            areaBR=0;
+//            areaBG=255;
+//            areaBB=0;
+//            break;
+//        case 5:
+//            areaBR=139;
+//            areaBG=0;
+//            areaBB=139;
+//            break;
+//        case 6:
+//            areaBR=0;
+//            areaBG=0;
+//            areaBB=0;
+//            break;
+//            areaBR=300;
+//            areaBG=300;
+//            areaBB=300;
+//        }
+//        qDebug()<<areaAR<<"    "<<areaAG<<"   "<<areaAB<<"A";
+//        qDebug()<<areaBR<<"    "<<areaBG<<"   "<<areaBB<<"B";
+//        for(int h=0;h<Lines;h++)
+//        {
+//            for(int w=0;w<Samples;w++)
+//            {
+//                if(QColor(partImage.pixel(w,h)).red()==areaAR
+//                        &&QColor(partImage.pixel(w,h)).green()==areaAG
+//                        &&QColor(partImage.pixel(w,h)).blue()==areaAB)
+//                {
+//                    mark[h][w]=1;//长宽对调
+//                }
+//                else if(QColor(partImage.pixel(w,h)).red()==areaBR
+//                        &&QColor(partImage.pixel(w,h)).green()==areaBG
+//                        &&QColor(partImage.pixel(w,h)).blue()==areaBB)
+//                {
+//                    mark[h][w]=2;//长宽对调
+//                }
+//            }
+//        }
+//        //        for(i=0;i<Samples*Lines;i++)
+//        //        {
+//        //            if(data_copy[i].bands[changer]==areaAR&&data_copy[i].bands[changeg]==areaAG&&data_copy[i].bands[changeb]==areaAB)
+//        //            {
+//        //                mark[i/Samples][(i-1)%Samples]=1;
+//        //            }
+//        //            else if(data_copy[i].bands[changer]==areaBR&&data_copy[i].bands[changeg]==areaBG&&data_copy[i].bands[changeb]==areaBB)
+//        //            {
+//        //                mark[i/Samples][(i-1)%Samples]=2;
+//        //            }
+//        //            else
+//        //            {
+//        //                mark[i/Samples][(i-1)%Samples]=1;
+//        //            }
+//        //        }
+//    }
+//    //淤泥与养殖区的交界线是海岸线或海水与养殖区的交界线是海岸线
+//    qDebug()<<"normal in mark";
+//    /***************************去噪声点 9宫格*********************************************/
+//    /* int time=0;
+//     for(time=1;time<=5;time++) {
+//      if(time<=2)flag=4;
+//      else flag=5;
+//    for(i=1123;i>=1;i--)
+//        for(j=1994;j>=1;j--) {
+
+//        int diw[4]={0,0,0,0},x_,y_,f;
+//        for(int f=0 ; f<8 ; f++)
+//        {
+//            x_ = i+x_go[f];
+//            y_ = j+y_go[f];
+//            diw[change[x_][y_]]++;
+
+//            if(diw[change[x_][y_]]==flag)
+//            {
+//                change[i][j] = change[x_][y_];
+
+//            }
+//        }
+//            }
+//           }        */
+//    /*****************************25宫格**************************************/
+//    //    int time=0;
+//    //    for(time=1;time<=2;time++)
+//    //    {
+//    //        flag=13;
+//    //        for(i=Lines-2;i>=1;i--)
+//    //            for(j=Samples-2;j>=1;j--)
+//    //            {
+//    //                int diw[4]={0,0,0,0},x_,y_;
+//    //                for(int f=0 ; f<24 ; f++)
+//    //                {
+//    //                    x_ = i+x1_go[f];
+//    //                    y_ = j+y1_go[f];
+//    //                    diw[mark[x_][y_]]++;
+//    //                    if(diw[mark[x_][y_]]==flag)
+//    //                    {
+//    //                        mark[i][j] = mark[x_][y_];
+//    //                    }
+//    //                }
+//    //            }
+//    //    }
+//    //    int time=0;
+//    //    for(time=1;time<=1;time++)
+//    //    {
+//    //        flag=42;
+//    //        for(i=Lines-5;i>=4;i--)
+//    //            for(j=Samples-5;j>=4;j--)
+//    //            {
+//    //                int diw[4]={0,0,0,0},x_,y_;
+//    //                for(int f=0 ; f<80 ; f++)
+//    //                {
+//    //                    x_ = i+x3_go[f];
+//    //                    y_ = j+y3_go[f];
+//    //                    diw[mark[x_][y_]]++;
+
+//    //                    if(diw[mark[x_][y_]]==flag)
+//    //                    {
+//    //                        mark[i][j] = mark[x_][y_];
+//    //                    }
+//    //                }
+//    //            }
+//    //    }
+//    int flag=42;
+//    for(int time=0;time<=1;time++)
+//    {
+//        for(int i=5;i<Lines-5;i++)
+//        {
+//            for(int j=5;j<Samples-5;j++)
+//            {
+//                int diw[4]={0,0,0,0},x_,y_;
+//                for(int f=0 ; f<80 ; f++)
+//                {
+//                    x_ = i+x3_go[f];
+//                    y_ = j+y3_go[f];
+//                    diw[mark[x_][y_]]++;
+
+//                    if(diw[mark[x_][y_]]==flag)
+//                    {
+//                        mark[i][j] = mark[x_][y_];
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+
+//    qDebug()<<"normal in down point";
+//    /******************************************49宫格***************************************/
+//    //    int time=0;
+//    //    for(time=1;time<=1;time++)
+//    //    {
+//    //        flag=24;
+//    //        for(i=1121;i>=3;i--)
+//    //            for(j=1992;j>=3;j--)
+//    //            {
+
+//    //                int diw[4]={0,0,0,0},x_,y_;
+//    //                for(int f=0 ; f<48 ; f++)
+//    //                {
+//    //                    x_ = i+x2_go[f];
+//    //                    y_ = j+y2_go[f];
+//    //                    diw[mark[x_][y_]]++;
+
+//    //                    if(diw[mark[x_][y_]]==flag)
+//    //                    {
+//    //                        mark[i][j] = mark[x_][y_];
+//    //                    }
+//    //                }
+//    //            }
+
+//    //    }
+
+//    /****************************修改数据（寻找符合规则的线）************************************************/
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            if((mark[i][j]==2&&mark[i-1][j-1]==1)||
+//                    (mark[i][j]==2&&mark[i-1][j+1]==1)||
+//                    (mark[i][j]==2&&mark[i-1][j]==1)||
+//                    (mark[i][j]==2&&mark[i+1][j-1]==1)||
+//                    (mark[i][j]==2&&mark[i+1][j]==1)||
+//                    (mark[i][j]==2&&mark[i+1][j+1]==1)||
+//                    (mark[i][j]==2&&mark[i][j-1]==1)||
+//                    (mark[i][j]==2&&mark[i][j+1]==1) )
+//            {
+//                longLineMark[i][j]=1;           //   chang1=1记录的是符合规则的线
+//                //                value = qRgb(0, 0, 0);
+//                //                image.setPixel(j,i, value);
+//            }
+//        }
+//    }//for
+//    //    fileStr.append(".tif");
+//    //    image.save(fileStr);
+
+//    //    for(i=2;i<=Lines-2;i++)
+//    //    {
+//    //        for(j=2;j<=Samples-2;j++)
+//    //        {
+//    //            if((mark[i][j]==2&&mark[i-1][j-1]==1)||
+//    //                    (mark[i][j]==2&&mark[i-1][j+1]==1)||
+//    //                    (mark[i][j]==2&&mark[i-1][j]==1)||
+//    //                    (mark[i][j]==2&&mark[i+1][j-1]==1)||
+//    //                    (mark[i][j]==2&&mark[i+1][j]==1)||
+//    //                    (mark[i][j]==2&&mark[i+1][j+1]==1)||
+//    //                    (mark[i][j]==2&&mark[i][j-1]==1)||
+//    //                    (mark[i][j]==2&&mark[i][j+1]==1)||//以后为新加
+//    //                    (mark[i][j]==2&&mark[i-2][j-2]==1)||
+//    //                    (mark[i][j]==2&&mark[i-2][j-1]==1)||
+//    //                    (mark[i][j]==2&&mark[i-2][j]==1)||
+//    //                    (mark[i][j]==2&&mark[i-2][j+1]==1)||
+//    //                    (mark[i][j]==2&&mark[i-2][j+1]==1)||
+//    //                    (mark[i][j]==2&&mark[i-2][j+2]==1)||
+//    //                    (mark[i][j]==2&&mark[i-1][j+2]==1)||
+//    //                    (mark[i][j]==2&&mark[i][j+2]==1)||
+//    //                    (mark[i][j]==2&&mark[i+1][j+2]==1)||
+//    //                    (mark[i][j]==2&&mark[i+2][j+2]==1)||
+//    //                    (mark[i][j]==2&&mark[i+2][j+1]==1)||
+//    //                    (mark[i][j]==2&&mark[i+2][j]==1)||
+//    //                    (mark[i][j]==2&&mark[i+2][j-1]==1)||
+//    //                    (mark[i][j]==2&&mark[i+2][j-2]==1)||
+//    //                    (mark[i][j]==2&&mark[i+1][j-2]==1)||
+//    //                    (mark[i][j]==2&&mark[i][j-2]==1)||
+//    //                    (mark[i][j]==2&&mark[i-1][j-2]==1) )
+//    //            {
+//    //                longLineMark[i][j]=1;           //   chang1=1记录的是符合规则的线
+//    //            }
+//    //        }
+//    //    }
+//    qDebug()<<"longLineMark complete";
+
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            mark[i][j]=0;
+//        }
+//        //此时的change是book
+//    }   //寻找最长的线
+
+
+//    /******************************************修改数据************************************************************************/
+//    qDebug()<<"before dfs";
+
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            count1++;//用作计数的
+//            regist_x[count1]=i;//记录x坐标
+//            regist_y[count1]=j;//记录y坐标
+//            mark[i][j]=1;   //此时的change是book
+//            dfs(i,j);
+//        }
+//    }
+
+//    qDebug()<<count1<<"count1";
+//    qDebug()<< regist_x[count1]<<"regist_x[count1]";
+//    qDebug()<< regist_y[count1]<<"regist_x[count1]";
+//    qDebug()<<maxLine<<"max";
+
+//    maxLine=0;
+//    for(i=1;i<=count1;i++)
+//    {
+//        if(maxLine<sum[i])
+//        {
+//            maxLine=sum[i];
+//            final=i;
+//        }
+//    }
+
+//    qDebug()<<final<<"final";
+
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            mark[i][j]=0;//change重置为0，在画最长的过程中依旧为book
+//        }
+//    }
+
+//    qDebug()<<regist_x[final]<<"regist_x[final]";
+//    qDebug()<<regist_y[final]<<"regist_y[final]";
+
+//    mark[regist_x[final]][regist_y[final]]=1;
+//    longLineMark[regist_x[final]][regist_y[final]]=2;     //change1=2记录的是最长的线
+//    redfs(regist_x[final],regist_y[final]);
+
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            if(longLineMark[i][j]!=2)
+//            {
+//                longLineMark[i][j]=0;
+//            }
+//        }
+//    }
+
+
+//    for(i=1;i<=Lines-2;i++)
+//    {
+//        for(j=1;j<=Samples-2;j++)
+//        {
+//            if(longLineMark[i][j]==2 )
+//            {
+//                image.setPixel(j,i, value);
+//            }
+//        }
+//    }
+//    partImage=image;
+//    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+//    fileStr.append(".tif");
+//    image.save(fileStr);
+//    QSqlQuery query;
+//    QString sqlInsertStr=QString("insert into RemoteSensingSeaLine values('%1','%2')").arg(fileStr).arg(filePathName);
+//    query.exec(sqlInsertStr);
+//    delete[] sum;
+//    delete[] regist_x;
+//    delete[] regist_y;
+//}
+//void filedeal::dfs(int x,int y)
+//{
+
+//    int k,tx,ty;
+
+//    for(k=0;k<=7;k++)
+//    {
+//        tx=x+next[k][0];
+//        ty=y+next[k][1];
+//        //判断是否越界
+//        if(tx<1||tx>Lines-1||ty<1||ty>Samples-1)
+//            continue;
+//        if(longLineMark[tx][ty]==1&&mark[tx][ty]==0)   //此时的change是book
+//        {
+//            sum[count1]++;	//将每根线的线长存到sum数组中
+//            mark[tx][ty]=1;
+//            dfs(tx,ty);
+//        }
+//    }
+//    return;
+
+//}
+//void filedeal:: redfs(int x,int y)
+//{
+//    int k,tx,ty;
+
+//    for(k=0;k<=7;k++)
+//    {
+//        tx=x+next[k][0];
+//        ty=y+next[k][1];
+//        //判断是否越界
+//        if(tx<1||tx>Lines-1||ty<1||ty>Samples-1)
+//            continue;
+//        if(longLineMark[tx][ty]>0&&mark[tx][ty]==0)   //此时的change是book
+//        {
+//            mark[tx][ty]=1;
+//            longLineMark[tx][ty]=2;
+//            redfs(tx,ty);
+//        }
+//    }
+//    return;
+
 //}

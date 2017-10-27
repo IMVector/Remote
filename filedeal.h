@@ -41,8 +41,8 @@ private:
     void getAimData(Points mPoints, float **data);
     void addPoint(float x0, float y0);
     void loadPartImage(int startX, int startY, int visiualHeight, int visiualWidth, QImage visiualImage);
-    void redfs(int x, int y);
-    void dfs(int x, int y);
+//    void redfs(int x, int y);
+//    void dfs(int x, int y);
     void lowBadPoints(int w, int h);
     point *reorderSLine(point *fLineP, point *sLineP, int number);
     double distance(point p1, point p2);
@@ -85,13 +85,12 @@ private slots:
     void currentFunction(int currentCount);
     void deleteDataFun(int currentIndex);
     void parser(QString ruleName);
-    void seaLineGet(int *seaColor, int *landColor);
+//    void seaLineGet(int *seaColor, int *landColor);
     void lowPointsStart();
     void combineLine(QString imageF, QString imageS);
     void saveSample(QString name);
     void simpleInfo(QString name,int *number);
     void lineMouse(int x, int y);
-
     void slotSealine(int *seaColor, int *landColor);
 signals:
     void sendVisiualP(int x,int y);
