@@ -21,6 +21,7 @@
 #include <dbsetting.h>
 #include <showinfo.h>
 #include <progressbar.h>
+#include <showinfo.h>
 namespace Ui {
 class operate;
 }
@@ -32,7 +33,7 @@ class operate : public QWidget
 public:
     explicit operate(QWidget *parent = 0);
     ~operate();
-
+    showInfo *messageDialog;
     QString imageStrF;
     QString imageStrS;
     void getFilePath(QString filePath);
@@ -54,6 +55,7 @@ private:
     database  *Sqlsever;
     dbsetting *setting;
     progressBar *proBar;
+    showInfo *message;
     int visiualX=0;
     int visiualY=0;
 
@@ -63,7 +65,7 @@ private:
     bool getDetails(bool flag);
     void initChoice();
     void initCombox();
-    void showInfo(QString info, QString type);
+//    void showInfo(QString info, QString type);
 private slots:
     void uiGetBand(int band);
     void on_fileBandWidget_clicked(const QModelIndex &index);
@@ -91,6 +93,8 @@ private slots:
     void getSize(int width,int height);
     void getDataFileDetails(int number,int geoNumber);
 
+    void lowPointsComplete(QString message);
+    void showMessage(QString message, int type);
 signals:
     void sendFileName(QString fileName);
     void showImage(int r,int g,int b);
@@ -104,6 +108,7 @@ signals:
     void lowPoiSignal();
     void mCombine(QString imageF,QString imageS);
     void sendSimpleInfo(QString name,int *number);
+
 };
 
 #endif // OPERATE_H

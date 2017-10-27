@@ -77,7 +77,7 @@ class classify : public QObject
     Q_OBJECT
 
 private:
-    showInfo *message;
+
 
 public:
     classify();

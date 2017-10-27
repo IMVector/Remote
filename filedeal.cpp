@@ -1,4 +1,5 @@
-﻿#include "filedeal.h"
+﻿
+#include "filedeal.h"
 //1650 202
 int thisCount=0;
 int ERRORCount=0;
@@ -29,9 +30,15 @@ int G[7]={255,     0,  255,    0,   255, 0 ,0};
 int B[7]={255,     0  ,  0,  255,   0,   139   ,0};
 
 ////////////////////////////////////////////////////////////////////
-unsigned short int markColor[10000][10000];   //count(max)=561875  有563行
-int xRoad[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
-int yRoad[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
+//unsigned short int markColor[10000][10000];   //count(max)=561875  有563行
+//int xRoad[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
+//int yRoad[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
+
+int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
+                 1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
+int xRoad[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
+                 2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
+
 
 filedeal::filedeal()
 {
@@ -92,18 +99,18 @@ void filedeal::getRGB(int r, int g, int b)
     else if(Samples>500&&Lines<500)
     {
         currentWidth=Lines;
-        visiualdraw(p,500,Lines,rawImage);
+        visiualdraw(p,Lines,500,rawImage);
     }
     else if(Samples<500&&Lines>500)
     {
         currentWidth=Samples;
-        visiualdraw(p,Samples,500,rawImage);
+        visiualdraw(p,500,Samples,rawImage);
     }
     else
     {
         currentWidth=Samples;
         currentHeight=Lines;
-        visiualdraw(p,Samples,Lines,rawImage);
+        visiualdraw(p,Lines,Samples,rawImage);
     }
 
     sorted=false;
@@ -302,10 +309,10 @@ unsigned char* filedeal::picSketch( float* buffer , GDALRasterBand* currentBand,
 void filedeal::visiualdraw(point p,int visiualHeight,int visiualWidth,QImage visiualImage)
 {
     int startX=0,startY=0;
-    QRgb value;
+
     QImage image=visiualImage;
     int r=255, g=0, b=0;//用来接收颜色
-    value = qRgb(r, g, b);
+    QRgb value=qRgb(r, g, b);
     visiualDrawP=p;
     //得到鼠标所在点的坐标
     //如果x小于25则x的起始点为0
@@ -458,48 +465,49 @@ void filedeal::startSelectDate()
 ////显示样本选择时的线
 void filedeal::getData_image(Points points)
 {
-    QRgb value;
+    QRgb value=qRgb(R[current+1],G[current+1],B[current+1]);
     QTime time;
-    time.start();
+    partImage=midPointLink(partImage,points[0],points[1],value);
+    //    time.start();
 
-    if(points[0].x>points[1].x)
-    {
-        tempPoint[0].x=points[1].x;
-        tempPoint[1].x=points[0].x;
-    }
-    else
-    {
-        tempPoint[0].x=points[0].x;
-        tempPoint[1].x=points[1].x;
-    }
-    if(points[0].y>points[1].y)
-    {
-        tempPoint[0].y=points[1].y;
-        tempPoint[1].y=points[0].y;
-    }
-    else
-    {
-        tempPoint[0].y=points[0].y;
-        tempPoint[1].y=points[1].y;
-    }
-    //double k,b;
-    //k=(double)(points[1].y-points[0].y)/(points[1].x-points[0].x);
-    //b=points[0].y-points[0].x*k;
-    //qDebug()<<"k:"<<k;
-    //qDebug()<<"b:"<<b;
-    //判断点是否在线上
-    for(int h=tempPoint[0].y;h<tempPoint[1].y;h++)
-    {
-        for(int w=tempPoint[0].x;w<tempPoint[1].x;w++)
-        {
-            //if(h==qCeil(k*w+b)||h==qFloor(k*w+b))
-            if(judgeArea(2,points,w,h))
-            {
-                value=qRgb(R[current+1],G[current+1],B[current+1]);
-                partImage.setPixelColor(w,h,value);
-            }
-        }
-    }
+    //    if(points[0].x>points[1].x)
+    //    {
+    //        tempPoint[0].x=points[1].x;
+    //        tempPoint[1].x=points[0].x;
+    //    }
+    //    else
+    //    {
+    //        tempPoint[0].x=points[0].x;
+    //        tempPoint[1].x=points[1].x;
+    //    }
+    //    if(points[0].y>points[1].y)
+    //    {
+    //        tempPoint[0].y=points[1].y;
+    //        tempPoint[1].y=points[0].y;
+    //    }
+    //    else
+    //    {
+    //        tempPoint[0].y=points[0].y;
+    //        tempPoint[1].y=points[1].y;
+    //    }
+    //    //double k,b;
+    //    //k=(double)(points[1].y-points[0].y)/(points[1].x-points[0].x);
+    //    //b=points[0].y-points[0].x*k;
+    //    //qDebug()<<"k:"<<k;
+    //    //qDebug()<<"b:"<<b;
+    //    //判断点是否在线上
+    //    for(int h=tempPoint[0].y;h<tempPoint[1].y;h++)
+    //    {
+    //        for(int w=tempPoint[0].x;w<tempPoint[1].x;w++)
+    //        {
+    //            //if(h==qCeil(k*w+b)||h==qFloor(k*w+b))
+    //            if(judgeArea(2,points,w,h))
+    //            {
+    //                value=qRgb(R[current+1],G[current+1],B[current+1]);
+    //                partImage.setPixelColor(w,h,value);
+    //            }
+    //        }
+    //    }
     qDebug()<<time.elapsed()<<"ms";
     loadPartImage(visiualX,visiualY,currentHeight,currentWidth,partImage);
 }
@@ -556,8 +564,7 @@ void filedeal::getAimData(Points mPoints,float **data)
 {
     QTime time;
     time.start();
-    QRgb value;
-    value = qRgb(R[current+1], G[current+1], B[current+1]);
+    QRgb value = qRgb(R[current+1], G[current+1], B[current+1]);
     //传入待测试的点
     for(int h=mPoints[0].y;h<mPoints[1].y;h++)
     {
@@ -918,6 +925,7 @@ void filedeal::parser(QString ruleName)
     }
     delete[] rawData;
     rawData=NULL;
+
     //    int time=0;
     //    int roadCount=0;
     //    for(time=1;time<=5;time++)
@@ -976,6 +984,458 @@ void filedeal::parser(QString ruleName)
     //    }
     //    fclose(fp);
 }
+void filedeal::slotSealine(int *seaColor,int *landColor)
+{
+    seaLineGet(partImage,seaColor,landColor);
+    //seaLineGet(seaColor,landColor);
+}
+
+void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
+{
+
+    QImage image(Samples+1, Lines+1, QImage::Format_RGB32);
+    image.fill(Qt::white);//将图片背景填充为白色
+    QRgb valueA=qRgb(0,0,0);
+    QRgb valueB=qRgb(255,0,0);
+    bool gotoFlag=false;
+    //线的下标
+    int lineCount=0;
+    int maxLineIndex=0;
+    //点最多线上点的数量
+    int maxPointNum=0;
+    //当前线上点的数量
+    int currentMaxNum=0;
+
+    //坐标栈
+    int pointCount=0;
+    point *line=NULL;
+
+    //    point **line=NULL;
+    //    line=new point*[10000];
+    if(Samples>Lines)
+    {
+        //        for(int i=0;i<10000;i++)
+        //        {
+        //            line[i]=new point[Samples*10];
+        //        }
+        line=new point[Samples*100];
+        qDebug()<<"Stake max number is "<<Samples*100;
+    }
+    else
+    {
+        //        for(int i=0;i<10000;i++)
+        //        {
+        //            line[i]=new point[Lines*10];
+        //        }
+        line=new point[Lines*100];
+        qDebug()<<"Stake max number is "<<Lines*100;
+    }
+
+    unsigned short int *footFlag=new unsigned short int[Samples*Lines+1000];
+    unsigned short int *orignImage=new unsigned short int[Samples*Lines+1000];
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+            footFlag[h*Samples+w]=0;
+            orignImage[h*Samples+w]=0;
+        }
+    }
+
+    int areaAR=0,areaAG=0,areaAB=0,areaBR=0,areaBG=0,areaBB=0;
+    for(int k=0;k<5;k++)
+    {
+        switch(landColor[k])
+        {
+        case 1:
+            areaAR=255;
+            areaAG=0;
+            areaAB=0;
+            break;
+        case 2:
+            areaAR=255;
+            areaAG=255;
+            areaAB=0;
+            break;
+        case 3:
+            areaAR=0;
+            areaAG=0;
+            areaAB=255;
+            break;
+        case 4:
+            areaAR=0;
+            areaAG=255;
+            areaAB=0;
+            break;
+        case 5:
+            areaAR=139;
+            areaAG=0;
+            areaAB=139;
+            break;
+        case 6:
+            areaAR=0;
+            areaAG=0;
+            areaAB=0;
+            break;
+        default:
+            areaAR=300;
+            areaAG=300;
+            areaAB=300;
+            break;
+        }
+        switch(seaColor[k])
+        {
+        case 1:
+            areaBR=255;
+            areaBG=0;
+            areaBB=0;
+            break;
+        case 2:
+            areaBR=255;
+            areaBG=255;
+            areaBB=0;
+            break;
+        case 3:
+            areaBR=0;
+            areaBG=0;
+            areaBB=255;
+            break;
+        case 4:
+            areaBR=0;
+            areaBG=255;
+            areaBB=0;
+            break;
+        case 5:
+            areaBR=139;
+            areaBG=0;
+            areaBB=139;
+            break;
+        case 6:
+            areaBR=0;
+            areaBG=0;
+            areaBB=0;
+            break;
+            areaBR=300;
+            areaBG=300;
+            areaBB=300;
+        }
+        for(int h=0;h<Lines;h++)
+        {
+            for(int w=0;w<Samples;w++)
+            {
+                if(QColor(tempImage.pixel(w,h)).red()==areaAR
+                        &&QColor(tempImage.pixel(w,h)).green()==areaAG
+                        &&QColor(tempImage.pixel(w,h)).blue()==areaAB)
+                {
+                    //tempImage.setPixel(w,h,valueA);
+                    footFlag[h*Samples+w]=1;
+                }
+                else if(QColor(tempImage.pixel(w,h)).red()==areaBR
+                        &&QColor(tempImage.pixel(w,h)).green()==areaBG
+                        &&QColor(tempImage.pixel(w,h)).blue()==areaBB)
+                {
+                    //tempImage.setPixel(w,h,valueB);
+                    footFlag[h*Samples+w]=2;
+                }
+
+            }
+        }
+    }
+    qDebug()<<"normal1";
+    //所有界限找出
+    //进行降噪
+    int flag=42;
+    for(int time=0;time<=1;time++)
+    {
+        for(int h=5;h<Lines-5;h++)
+        {
+            for(int w=5;w<Samples-5;w++)
+            {
+                int diw[4]={0,0,0,0},x_,y_;
+                for(int f=0 ; f<80 ; f++)
+                {
+                    x_ = w+xRoad[f];
+                    y_ = h+yRoad[f];
+                    diw[footFlag[y_*Samples+x_]]++;
+                    if(diw[footFlag[y_*Samples+x_]]==flag)
+                    {
+                        footFlag[h*Samples+w] = footFlag[y_*Samples+x_];
+                    }
+                }
+            }
+        }
+    }
+    qDebug()<<"normal2";
+    for(int h=1;h<Lines-1;h++)
+    {
+        for(int w=1;w<Samples-1;w++)
+        {
+            if(footFlag[h*Samples+w]==2&&footFlag[(h+1)*Samples+w]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[(h+1)*Samples+(w-1)]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[(h+1)*Samples+(w+1)]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[(h-1)*Samples+w]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[(h-1)*Samples+(w-1)]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[(h-1)*Samples+(w+1)]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[h*Samples+(w+1)]==1||
+                    footFlag[h*Samples+w]==2&&footFlag[h*Samples+(w-1)]==1
+                    )
+
+            {
+                image.setPixel(w,h,valueA);
+                orignImage[h*Samples+w]=1;
+            }
+            //找一条最长的海岸线
+        }
+    }
+    partImage=image;
+    rawImage=image;
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+    qDebug()<<"normal3";
+    //将原来的海岸线数组变成标记数组
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+            footFlag[h*Samples+w]=0;
+        }
+    }
+    //定义一个方向数组
+    int next[25][2]={ {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1},
+                      {-2,2},{-1,2},{0,2},{1,2},{2,2},{2,1},{2,0},{2,-1},
+                      {2,-2},{1,-2},{0,-2},{-1,-2},{-2,-2},{-2,-1},{-2,0},{-2,1}
+                    };
+    qDebug()<<"normal4";
+    int extends=2;
+    int footPath=24;
+    int nx=0,ny=0;//移动点
+    int x=0,y=0;//基点
+    try{
+        for(int h=0;h<Lines;h++)
+        {
+            for(int w=0;w<Samples;w++)
+            {
+
+                pointCount=0;
+                currentMaxNum=0;
+
+                if(orignImage[h*Samples+w]==1
+                        &&footFlag[h*Samples+w]==0)
+                {
+                    //qDebug()<<"w:"<<w<<"h:"<<h;
+                    line[currentMaxNum].x=w;
+                    line[currentMaxNum].y=h;
+
+                    //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
+                    footFlag[h*Samples+w]=1;
+                    currentMaxNum++;
+                    pointCount++;
+                    nx=w;ny=h;
+                    do
+                    {
+                        x=nx;y=ny;
+                        gotoFlag=false;
+                        for(int i=0;i<footPath;i++)
+                        {
+                            nx=x+next[i][0];
+                            ny=y+next[i][1];
+                            if(nx<extends||nx>Samples-extends||ny<extends||ny>Lines-extends)
+                            {
+                                continue;
+                            }
+                            //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
+                            //满足条件跳往下一个移动点
+                            if(orignImage[ny*Samples+nx]==1
+                                    &&footFlag[ny*Samples+nx]==0)
+                            {
+                                line[currentMaxNum].x=nx;
+                                line[currentMaxNum].y=ny;
+                                //image.setPixel(nx,ny,valueB);
+                                //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
+                                footFlag[ny*Samples+nx]=1;
+                                pointCount++;
+                                currentMaxNum++;
+                                //qDebug()<<"currentMaxNum"<<currentMaxNum;
+                                gotoFlag=true;
+                                break;
+                            }
+                        }
+                        //7个点都不满足返回上一个点
+                        if(gotoFlag==false)
+                        {
+                            //每返回一个点，都要把指针向下移动一格
+                            pointCount--;
+                            if(pointCount>-1)
+                            {
+                                //nx,ny坐标回到上一步坐标
+                                nx=line[pointCount].x;
+                                ny=line[pointCount].y;
+                                //允许循环，可以回到上一步
+                                gotoFlag=true;
+                            }
+
+                        }
+
+                    } while(gotoFlag);
+
+                    //qDebug()<<"current stake number is:"<<currentMaxNum;
+
+                    if(currentMaxNum>maxPointNum)
+                    {
+                        maxLineIndex=lineCount;
+                        maxPointNum=currentMaxNum;
+                        if(maxPointNum>100)
+                            qDebug()<<"maxPointNum"<<maxPointNum;
+                    }
+                    lineCount++;
+                    //qDebug()<<"-----------------------------------------";
+                }
+
+            }
+        }
+    }
+    catch(QString exception)
+    {
+        qDebug()<<exception;
+    }
+    partImage=image;
+    rawImage=image;
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+    qDebug()<<"firstLineCount"<<lineCount;
+    qDebug()<<"firstMaxLineIndex"<<maxLineIndex;
+    //重置标记
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+            footFlag[h*Samples+w]=0;
+        }
+    }
+    //线计数置空
+    lineCount=0;
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+
+            nx=w;ny=h;
+            pointCount=0;
+            currentMaxNum=0;
+            if(orignImage[h*Samples+w]==1
+                    &&footFlag[h*Samples+w]==0)
+            {
+                line[currentMaxNum].x=w;
+                line[currentMaxNum].y=h;
+                footFlag[h*Samples+w]=1;
+                currentMaxNum++;
+                pointCount++;
+
+                do
+                {
+                    x=nx;y=ny;
+                    gotoFlag=false;
+                    for(int i=0;i<footPath;i++)
+                    {
+                        nx=x+next[i][0];
+                        ny=y+next[i][1];
+                        //qDebug()<<"nx:"<< nx <<" ny:"<< ny;
+                        if(nx<extends||nx>Samples-extends||ny<extends||ny>Lines-extends)
+                        {
+                            continue;
+                        }
+                        //满足条件跳往下一个移动点
+                        if(orignImage[ny*Samples+nx]==1
+                                &&footFlag[ny*Samples+nx]==0)
+                        {
+                            //qDebug()<<lineCount;
+                            //if(lineCount==maxLineIndex)
+                            //{
+                            //    qDebug()<<"aaaaaaaaaaaaaaaa";
+                            //    qDebug()<<"i value is "<<i;
+                            //}
+                            line[currentMaxNum].x=nx;
+                            line[currentMaxNum].y=ny;
+                            footFlag[ny*Samples+nx]=1;
+                            pointCount++;
+                            currentMaxNum++;
+                            gotoFlag=true;
+                            break;
+                        }
+                    }
+                    //7个点都不满足返回上一个点
+                    if(gotoFlag==false)
+                    {
+                        //每返回一个点，都要把指针向下移动一格
+                        pointCount--;
+                        //如果没回到起始点，一直往回退
+                        if(pointCount>-1)
+                        {
+                            //nx,ny坐标回到上一步坐标
+                            nx=line[pointCount].x;
+                            ny=line[pointCount].y;
+                            //允许循环，可以回到上一步
+                            gotoFlag=true;
+                        }
+
+                    }
+                } while(gotoFlag);
+                //跳出所有循环
+                if(lineCount==maxLineIndex)
+                {
+                    w=Samples;
+                    h=Lines;
+                    break;
+                }
+                lineCount++;
+            }
+
+        }
+    }
+
+    image.fill(Qt::white);
+    qDebug()<<"lineCount"<<lineCount;
+    qDebug()<<"maxPointNum"<<maxPointNum;
+    for(int i=0;i<maxPointNum;i++)
+    {
+        image.setPixel(line[i].x,line[i].y,valueB);
+    }
+    image.setPixel(nx,ny,valueB);
+    partImage=image;
+    rawImage=image;
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+
+
+
+
+    //    设定当前位置的初值为入口位置；
+    //      do{
+    //        若当前位置可通，
+    //        则{
+    //         将当前位置插入栈顶； 　　　　　　// 纳入路径
+    //         若该位置是出口位置，则算法结束；
+    //          // 此时栈中存放的是一条从入口位置到出口位置的路径
+    //         否则切换当前位置的东邻方块为新的当前位置；
+    //         }
+    //        否则
+    //        {
+    //        若栈不空且栈顶位置尚有其他方向未被探索，
+    //        则设定新的当前位置为: 沿顺时针方向旋转找到的栈顶位置的下一相邻块；
+    //        若栈不空但栈顶位置的四周均不可通，
+    //        则{ 删去栈顶位置； 　　　　　　　　// 从路径中删去该通道块
+    //          若栈不空，则重新测试新的栈顶位置，
+    //          直至找到一个可通的相邻块或出栈至栈空；
+    //         }
+    //       }
+    //    } while (栈不空)；
+
+    delete[] line;
+    line=NULL;
+
+    delete[] orignImage;
+    orignImage=NULL;
+    delete[] footFlag;
+    footFlag=NULL;
+}
+
 
 //////////////////////////////////海岸线提取///////////////////////////////////////////////////////
 unsigned short int mark[10000][10000];   //count(max)=561875  有563行
@@ -1019,7 +1479,7 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
     regist_y=new int[Samples*Lines];
 
     QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb value;
+    QRgb value = qRgb(0, 0, 0);
     image.fill(Qt::white);//将图片背景填充为白色
     int final=0;
     count1=0,maxLine=0;
@@ -1028,7 +1488,7 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
     memset(regist_y ,0,Samples*Lines*sizeof(int));
     memset(mark,0,Samples*Lines*sizeof(unsigned short int));
     memset(longLineMark,0,Samples*Lines*sizeof(unsigned short int));
-    int i,j,r,g,b;
+    int i,j;
     QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
     QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
     QString fileStr=filePathName;
@@ -1193,14 +1653,34 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
     //                }
     //            }
     //    }
-    int time=0;
-    for(time=1;time<=1;time++)
-    {
-        flag=42;
-        for(i=Lines-5;i>=4;i--)
-            for(j=Samples-5;j>=4;j--)
-            {
+    //    int time=0;
+    //    for(time=1;time<=1;time++)
+    //    {
+    //        flag=42;
+    //        for(i=Lines-5;i>=4;i--)
+    //            for(j=Samples-5;j>=4;j--)
+    //            {
+    //                int diw[4]={0,0,0,0},x_,y_;
+    //                for(int f=0 ; f<80 ; f++)
+    //                {
+    //                    x_ = i+x3_go[f];
+    //                    y_ = j+y3_go[f];
+    //                    diw[mark[x_][y_]]++;
 
+    //                    if(diw[mark[x_][y_]]==flag)
+    //                    {
+    //                        mark[i][j] = mark[x_][y_];
+    //                    }
+    //                }
+    //            }
+    //    }
+    int flag=42;
+    for(int time=0;time<=1;time++)
+    {
+        for(int i=5;i<Lines-5;i++)
+        {
+            for(int j=5;j<Samples-5;j++)
+            {
                 int diw[4]={0,0,0,0},x_,y_;
                 for(int f=0 ; f<80 ; f++)
                 {
@@ -1214,7 +1694,9 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
                     }
                 }
             }
+        }
     }
+
 
     qDebug()<<"normal in down point";
     /******************************************49宫格***************************************/
@@ -1257,14 +1739,13 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
                     (mark[i][j]==2&&mark[i][j+1]==1) )
             {
                 longLineMark[i][j]=1;           //   chang1=1记录的是符合规则的线
-                //                                r=0;b=0;g=0; //黑
-                //                                value = qRgb(r, g, b);
-                //                                image.setPixel(j,i, value);
+                //                value = qRgb(0, 0, 0);
+                //                image.setPixel(j,i, value);
             }
         }
     }//for
-    //        fileStr.append(".tif");
-    //        image.save(fileStr);
+    //    fileStr.append(".tif");
+    //    image.save(fileStr);
 
     //    for(i=2;i<=Lines-2;i++)
     //    {
@@ -1320,8 +1801,8 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
         for(j=1;j<=Samples-2;j++)
         {
             count1++;//用作计数的
-            regist_x[count1]=i;
-            regist_y[count1]=j;
+            regist_x[count1]=i;//记录x坐标
+            regist_y[count1]=j;//记录y坐标
             mark[i][j]=1;   //此时的change是book
             dfs(i,j);
         }
@@ -1377,8 +1858,6 @@ void filedeal:: seaLineGet(int *seaColor,int *landColor)
         {
             if(longLineMark[i][j]==2 )
             {
-                r=0;b=0;g=0; //黑
-                value = qRgb(r, g, b);
                 image.setPixel(j,i, value);
             }
         }
@@ -1471,24 +1950,35 @@ void filedeal::lowPointsStart()
         }
         mytempChange=false;
     }*/
-
+    int progressValue=0;
+    int lowCount=0;
+    emit setProgressRange(0,100);
+    emit setProgressValue(0);
     for(int time=0;time<2;time++)
     {
 
         for(int i=18;i>=1;i--)
         {
             lowBadPoints(i*5,i*5);
+            lowCount++;
+            progressValue=1.38*lowCount;
+            emit setProgressValue(progressValue);
         }
         for(int i=1;i<=18;i++)
         {
             lowBadPoints(i*5,i*5);
+            lowCount++;
+            progressValue=1.38*lowCount;
+            emit setProgressValue(progressValue);
         }
         visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     }
+    emit complete(QString::fromLocal8Bit("降噪完成"));
+
 }
 ////降噪函数
 void filedeal::lowBadPoints(int w,int h){
-    qDebug()<<"lowPoints in";
+    //    qDebug()<<"lowPoints in";
     //    int h=Lines/hNumber;//降噪块的高度
     //    int w=Samples/wNumber;//降噪块的宽度
     QRgb value;
@@ -1583,7 +2073,7 @@ void filedeal::lowBadPoints(int w,int h){
             }
             if(boxNumber==0)
             {
-                qDebug()<<"there is /0";
+                //                qDebug()<<"there is /0";
                 continue;
             }
             //            qDebug()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
@@ -1716,7 +2206,7 @@ void filedeal::lowBadPoints(int w,int h){
             }
             if(boxNumber==0)
             {
-                qDebug()<<"there is /0";
+                //                qDebug()<<"there is /0";
                 continue;
             }
             //            qDebug()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
@@ -1757,8 +2247,13 @@ void filedeal::saveTif()
     QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
     QString fileStr=filePathName;
     fileStr=fileStr+"Rule"+str+".tif";
-    partImage.save(fileStr.toStdString().c_str());
-    //.toStdString().c_str()
+    if(!partImage.isNull())
+    {
+        partImage.save(fileStr.toStdString().c_str());
+        QString message=QString::fromLocal8Bit("文件已保存到");
+        message=message+fileStr;
+        emit messageInfo(message,0);
+    }
 }
 ////保存二进制文件
 void filedeal::saveBinary()
@@ -1776,50 +2271,59 @@ void filedeal::saveBinary()
         return;
     }
     int g;
-    for(int y=0;y<Lines;y++)
+    if(!partImage.isNull())
     {
-        for(int x=0;x<Samples;x++)
+        for(int y=0;y<Lines;y++)
         {
-            if(QColor(partImage.pixel(x,y)).red()==255&&
-                    QColor(partImage.pixel(x,y)).green()==0&&
-                    QColor(partImage.pixel(x,y)).blue()==0)
+            for(int x=0;x<Samples;x++)
             {
-                g=1;
+                if(QColor(partImage.pixel(x,y)).red()==255&&
+                        QColor(partImage.pixel(x,y)).green()==0&&
+                        QColor(partImage.pixel(x,y)).blue()==0)
+                {
+                    g=1;
+                }
+                else if(QColor(partImage.pixel(x,y)).red()==255&&
+                        QColor(partImage.pixel(x,y)).green()==255&&
+                        QColor(partImage.pixel(x,y)).blue()==0)
+                {
+                    g=2;
+                }
+                else if(QColor(partImage.pixel(x,y)).red()==0&&
+                        QColor(partImage.pixel(x,y)).green()==0&&
+                        QColor(partImage.pixel(x,y)).blue()==255)
+                {
+                    g=3;
+                }
+                else if(QColor(partImage.pixel(x,y)).red()==0&&
+                        QColor(partImage.pixel(x,y)).green()==255&&
+                        QColor(partImage.pixel(x,y)).blue()==0)
+                {
+                    g=4;
+                }
+                else if(QColor(partImage.pixel(x,y)).red()==139&&
+                        QColor(partImage.pixel(x,y)).green()==0&&
+                        QColor(partImage.pixel(x,y)).blue()==139)
+                {
+                    g=5;
+                }
+                else if(QColor(partImage.pixel(x,y)).red()==0&&
+                        QColor(partImage.pixel(x,y)).green()==0&&
+                        QColor(partImage.pixel(x,y)).blue()==0)
+                {
+                    g=6;
+                }
+                fwrite(&g,1,1,fp);
             }
-            else if(QColor(partImage.pixel(x,y)).red()==255&&
-                    QColor(partImage.pixel(x,y)).green()==255&&
-                    QColor(partImage.pixel(x,y)).blue()==0)
-            {
-                g=2;
-            }
-            else if(QColor(partImage.pixel(x,y)).red()==0&&
-                    QColor(partImage.pixel(x,y)).green()==0&&
-                    QColor(partImage.pixel(x,y)).blue()==255)
-            {
-                g=3;
-            }
-            else if(QColor(partImage.pixel(x,y)).red()==0&&
-                    QColor(partImage.pixel(x,y)).green()==255&&
-                    QColor(partImage.pixel(x,y)).blue()==0)
-            {
-                g=4;
-            }
-            else if(QColor(partImage.pixel(x,y)).red()==139&&
-                    QColor(partImage.pixel(x,y)).green()==0&&
-                    QColor(partImage.pixel(x,y)).blue()==139)
-            {
-                g=5;
-            }
-            else if(QColor(partImage.pixel(x,y)).red()==0&&
-                    QColor(partImage.pixel(x,y)).green()==0&&
-                    QColor(partImage.pixel(x,y)).blue()==0)
-            {
-                g=6;
-            }
-            fwrite(&g,1,1,fp);
         }
+        QString message=QString::fromLocal8Bit("文件已保存到");
+        message=message+fileStr;
+        emit messageInfo(message,0);
     }
-    fclose(fp);
+    if(fp!=NULL)
+    {
+        fclose(fp);
+    }
 }
 void filedeal::moveLine(int x,int y)
 {
@@ -1954,6 +2458,14 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     Lines=imageF.height();
     qDebug()<<Samples;
     qDebug()<<Lines;
+    if(Samples<500)
+    {
+        currentWidth=Samples;
+    }
+    if(Lines<500)
+    {
+        currentHeight=Lines;
+    }
     //emit sendSize(Samples,Lines);
     //fLine是靠近海的那条海岸线
     //sLine是靠近陆地的那条海岸线
@@ -2001,6 +2513,9 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
 
         }
     }
+    --x;
+    --y;
+    calculateDiffer(fLine,sLine,x,y);
     int min=0;
     int max=0;
     if(x>y)
@@ -2023,13 +2538,10 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     //        qDebug()<<"sLine:"<<i<<" x:"<<sLine[i].x<<" y:"<<sLine[i].y<<"\n";
     //    }
     QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb valueF;
-    QRgb valueS;
-    QRgb valueT;
+    QRgb valueF=qRgb(0,0,255);
+    QRgb valueS=qRgb(255,0,0);
+    QRgb valueT=qRgb(0,255,0);
     image.fill(Qt::white);//将图片背景填充为白色
-    valueF=qRgb(0,0,255);
-    valueS=qRgb(255,0,0);
-    valueT=qRgb(0,255,0);
     for(int i=0;i<max;i++)
     {
         image.setPixel(fLine[i].x,fLine[i].y,valueF);
@@ -2102,13 +2614,10 @@ void filedeal::move(point**lineSet,point standPoint,int number)
         //        standPoint=tLine[i];//重新指定标准点
     }
     QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb valueF;
-    QRgb valueS;
-    QRgb valueT;
+    QRgb valueF=qRgb(0,0,255);
+    QRgb valueS=qRgb(255,0,0);
+    QRgb valueT=qRgb(0,0,0);
     image.fill(Qt::white);//将图片背景填充为白色
-    valueF=qRgb(0,0,255);
-    valueS=qRgb(255,0,0);
-    valueT=qRgb(0,0,0);
     for(int i=0;i<number;i++)
     {
         //        image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
@@ -2119,68 +2628,12 @@ void filedeal::move(point**lineSet,point standPoint,int number)
     rawImage=image;
     partImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
+    averageLine(image,Samples,Lines);
     //        unLinkPoint(tLine,number);
     //        rawImage=partImage;
     //        visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
-    averageLine(image,Samples,Lines);
 }
-/**
- * @brief filedeal::unLinkPoint 判断点是否连在海岸线上
- * @param Line
- * @param number
- * @return
- */
-int * filedeal::unLinkPoint(point* Line,int number)
-{
-    //(x,y)
-    //(x+1,y)
-    //(x-1,y)
-    //(x,y+1)
-    //(x,y-1)
-    //(x+1,y+1)
-    //(x+1,y-1)
-    //(x-1,y+1)
-    //(x-1,y-1)
-    bool flag=false;
-    int count=0;
-    int *index=new int[number];
-    point p;
-    for(int i=0;i<number;i++)
-    {
-        p=Line[i];
-        flag=false;
-        for(int j=-1;j<2;j++)
-        {
-            for(int k=-1;k<2;k++)
-            {
-                p.x=Line[i].x+j;
-                p.y=Line[i].y+k;
-                if(p.x!=Line[i].x&&p.y!=Line[i].y)
-                {
-                    if(pExistLine(p,Line,number))
-                    {
-                        j=2;
-                        k=2;
-                        flag=true;
-                    }
-                }
-            }
-        }
-        if(!flag)
-        {
-            index[count]=i;
-            count++;
-        }
-    }
-    qDebug()<<"number"<<number;
-    qDebug()<<"不在线上的点的数量是："<<count;
-    for(int i=0;i<count;i++)
-    {
-        int lineIndex=pToLminIndex(Line[index[i]],Line,number);//返回不在海岸线上的点与海岸线上距离最近的点的index
-        partImage=linkLine(partImage,Line[lineIndex],Line[index[i]]);
-    }
-    return index;
-}
+
 int filedeal::pToLminIndex(point alonePoint,point *Line,int number)
 {
     int minIndex=0;
@@ -2203,64 +2656,7 @@ int filedeal::pToLminIndex(point alonePoint,point *Line,int number)
     return minIndex;
 }
 
-/**
- * @brief filedeal::linkLine 将孤立两点连接成线
- * @param image
- * @param p1 点1
- * @param p2 点2
- * @return 返回连接后的图像
- */
 
-QImage filedeal::linkLine(QImage image,point p1,point p2)
-{
-    //    if(distance(p1,p2)>150)
-    //    {
-    //        return image;
-    //    }
-    point minP,maxP;
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
-    if(p1.x<p2.x)
-    {
-        minP.x=p1.x;
-        maxP.x=p2.x;
-    }
-    else
-    {
-        minP.x=p2.x;
-        maxP.x=p1.x;
-    }
-
-    if(p1.y<p2.y)
-    {
-        minP.y=p1.y;
-        maxP.y=p2.y;
-    }
-    else
-    {
-        minP.y=p2.y;
-        maxP.y=p1.y;
-    }
-    //    qDebug()<<"p1"<<p1.x<<"p1"<<p1.y;
-    //    qDebug()<<"p2"<<p2.x<<"p2"<<p2.y<<"\n";
-    //    qDebug()<<"minX"<<minP.x<<"maxX"<<maxP.x;
-    //    qDebug()<<"minY"<<minP.y<<"maxY"<<maxP.y<<"\n";
-    for(int h=minP.y;h<maxP.y;h++)
-    {
-        for(int w=minP.x;w<maxP.x;w++)
-        {
-            point test;
-            test.x=w;
-            test.y=h;
-
-            if(judgePoint(p1,p2,test))
-            {
-                image.setPixel(w,h,valueF);
-            }
-        }
-    }
-    return image;
-}
 
 /**
  * @brief filedeal::pExistLine 判断点是否在海岸线上（子函数，父函数是unLinkPoint）
@@ -2324,30 +2720,9 @@ point* filedeal::reorderSLine(point *fLineP,point *sLineP,int number)
             {
                 minDistance=tempDistance;
                 minIndex=j;
-                //                                it=indexSet.find(j);
-                //                                if(it!=indexSet.end())
-                //                                {
-                //                                    //还存在
-                //                                    exist=true;
-                //                                }
-                //                                else
-                //                                {
-                //                                    //不存在
-                //                                    exist=false;
-                //                                }
-                //                                if(exist)
-                //                                {
-                //                                    minDistance=tempDistance;
-                //                                    minIndex=j;
-                //                                }
-
             }
         }
-        //        indexSet.erase(indexSet.find(minIndex));
-        //        if(distance(fLineP[i],sLineP[minIndex])>30)
-        //        {
-        //            qDebug()<<"th"<<i<<"maybe ERROR"<<"finalminDistance"<<minDistance<<" "<<minIndex<<"\n";
-        //        }
+
         tLine[i]=sLineP[minIndex];
     }
     return tLine;
@@ -2541,9 +2916,6 @@ int filedeal::minDistanceIndex(point standPoint,point *sLine,int number,QSet<int
 point filedeal::calculatePoint(point fPoint,point sPoint,double ratio)
 {
     double l=distance(sPoint,fPoint)*ratio;
-    //    double l=8.0;
-    //(standPoint-sLinePoint)/(sLinePoint-fLinePoint)*(sPoint-fPoint);
-    //    qDebug()<<"distance(sPoint,fPoint)"<<distance(sPoint,fPoint);
     thisCount++;
 
     double k,b;
@@ -2596,20 +2968,6 @@ point filedeal::calculatePoint(point fPoint,point sPoint,double ratio)
         }
 
     }
-    //    if(l>20)
-    //    {
-    //        qDebug()<<thisCount<<"fpoint"<<"  x:"<<fPoint.x<<"  y"<<fPoint.y;
-    //        qDebug()<<thisCount<<"spoint"<<"  x:"<<sPoint.x<<"  y"<<sPoint.y;
-    //        qDebug()<<"ratio"<<ratio;
-    //        qDebug()<<"l"<<l;
-    //        qDebug()<<"newPoint:  x"<<newPoint.x<<"  y"<<newPoint.y<<"\n";
-    //        ERRORCount++;
-    //    }
-
-    //    if(newPoint.x>2729||newPoint.x<0||newPoint.y>1302||newPoint.y<0)
-    //    {
-    //        qDebug()<<"ERROR new point value out of range canvas";
-    //    }
     return newPoint;
 }
 
@@ -2762,13 +3120,10 @@ void filedeal::oldMove(point**lineSet,point standPoint,int number)
     //        standPoint=tLine[i];
     //    }
     QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb valueF;
-    QRgb valueS;
-    QRgb valueT;
+    QRgb valueF=qRgb(0,0,255);
+    QRgb valueS=qRgb(255,0,0);
+    QRgb valueT=qRgb(0,0,0);
     image.fill(Qt::white);//将图片背景填充为白色
-    valueF=qRgb(0,0,255);
-    valueS=qRgb(255,0,0);
-    valueT=qRgb(0,0,0);
     for(int i=0;i<number;i++)
     {
         image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
@@ -2798,8 +3153,7 @@ void filedeal::averageLine(QImage image, int width, int height)
     int cut=9;
     QImage newImage(width, height, QImage::Format_RGB32);
     newImage.fill(Qt::white);//将图片背景填充为白色
-    QRgb valueF;
-    valueF=qRgb(255,0,0);
+    QRgb valueF=qRgb(255,0,0);
     int count=0;
     point *tempPoi=new point[100];
     for(int h=0;h<height/cut-1;h++)
@@ -2826,6 +3180,7 @@ void filedeal::averageLine(QImage image, int width, int height)
                     }
                 }
             }
+            count-=1;
             if(count>0)
             {
                 //求平均值
@@ -2846,37 +3201,24 @@ void filedeal::averageLine(QImage image, int width, int height)
     partImage=newImage;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,newImage);
     linkPoint(newImage,Samples,Lines);
+    delete[] tempPoi;
+    tempPoi=NULL;
 }
-
-void filedeal::linkPoint(QImage image,int width,int height)
+////废弃不用
+point* filedeal::averagePoint(point* line,int number,point* minDistanceLine)
 {
     int count=0;
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
-    point *tempPoint=new point[Samples*10];
-    for(int h=0;h<height;h++)
-    {
-        for(int w=0;w<width;w++)
-        {
-            if(QColor(image.pixel(w,h)).red()==255&&
-                    QColor(image.pixel(w,h)).green()==0&&
-                    QColor(image.pixel(w,h)).blue()==0)
-            {
-                //                image.setPixel(w,h,valueF);
-                tempPoint[count].x=w;
-                tempPoint[count].y=h;
-                count++;
-            }
-        }
-    }
-    qDebug()<<"found point numebr is "<<count;
-    //    printPointSet(count,tempPoint);
-    //判断点是否在线段上
-    //或者过定点的曲线
-    //先找最小范围
+    int radius=11;
+    point *dealLine=new point[number];
+    point *tempP=new point[20];
 
-    //////////////////////////////////////找图中最左边的点////////////////////////////////////////////////////
-    //先找最左边的点
+    QSet<int> indexSet;
+    for(int i=0;i<number;i++)
+    {
+        indexSet.insert(i);
+    }
+    QSet<int>::iterator it;
+    //如果海岸线是横着的先找最左边的点
     point mostLeft;
     mostLeft.x=tempPoint[0].x;
     int mostLeftIndex=0;
@@ -2889,13 +3231,193 @@ void filedeal::linkPoint(QImage image,int width,int height)
             mostLeftIndex=i;
         }
     }
+    //如果海岸线是竖着的先找最上面的点
+    point mostTop;
+    mostTop.y=tempPoint[0].y;
+    int mostTopIndex=0;
+    for(int i=0;i<count;i++)
+    {
+        if(tempPoint[i].y<mostTop.y)
+        {
+            mostTop.x=tempPoint[i].x;
+            mostTop.y=tempPoint[i].y;
+            mostTopIndex=i;
+        }
+    }
 
     //第二个坐标
-    int currentIndex=mostLeftIndex;
+    int currentIndex;
+    if(mostTop.y<mostLeft.x)
+    {
+        currentIndex=mostTopIndex;
+    }
+    else
+    {
+        currentIndex=mostLeftIndex;
+    }
+    indexSet.remove(currentIndex);//移除第0个
+    dealLine[0].x=minDistanceLine[0].x;
+    dealLine[0].y=minDistanceLine[0].y;
 
+    for(int i=1;i<number;i++)
+    {
+        count=0;
+        //找噪点
+        for(int j=0;j<number;j++)
+        {
+            it=indexSet.find(j);
+            if(distance(dealLine[i-1],line[j])<=radius&&it!=indexSet.end())
+            {
+                tempP[count].x=line[j].x;
+                tempP[count].y=line[j].y;
+                indexSet.remove(j);
+                count++;
+            }
+
+        }
+        int sumX=0,sumY=0,averageX=-1,averageY=-1;
+        count-=1;
+        //求和
+        for(int k=0;k<count;k++)
+        {
+            sumX+=tempP[k].x;
+            sumY+=tempP[k].y;
+        }
+        //求平均值
+        if(count>0)
+        {
+            averageX=sumX/count;
+            averageY=sumY/count;
+            dealLine[i].x=averageX;
+            dealLine[i].y=averageY;
+        }
+        else
+        {
+            //            qDebug()<<"this is a point ............";
+            dealLine[i]=minDistanceLine[i];
+        }
+
+    }
+    delete[]tempP;
+    tempP=NULL;
+    return dealLine;
+}
+point* filedeal::newAveragePoint(point* line,int number)
+{
+    int count=0;
+    point *dealLine=new point[number];
+    double minDistance=0,maxDistance=0;
+    point *tempP=new point[20];
+    for(int i=0;i<number-2;i++)
+    {
+        //距离一
+        minDistance=distance(line[i],line[i+1]);
+        //距离二
+        maxDistance=distance(line[i+1],line[i+2])+minDistance;
+        count=0;
+        for(int j=0;j<number;j++)
+        {
+            if(distance(line[i],line[j])>minDistance&&distance(line[i],line[j])<maxDistance)
+            {
+                //噪点，求平均
+                tempP[count]=line[j];
+                count++;
+            }
+
+        }
+        int sumX=0,sumY=0,averageX=-1,averageY=-1;
+        tempP[count]=line[i+1];
+        //求和
+        for(int k=0;k<count;k++)
+        {
+            sumX+=tempP[k].x;
+            sumY+=tempP[k].y;
+        }
+        //求平均值
+        if(count>0)
+        {
+            averageX=sumX/count;
+            averageY=sumY/count;
+            //平均点
+            dealLine[i].x=averageX;
+            dealLine[i].y=averageY;
+        }
+        else //如果没有平均点
+        {
+            dealLine[i]=line[i+1];
+        }
+    }
+    delete[]tempP;
+    tempP=NULL;
+    return dealLine;
+}
+void filedeal::linkPoint(QImage image,int width,int height)
+{
+    int count=0;
+    int breakValue=0;
+    QRgb valueF=qRgb(0,0,0);
+    QRgb noVisiusl=qRgb(255,255,255);
+    point *tempPoint=new point[Samples*10];
+    for(int h=0;h<height;h++)
+    {
+        for(int w=0;w<width;w++)
+        {
+            if(QColor(image.pixel(w,h)).red()==255&&
+                    QColor(image.pixel(w,h)).green()==0&&
+                    QColor(image.pixel(w,h)).blue()==0)
+            {
+                tempPoint[count].x=w;
+                tempPoint[count].y=h;
+                count++;
+            }
+        }
+    }
+    qDebug()<<"found point numebr is "<<count;
+    //    printPointSet(count,tempPoint);
+    //判断点是否在线段上
+    //或者过定点的曲线
+    //先找最小范围
+
+
+    //////////////////////////////////////找图中最左边的点////////////////////////////////////////////////////
+    //如果海岸线是横着的先找最左边的点
+    point mostLeft;
+    mostLeft.x=tempPoint[0].x;
+    int mostLeftIndex=0;
+    for(int i=0;i<count;i++)
+    {
+        if(tempPoint[i].x<mostLeft.x)
+        {
+            mostLeft.x=tempPoint[i].x;
+            mostLeft.y=tempPoint[i].y;
+            mostLeftIndex=i;
+        }
+    }
+    //如果海岸线是竖着的先找最上面的点
+    point mostTop;
+    mostTop.y=tempPoint[0].y;
+    int mostTopIndex=0;
+    for(int i=0;i<count;i++)
+    {
+        if(tempPoint[i].y<mostTop.y)
+        {
+            mostTop.x=tempPoint[i].x;
+            mostTop.y=tempPoint[i].y;
+            mostTopIndex=i;
+        }
+    }
+
+    //第二个坐标
+    int currentIndex;
+    if(mostTop.y<mostLeft.x)
+    {
+        currentIndex=mostTopIndex;
+    }
+    else
+    {
+        currentIndex=mostLeftIndex;
+    }
     /////////////////////////////////////////////////////////////////////
-
-
     //tempPoint[i],tempPoint[i+1]最小x,最大x
     QSet<int> indexSet;
     point *index=new point[count];
@@ -2905,59 +3427,78 @@ void filedeal::linkPoint(QImage image,int width,int height)
         indexSet.insert(i);
     }
 
-    //    count=3;////////测试专用要删掉
     count--;
     for(int i=0;i<count;i++)
     {
-        //        int index1=i;
-        //        int index2=ptpMinDisIndex(i,tempPoint,count,indexSet);//最近点下标
-        //        int index2=ptpMinDisIndex(i,tempPoint,count,index);//最近点下标
-
         index[i].x=currentIndex;
         indexSet.remove(currentIndex);//去重复点
         currentIndex=ptpMinDisIndex(currentIndex,tempPoint,count,indexSet);//最近点下标
         index[i].y=currentIndex;
         indexSet.remove(currentIndex);//去重复点
-        if(distance(tempPoint[index[i].x],tempPoint[index[i].y])<100)
+    }
+    point *p=new point[count];
+    for(int i=0;i<count;i++)
+    {
+        p[i]=tempPoint[index[i].x];
+    }
+    delete[] p;
+    p=NULL;
+
+    //连线
+    for(int i=0;i<count;i++)
+    {
+        //如果距离太大自动跳出循环，不再往下连线
+        if(distance(tempPoint[index[i].x],tempPoint[index[i].y])>100)
         {
-//            image=linkLine(image,tempPoint[index[i].x],tempPoint[index[i].y]);
-            image=midPointLink(image,tempPoint[index[i].x],tempPoint[index[i].y]);
+            break;
         }
-
-        partImage=image;
-        rawImage=image;
-        visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
-        //        qDebug()<<index[i].x;
-        //        qDebug()<<index[i].y;
-        //        qDebug()<<tempPoint[index[i].x].x<<tempPoint[index[i].x].y;
-        //        qDebug()<<tempPoint[index[i].y].x<<tempPoint[index[i].y].y;
-        //        qDebug()<<"\n";
+        breakValue++;
+        image=midPointLink(image,tempPoint[index[i].x],tempPoint[index[i].y],valueF);
     }
-    QImage image1(Samples, Lines, QImage::Format_RGB32);
-    image1.fill(Qt::white);
-    QRgb valueP;
-    valueP=qRgb(0,0,0);
-
-    for(int i=0;i<count;i++)
+    //噪点去除
+    for(int i=breakValue-1;i<count;i++)
     {
-        image1.setPixel(tempPoint[index[i].x].x,tempPoint[index[i].x].y,valueP);
-    }
-    image1.save("D:\\averageline.tif");
-
-    FILE *fp;
-    fp=fopen("D:\\binaryLine","wb");
-    if(fp==NULL)
-    {
-        qDebug()<<"ERROR";
-        return;
+        image.setPixel(tempPoint[index[i].x].x,tempPoint[index[i].x].y,noVisiusl);
     }
 
-    for(int i=0;i<count;i++)
-    {
-        fwrite(&tempPoint[index[i].x].x,2,1,fp);
-        fwrite(&tempPoint[index[i].x].y,2,1,fp);
-    }
-    fclose(fp);
+    //        point *p=new point[count];
+    //        for(int i=0;i<count;i++)
+    //        {
+    //            p[i]=tempPoint[index[i].x];
+    //        }
+    //        tempPoint=averagePoint(tempPoint,count,p);
+    //        tempPoint=newAveragePoint(p,count);
+    //        QImage image1(Samples, Lines, QImage::Format_RGB32);
+    //        image1.fill(Qt::white);
+
+    //        delete[] p;
+    //        p=NULL;
+    //        for(int i=0;i<count-2;i++)
+    //        {
+    //            if(distance(tempPoint[i],tempPoint[i+1])>100)
+    //            {
+    //                break;
+    //            }
+    //            image1=midPointLink(image1,tempPoint[i],tempPoint[i+1],valueF);
+    ////            image1.setPixel(tempPoint[i].x,tempPoint[i].y,valueF);
+    //        }
+    //        partImage=image1;
+    //        rawImage=image1;
+    //        visiualdraw(visiualDrawP,currentHeight,currentWidth,image1);
+
+    //    FILE *fp;
+    //    fp=fopen("D:\\binaryLine","wb");
+    //    if(fp==NULL)
+    //    {
+    //        qDebug()<<"ERROR";
+    //        return;
+    //    }
+    //    for(int i=0;i<count;i++)
+    //    {
+    //        fwrite(&tempPoint[index[i].x].x,2,1,fp);
+    //        fwrite(&tempPoint[index[i].x].y,2,1,fp);
+    //    }
+    //    fclose(fp);
 
     delete[] tempPoint;
     tempPoint=NULL;
@@ -2966,71 +3507,6 @@ void filedeal::linkPoint(QImage image,int width,int height)
     partImage=image;
     rawImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
-}
-/**
- * @brief filedeal::judgeExist 判断下标组是否被用过
- * @param number
- * @param index1
- * @param index2
- * @param indexSet
- * @return
- */
-////////暂时不用
-bool filedeal::judgeExist(int number,int index1,int index2,point *indexSet)
-{
-    //查找是否用到过该组下标
-    for(int i=0;i<number;i++)
-    {
-        //该组下标已经用过
-        if(index1==indexSet[i].x&&index2==indexSet[i].y||index2==indexSet[i].x&&index1==indexSet[i].y)
-        {
-            return true;
-        }
-
-    }
-    //该组下标还未用过
-    return false;
-}
-/**
- * @brief filedeal::ptpMinDisIndex 返回距离最小的点
- * @param index
- * @param p
- * @param pNumber
- * @param indexSet
- * @return
- */
-////////暂时不用
-int filedeal::ptpMinDisIndex(int count,int index,point*p,int pNumber,point *indexSet)
-{
-    int *dis=new int[pNumber];
-    for(int i=0;i<pNumber;i++)
-    {
-        dis[i]=distance(p[index],p[i]);
-    }
-    //自己跟自己的距离设置成最大
-    dis[index]=65535;
-    int  minDistance=65535;
-
-    int tempMin=0;
-    int minIndex=0;
-    for(int i=0;i<pNumber;i++)
-    {
-        tempMin=dis[i];
-        if(tempMin<minDistance)
-        {
-            //如果该组下标没被用过，说明两点未连成线
-            //若该组下标已经被用过，则跳过该最小距离并不动原来最小的下标
-            if(!judgeExist(count,index,i,indexSet))
-            {
-                minDistance=tempMin;
-                minIndex=i;
-            }
-
-        }
-    }
-    delete[] dis;
-    dis=NULL;
-    return minIndex;
 }
 
 /**
@@ -3042,7 +3518,6 @@ int filedeal::ptpMinDisIndex(int count,int index,point*p,int pNumber,point *inde
  */
 int filedeal::ptpMinDisIndex(int index,point*p,int pNumber,QSet<int> indexSet)
 {
-    //    bool exist=false;
     QSet<int>::iterator it;
     int *dis=new int[pNumber];
     for(int i=0;i<pNumber;i++)
@@ -3072,59 +3547,244 @@ int filedeal::ptpMinDisIndex(int index,point*p,int pNumber,QSet<int> indexSet)
     for(int i=0;i<pNumber;i++)
     {
         tempMin=dis[i];
-        //        exist=false;
         if(tempMin<minDistance)
         {
-            //            it=indexSet.find(i);
-            //            if(it!=indexSet.end())
-            //            {
-            //                //还存在
-            //                exist=true;
-            //            }
-            //            else
-            //            {
-            //                //不存在
-            //                exist=false;
-            //            }
-            //            if(exist)
-            //            {
+
             minDistance=tempMin;
             minIndex=i;
-            //                qDebug()<<"mindistance is "<<distance(p[index],p[minIndex]);
-            //            }
 
         }
     }
     //    qDebug()<<"mindistance is "<<distance(p[index],p[minIndex])<<"\n";
 
-
     delete[] dis;
     dis=NULL;
     return minIndex;
 }
+
 /**
- * @brief filedeal::judgePoint//向量法：判断中间一点 是否在直线上
+ * @brief filedeal::midPointLink 生成直线的中点画法
+ * @param image
  * @param p1
  * @param p2
- * @param testPoint 判断点是否在线段上
  * @return
  */
-bool filedeal::judgePoint(point p1,point p2,point testPoint)
+QImage filedeal:: midPointLink(QImage image,point p1,point p2,QRgb color)
 {
-    double s1,s2,t1,t2;
-    s1=testPoint.x-p1.x;
-    t1=testPoint.y-p1.y;
-    s2=p1.x-p2.x;
-    t2=p1.y-p2.y;
-    if(-5<=(s1*t2-t1*s2)&&(s1*t2-t1*s2)<=5)
+    int x = p1.x, y = p1.y;
+    int a = p1.y - p2.y, b = p2.x - p1.x;
+    int cx = (b >= 0 ? 1 : (b = -b, -1));
+    int cy = (a <= 0 ? 1 : (a = -a, -1));
+
+    image.setPixel(x, y, color);
+
+    int d, d1, d2;
+    if (-a <= b)     // 斜率绝对值 <= 1
     {
-        return true;
+        d = 2 * a + b;
+        d1 = 2 * a;
+        d2 = 2 * (a + b);
+        while(x != p2.x)
+        {
+            if (d < 0)
+            {
+                y += cy, d += d2;
+            }
+            else
+            {
+                d += d1;
+            }
+            x += cx;
+            image.setPixel(x, y, color);
+        }
     }
-    else
+    else                // 斜率绝对值 > 1
     {
-        return false;
+        d = 2 * b + a;
+        d1 = 2 * b;
+        d2 = 2 * (a + b);
+        while(y != p2.y)
+        {
+            if(d < 0)
+            {
+                d += d1;
+            }
+            else
+            {
+                x += cx, d += d2;
+            }
+            y += cy;
+            image.setPixel(x, y, color);
+        }
     }
+    return image;
 }
+/**
+ * @brief filedeal::calculateDiffer 计算与标准海岸线的误差
+ * @param calLine
+ * @param stdLine
+ * @param calNumber
+ * @param stdNumber
+ */
+void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int stdNumber)
+{
+    double calSum=0,stdSum=0;
+    double calAverage,stdAverage;
+    for(int i=0;i<calNumber;i++)
+    {
+        int index1=i;
+        int index2=oldMinDistanceIndex(calLine[i],stdLine,calNumber);
+        calSum+=distance(calLine[index1],stdLine[index2]);
+    }
+    calAverage=calSum/calNumber;
+    for(int i=0;i<stdNumber;i++)
+    {
+        int index1=i;
+        int index2=oldMinDistanceIndex(stdLine[i],calLine,stdNumber);
+        stdSum+=distance(stdLine[index1],calLine[index2]);
+    }
+    stdAverage=stdSum/stdNumber;
+    qDebug()<<"calAverage"<<calAverage;
+    qDebug()<<"stdAverage"<<stdAverage;
+    qDebug()<<calAverage-stdAverage;
+}
+
+///**
+// * @brief filedeal::unLinkPoint 判断点是否连在海岸线上
+// * @param Line
+// * @param number
+// * @return
+// */
+//QImage filedeal::unLinkPoint(QImage image,point* Line,int number)
+//{
+//    //(x,y)
+//    //(x+1,y)
+//    //(x-1,y)
+//    //(x,y+1)
+//    //(x,y-1)
+//    //(x+1,y+1)
+//    //(x+1,y-1)
+//    //(x-1,y+1)
+//    //(x-1,y-1)
+//    QRgb value=qRgb(255,255,255);
+//    bool flag=false;
+//    int count=0;
+//    int *index=new int[number];
+//    point p;
+//    for(int i=0;i<number;i++)
+//    {
+//        p=Line[i];
+//        flag=false;
+//        for(int j=-3;j<4;j++)
+//        {
+//            for(int k=-3;k<4;k++)
+//            {
+//                p.x=Line[i].x+j;
+//                p.y=Line[i].y+k;
+//                if(p.x!=Line[i].x&&p.y!=Line[i].y)
+//                {
+//                    if(pExistLine(p,Line,number))
+//                    {
+//                        j=4;
+//                        k=4;
+//                        flag=true;
+//                    }
+//                }
+//            }
+//        }
+//        if(!flag)
+//        {
+//            index[count]=i;
+//            count++;
+//        }
+//    }
+//    //    qDebug()<<"number"<<number;
+//    //    qDebug()<<"不在线上的点的数量是："<<count;
+//    for(int i=0;i<count;i++)
+//    {
+//        image.setPixel(Line[index[i]].x,Line[index[i]].y,value);
+
+//        //        int lineIndex=pToLminIndex(Line[index[i]],Line,number);//返回不在海岸线上的点与海岸线上距离最近的点的index
+//        //        partImage=linkLine(partImage,Line[lineIndex],Line[index[i]]);
+//    }
+//    return image;
+//}
+
+///**
+// * @brief filedeal::linkLine 将孤立两点连接成线
+// * @param image
+// * @param p1 点1
+// * @param p2 点2
+// * @return 返回连接后的图像
+// */
+
+//QImage filedeal::linkLine(QImage image,point p1,point p2)
+//{
+
+//    point minP,maxP;
+//    QRgb valueF;
+//    valueF=qRgb(0,0,0);
+//    if(p1.x<p2.x)
+//    {
+//        minP.x=p1.x;
+//        maxP.x=p2.x;
+//    }
+//    else
+//    {
+//        minP.x=p2.x;
+//        maxP.x=p1.x;
+//    }
+
+//    if(p1.y<p2.y)
+//    {
+//        minP.y=p1.y;
+//        maxP.y=p2.y;
+//    }
+//    else
+//    {
+//        minP.y=p2.y;
+//        maxP.y=p1.y;
+//    }
+
+//    for(int h=minP.y;h<maxP.y;h++)
+//    {
+//        for(int w=minP.x;w<maxP.x;w++)
+//        {
+//            point test;
+//            test.x=w;
+//            test.y=h;
+
+//            if(judgePoint(p1,p2,test))
+//            {
+//                image.setPixel(w,h,valueF);
+//            }
+//        }
+//    }
+//    return image;
+//}
+///**
+// * @brief filedeal::judgePoint//向量法：判断中间一点 是否在直线上
+// * @param p1
+// * @param p2
+// * @param testPoint 判断点是否在线段上
+// * @return
+// */
+//bool filedeal::judgePoint(point p1,point p2,point testPoint)
+//{
+//    double s1,s2,t1,t2;
+//    s1=testPoint.x-p1.x;
+//    t1=testPoint.y-p1.y;
+//    s2=p1.x-p2.x;
+//    t2=p1.y-p2.y;
+//    if(-5<=(s1*t2-t1*s2)&&(s1*t2-t1*s2)<=5)
+//    {
+//        return true;
+//    }
+//    else
+//    {
+//        return false;
+//    }
+//}
 
 //给定一点Q(a,b),和线段M的首尾两个端点P1(X1,Y1),P2(X2,Y2),要求判断点Q否在线段M上；
 //(为了方便理解,这里我们就认为X1>X2,Y1>Y2)
@@ -3148,139 +3808,145 @@ bool filedeal::judgePoint(point p1,point p2,point testPoint)
 //    puts((s1*t2-t1*s2)==0?"Yes":"No");        //二维点的×乘x1*y2-x2*y1
 //    return 0;
 //}
-QImage filedeal::ddaLinkLine(QImage image,point p1,point p2){
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
-    float x,y;
-    float dx,dy,k;
-    dx=(float)(p2.x-p1.x);
-    dy=(float)(p2.y-p1.y);
-    k=dy/dx;//斜率
-    x=p1.x;
-    y=p1.y;
 
-    if (abs(k)<1)//斜率绝对值小于1时，以x步进
-    {
-        for (;x<=p2.x;++x)
-        {
-            image.setPixel(x,int(y+0.5),valueF);
-            y+=k;
-        }
-    }
-    if (abs(k)>=1)//斜率绝对值大于等于1时，以y步进
+//QImage filedeal::ddaLinkLine(QImage image,point p1,point p2){
+//    QRgb valueF;
+//    valueF=qRgb(0,0,0);
+//    float x,y;
+//    float dx,dy,k;
+//    dx=(float)(p2.x-p1.x);
+//    dy=(float)(p2.y-p1.y);
+//    k=dy/dx;//斜率
+//    x=p1.x;
+//    y=p1.y;
 
-    {
-        for (;y<p2.y;++y)
-        {
-            image.setPixel(int(x+0.5),y,valueF);
-            x+=1/k;
-        }
-    }
-    return image;
-}
-//Bresenham  算法
-QImage filedeal::OnBresenhamline(QImage image,point p1,point p2)
-{
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
-    int x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
-    int i,s1,s2,interchange;
-    float x,y,deltax,deltay,f,temp;
-    x=x1;
-    y=y1;
-    deltax=abs(x2-x1);
-    deltay=abs(y2-y1);
-    if(x2-x1>=0) s1=1; else s1=-1;
-    if(y2-y1>=0) s2=1; else s2=-1;
+//    if (abs(k)<1)//斜率绝对值小于1时，以x步进
+//    {
+//        for (;x<=p2.x;++x)
+//        {
+//            image.setPixel(x,int(y+0.5),valueF);
+//            y+=k;
+//        }
+//    }
+//    if (abs(k)>=1)//斜率绝对值大于等于1时，以y步进
 
-    if(deltay>deltax)
-    {
-        temp=deltax;
-        deltax=deltay;
-        deltay=temp;
-        interchange=1;
-    }
-    else interchange=0;
-    f=2*deltay-deltax;
-    image.setPixel(x,y,valueF);
+//    {
+//        for (;y<p2.y;++y)
+//        {
+//            image.setPixel(int(x+0.5),y,valueF);
+//            x+=1/k;
+//        }
+//    }
+//    return image;
+//}
+////Bresenham  算法
+//QImage filedeal::OnBresenhamline(QImage image,point p1,point p2)
+//{
+//    QRgb valueF;
+//    valueF=qRgb(0,0,0);
+//    int x1=p1.x, y1=p1.y, x2=p2.x, y2=p2.y;
+//    int i,s1,s2,interchange;
+//    float x,y,deltax,deltay,f,temp;
+//    x=x1;
+//    y=y1;
+//    deltax=abs(x2-x1);
+//    deltay=abs(y2-y1);
+//    if(x2-x1>=0) s1=1; else s1=-1;
+//    if(y2-y1>=0) s2=1; else s2=-1;
 
-    for(i=1;i<=deltax;i++)
-    {
+//    if(deltay>deltax)
+//    {
+//        temp=deltax;
+//        deltax=deltay;
+//        deltay=temp;
+//        interchange=1;
+//    }
+//    else interchange=0;
+//    f=2*deltay-deltax;
+//    image.setPixel(x,y,valueF);
 
-        if(f>=0)
-        {
-            if(interchange==1) x+=s1;
+//    for(i=1;i<=deltax;i++)
+//    {
 
-            else y+=s2;
-            image.setPixel(x,y,valueF);
-            f=f-2*deltax;
-        }
-        else
-        {
-            if(interchange==1) y+=s2;
-            else x+=s1;
-            f=f+2*deltay;
-        }
-    }
-    return image;
-}
-/**
- * @brief filedeal::Line_Midpoint 生成直线的中点画法
- * @param image
- * @param p1
- * @param p2
- * @return
- */
-QImage filedeal:: midPointLink(QImage image,point p1,point p2)
-{
-    QRgb valueF;
-    valueF=qRgb(0,0,0);
+//        if(f>=0)
+//        {
+//            if(interchange==1) x+=s1;
 
-    int x = p1.x, y = p1.y;
-    int a = p1.y - p2.y, b = p2.x - p1.x;
-    int cx = (b >= 0 ? 1 : (b = -b, -1));
-    int cy = (a <= 0 ? 1 : (a = -a, -1));
+//            else y+=s2;
+//            image.setPixel(x,y,valueF);
+//            f=f-2*deltax;
+//        }
+//        else
+//        {
+//            if(interchange==1) y+=s2;
+//            else x+=s1;
+//            f=f+2*deltay;
+//        }
+//    }
+//    return image;
+//}
+///**
+// * @brief filedeal::ptpMinDisIndex 返回距离最小的点
+// * @param index
+// * @param p
+// * @param pNumber
+// * @param indexSet
+// * @return
+// */
+//////////暂时不用
+//int filedeal::ptpMinDisIndex(int count,int index,point*p,int pNumber,point *indexSet)
+//{
+//    int *dis=new int[pNumber];
+//    for(int i=0;i<pNumber;i++)
+//    {
+//        dis[i]=distance(p[index],p[i]);
+//    }
+//    //自己跟自己的距离设置成最大
+//    dis[index]=65535;
+//    int  minDistance=65535;
 
-    image.setPixel(x, y, valueF);
+//    int tempMin=0;
+//    int minIndex=0;
+//    for(int i=0;i<pNumber;i++)
+//    {
+//        tempMin=dis[i];
+//        if(tempMin<minDistance)
+//        {
+//            //如果该组下标没被用过，说明两点未连成线
+//            //若该组下标已经被用过，则跳过该最小距离并不动原来最小的下标
+//            if(!judgeExist(count,index,i,indexSet))
+//            {
+//                minDistance=tempMin;
+//                minIndex=i;
+//            }
 
-    int d, d1, d2;
-    if (-a <= b)     // 斜率绝对值 <= 1
-    {
-        d = 2 * a + b;
-        d1 = 2 * a;
-        d2 = 2 * (a + b);
-        while(x != p2.x)
-        {
-            if (d < 0)
-            {
-                y += cy, d += d2;
-            }
-            else
-            {
-                d += d1;
-            }
-            x += cx;
-            image.setPixel(x, y, valueF);
-        }
-    }
-    else                // 斜率绝对值 > 1
-    {
-        d = 2 * b + a;
-        d1 = 2 * b;
-        d2 = 2 * (a + b);
-        while(y != p2.y)
-        {
-            if(d < 0)
-            {
-                d += d1;
-            }
-            else
-            {
-                x += cx, d += d2;
-            }
-            y += cy;
-           image.setPixel(x, y, valueF);
-        }
-    }
-    return image;
-}
+//        }
+//    }
+//    delete[] dis;
+//    dis=NULL;
+//    return minIndex;
+//}
+///**
+// * @brief filedeal::judgeExist 判断下标组是否被用过
+// * @param number
+// * @param index1
+// * @param index2
+// * @param indexSet
+// * @return
+// */
+//////////暂时不用
+//bool filedeal::judgeExist(int number,int index1,int index2,point *indexSet)
+//{
+//    //查找是否用到过该组下标
+//    for(int i=0;i<number;i++)
+//    {
+//        //该组下标已经用过
+//        if(index1==indexSet[i].x&&index2==indexSet[i].y||index2==indexSet[i].x&&index1==indexSet[i].y)
+//        {
+//            return true;
+//        }
+
+//    }
+//    //该组下标还未用过
+//    return false;
+//}

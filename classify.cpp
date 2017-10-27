@@ -590,9 +590,7 @@ void classify::thismain()
     emit sortComplete(fileStr);//地物分类完成
     emit setProgressValue(100);
     emit complete();
-    message=new showInfo;
-    message->setMessage(QString::fromLocal8Bit("地物区分完成"),0);
-    message->show();
+
     free(data);//将分配的内存释放
     DeleteTree(root->left);
     DeleteTree(root->right);

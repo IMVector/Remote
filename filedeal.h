@@ -12,9 +12,10 @@
 #include <set>
 #include <String>
 #include <algorithm>
+#include <showinfo.h>
 typedef struct{
-    int x;
-    int y;
+    unsigned short int x;
+    unsigned short int y;
 }point, *Points;
 class filedeal : public QObject
 {
@@ -61,16 +62,18 @@ private:
     void linkPoint(QImage image, int width, int height);
     int ptpMinDisIndex(int index, point *p, int pNumber, QSet<int> indexSet);
     bool pExistLine(point p, point *Line, int number);
-    int *unLinkPoint(point *Line, int number);
+    QImage unLinkPoint(QImage image, point *Line, int number);
     QImage linkLine(QImage image, point p1, point p2);
     int pToLminIndex(point alonePoint, point *Line, int number);
     int ptpMinDisIndex(int count, int index, point *p, int pNumber, point *indexSet);
     bool judgeExist(int number, int index1, int index2, point *indexSet);
-
     QImage ddaLinkLine(QImage image, point p1, point p2);
     QImage OnBresenhamline(QImage image, point p1, point p2);
-
-    QImage midPointLink(QImage image, point p1, point p2);
+    QImage midPointLink(QImage image, point p1, point p2,QRgb color);
+    point *newAveragePoint(point *line, int number);
+    void calculateDiffer(point *calLine, point *stdLine, int calNumber, int stdNumber);
+    point *averagePoint(point *line, int number, point *minDistanceLine);
+    void seaLineGet(QImage partImage, int *seaColor, int *landColor);
 private slots:
     void openPathFile(QString fileName);
     void getRGB(int r,int g,int b);
@@ -88,6 +91,8 @@ private slots:
     void saveSample(QString name);
     void simpleInfo(QString name,int *number);
     void lineMouse(int x, int y);
+
+    void slotSealine(int *seaColor, int *landColor);
 signals:
     void sendVisiualP(int x,int y);
     void bandToUi(int band);
@@ -99,7 +104,8 @@ signals:
     void fileDataDetails(int number,int geoNumber);
     void setProgressValue(int value);
     void setProgressRange(int startRange,int endRange);
-    void complete();
+    void complete(QString message);
+    void messageInfo(QString message,int type);
 };
 
 #endif // FILEDEAL_H

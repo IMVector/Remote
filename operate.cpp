@@ -76,9 +76,10 @@ operate::operate(QWidget *parent) :
     connect(fileDeal,SIGNAL(sendFeature(QStringList)),this,SLOT(getFeature(QStringList)));//获取决策树特征
     connect(fileDeal,SIGNAL(sendSize(int,int)),this,SLOT(getSize(int,int)));//有新图片要显示时获取新图片的size
     connect(fileDeal,SIGNAL(fileDataDetails(int,int)),this,SLOT(getDataFileDetails(int,int)));
+    connect(fileDeal,SIGNAL(messageInfo(QString,int)),this,SLOT(showMessage(QString,int)));
 
     connect(mySort,SIGNAL(sortComplete(QString)),fileDeal,SLOT(parser(QString)));
-    connect(seaLine,SIGNAL(getSealine(int*,int*)),fileDeal,SLOT(seaLineGet(int*,int*)));//海岸线提取
+    connect(seaLine,SIGNAL(getSealine(int*,int*)),fileDeal,SLOT(slotSealine(int*,int*)));//海岸线提取
 
     connect(Sqlsever,SIGNAL(sendImageName(QString)),this,SLOT(getImageName(QString)));//数据库发来的文件
     connect(Sqlsever,SIGNAL(sendRule(QString)),this,SLOT(getRuleOrLineName(QString)));//数据库发来的规则
@@ -114,8 +115,36 @@ void operate::initProBar()
     connect(mySort,SIGNAL(setProgressRange(int,int)),proBar,SLOT(setTotalRange(int,int)));
     connect(mySort,SIGNAL(setProgressValue(int)),proBar,SLOT(changeValue(int)));
     connect(mySort,SIGNAL(complete()),proBar,SLOT(close()));
+    connect(fileDeal,SIGNAL(setProgressRange(int,int)),proBar,SLOT(setTotalRange(int,int)));
+    connect(fileDeal,SIGNAL(setProgressValue(int)),proBar,SLOT(changeValue(int)));
+    connect(fileDeal,SIGNAL(complete(QString)),this,SLOT(lowPointsComplete(QString)));
     proBar->show();
 }
+/**
+ * @brief operate::lowPointsComplete降噪完成弹出消息框
+ * @param message
+ */
+void operate::lowPointsComplete(QString message)
+{
+    messageDialog=new showInfo;
+    messageDialog->setMessage(message,0);
+    messageDialog->show();
+    proBar->close();
+}
+/**
+ * @brief operate::showMassage 消息提示框
+ * @param message
+ * @param type
+ */
+void operate::showMessage(QString message,int type)
+{
+    messageDialog=new showInfo;
+    messageDialog->setMessage(message,type);
+    messageDialog->show();
+}
+/**
+ * @brief operate::initChoice初始化样本选择框
+ */
 void operate::initChoice()
 {
     count_for_select_area=-1;
@@ -129,6 +158,7 @@ void operate::initChoice()
 ////降噪函数
 void operate::on_lowPointsBtn_clicked()
 {
+    initProBar();
     emit lowPoiSignal();
 }
 ////从数据库打开分类规则
@@ -723,6 +753,9 @@ void operate::getFeature(QStringList feature)//将决策树显示到ui界面
             ui->textEdit->append(featureStr+="\n");
         }
     }
+    message=new showInfo;
+    message->setMessage(QString::fromLocal8Bit("地物区分完成"),0);
+    message->show();
 }
 
 ////保存降噪后tif文件
@@ -771,8 +804,8 @@ void operate::on_openFromFileBtn_clicked()
     }
 
 }
-void operate::showInfo(QString info,QString type)
-{
+//void operate::showInfo(QString info,QString type)
+//{
 //    if(type=="warning")
 //    {
 //        QMessageBox::warning(this, "Warning",QString::fromLocal8Bit(info), QMessageBox::Ok);
@@ -781,5 +814,5 @@ void operate::showInfo(QString info,QString type)
 //    {
 //        QMessageBox::information(this, "Warning",QString::fromLocal8Bit(info), QMessageBox::Ok);
 //    }
-}
+//}
 
