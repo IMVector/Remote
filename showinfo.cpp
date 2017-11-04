@@ -21,15 +21,15 @@ void showInfo::setMessage(QString message, int type)
     if (type == 0) {
         ui->labIcoMain->setStyleSheet("border-image: url(:/image/info.png);");
         ui->cancleBtn->setVisible(false);
-        this->setWindowTitle(QString::fromLocal8Bit("提示"));
+        this->setWindowTitle(QStringLiteral("提示"));
 
     } else if (type == 1) {
         ui->labIcoMain->setStyleSheet("border-image: url(:/image/question.png);");
-        this->setWindowTitle(QString::fromLocal8Bit("询问"));
+        this->setWindowTitle(QStringLiteral("询问"));
     } else if (type == 2) {
         ui->labIcoMain->setStyleSheet("border-image: url(:/image/error.png);");
         ui->cancleBtn->setVisible(false);
-        this->setWindowTitle(QString::fromLocal8Bit("错误"));
+        this->setWindowTitle(QStringLiteral("错误"));
     }
 
     ui->labInfo->setText(message);

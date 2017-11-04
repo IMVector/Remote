@@ -4,11 +4,13 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-
+    //解决数据库乱码
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(codec);
     //////////////////////////////////////////主题///////////////////////////////
-//    QString path = QDir::currentPath();//获取当前运行路径
-//    path.replace("/","\\");
-//    path.append("\\image\\blue.css");
+    //    QString path = QDir::currentPath();//获取当前运行路径
+    //    path.replace("/","\\");
+    //    path.append("\\image\\blue.css");
     QString path=":/image/blue.css";
     QFile file(path);
     file.open(QFile::ReadOnly);

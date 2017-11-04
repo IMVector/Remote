@@ -11,7 +11,7 @@ sealine::sealine(QWidget *parent) :
 
     this->setMaximumSize(360,205);
     this->setMinimumSize(360,205);
-    this->setWindowTitle(QString::fromLocal8Bit("提取海岸线"));
+    this->setWindowTitle(QStringLiteral("提取海岸线"));
     initStyle();
 }
 

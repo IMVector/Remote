@@ -1,6 +1,4 @@
-﻿
-#include "filedeal.h"
-//1650 202
+﻿#include "filedeal.h"
 int thisCount=0;
 int ERRORCount=0;
 QString filePathName=NULL;
@@ -28,12 +26,6 @@ QImage partImage;
 int R[7]={255,   255,  255,    0,   0,   139,0};
 int G[7]={255,     0,  255,    0,   255, 0 ,0};
 int B[7]={255,     0  ,  0,  255,   0,   139   ,0};
-
-////////////////////////////////////////////////////////////////////
-//unsigned short int markColor[10000][10000];   //count(max)=561875  有563行
-//int xRoad[24] = {-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,0,0,0,0,1,1,1,1,1,2,2,2,2,2};
-//int yRoad[24] = {-2,-1,0,1,2,-2,-1,0,1,2,-2,-1,1,2,-2,-1,0,1,2,-2,-1,0,1,2};
-
 
 
 filedeal::filedeal()
@@ -78,8 +70,9 @@ void filedeal::openPathFile(QString fileName)
         scale=(double)(QApplication::desktop()->width()/12)/Samples;
     }
     QSqlQuery query;
-    QString sqlInsertStr=QString("insert into RemoteSensingImage values('%1')").arg(fileName);
-    query.exec(sqlInsertStr);
+    QString sqlInsertStr=QString("insert into RemoteSensingImage(name)values('%1')").arg(fileName);
+    bool querySuccess=query.exec(sqlInsertStr);
+    qDebug()<<"querySuccess"<<querySuccess;
 }
 ///获得rgb信息并显示图片
 void filedeal::getRGB(int r, int g, int b)
@@ -462,49 +455,7 @@ void filedeal::startSelectDate()
 void filedeal::getData_image(Points points)
 {
     QRgb value=qRgb(R[current+1],G[current+1],B[current+1]);
-    QTime time;
     partImage=midPointLink(partImage,points[0],points[1],value);
-    //    time.start();
-
-    //    if(points[0].x>points[1].x)
-    //    {
-    //        tempPoint[0].x=points[1].x;
-    //        tempPoint[1].x=points[0].x;
-    //    }
-    //    else
-    //    {
-    //        tempPoint[0].x=points[0].x;
-    //        tempPoint[1].x=points[1].x;
-    //    }
-    //    if(points[0].y>points[1].y)
-    //    {
-    //        tempPoint[0].y=points[1].y;
-    //        tempPoint[1].y=points[0].y;
-    //    }
-    //    else
-    //    {
-    //        tempPoint[0].y=points[0].y;
-    //        tempPoint[1].y=points[1].y;
-    //    }
-    //    //double k,b;
-    //    //k=(double)(points[1].y-points[0].y)/(points[1].x-points[0].x);
-    //    //b=points[0].y-points[0].x*k;
-    //    //qDebug()<<"k:"<<k;
-    //    //qDebug()<<"b:"<<b;
-    //    //判断点是否在线上
-    //    for(int h=tempPoint[0].y;h<tempPoint[1].y;h++)
-    //    {
-    //        for(int w=tempPoint[0].x;w<tempPoint[1].x;w++)
-    //        {
-    //            //if(h==qCeil(k*w+b)||h==qFloor(k*w+b))
-    //            if(judgeArea(2,points,w,h))
-    //            {
-    //                value=qRgb(R[current+1],G[current+1],B[current+1]);
-    //                partImage.setPixelColor(w,h,value);
-    //            }
-    //        }
-    //    }
-    qDebug()<<time.elapsed()<<"ms";
     loadPartImage(visiualX,visiualY,currentHeight,currentWidth,partImage);
 }
 ////找能把所有点放进去的矩形,提高效率
@@ -734,17 +685,19 @@ void filedeal::parser(QString ruleName)
     sorted=true;
     float **rawData=NULL;
     rawData=openFile();
-    if(!rawImage.isNull())
-    {
-        partImage=rawImage;
-    }
-    else
-    {
-        openFile(1,2,3);
-        partImage=rawImage;
-    }
-
+//    if(!rawImage.isNull())
+//    {
+//        partImage=rawImage;
+//    }
+//    else
+//    {
+//        openFile(1,2,3);
+//        partImage=rawImage;
+//    }
+    QImage image(Samples, Lines, QImage::Format_RGB32);
+    image.fill(Qt::white);//将图片背景填充为白色
     QRgb value;
+
     QVector<QString>str(30);
     QVector<QStringList>strList(30);
     QFile read(ruleName.toStdString().c_str());
@@ -901,7 +854,7 @@ void filedeal::parser(QString ruleName)
                 if(thisbool)
                 {
                     value = qRgb(R[geoName[geoNameCount]], G[geoName[geoNameCount]], B[geoName[geoNameCount]]);
-                    partImage.setPixel(k%Samples,k/Samples,value);
+                    image.setPixel(k%Samples,k/Samples,value);
                     //                    value=qRgb(255,255,255);
                     //                    mImage.setPixel(k%Samples,k/Samples,value);
                     //                    data_copy[k].bands[changer]=R[geoName[geoNameCount]];
@@ -913,7 +866,8 @@ void filedeal::parser(QString ruleName)
             geoNameCount++;
         }
     }
-    rawImage=partImage;
+    rawImage=image;
+    partImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     for(int i=0;i<Band;i++)
     {
@@ -998,6 +952,8 @@ void filedeal::slotSealine(int *seaColor,int *landColor)
  */
 void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 {
+    emit setProgressRange(0,100);
+    emit setProgressValue(0);
 
     int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
                      1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
@@ -1149,7 +1105,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     //所有界限找出
     //进行降噪
     int flag=42;
-    for(int time=0;time<=1;time++)
+    for(int time=0;time<=10;time++)
     {
         for(int h=5;h<Lines-5;h++)
         {
@@ -1217,7 +1173,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
         {
             for(int w=0;w<Samples;w++)
             {
-
+                 emit setProgressValue((h*Samples+w)/(Samples*Lines*2));
                 pointCount=0;
                 currentMaxNum=0;
 
@@ -1310,7 +1266,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     {
         for(int w=0;w<Samples;w++)
         {
-
+            emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2));
             nx=w;ny=h;
             pointCount=0;
             currentMaxNum=0;
@@ -1392,8 +1348,9 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     fileStr.append(".tif");
     image.save(fileStr);
     QSqlQuery query;
-    QString sqlInsertStr=QString("insert into RemoteSensingSeaLine values('%1','%2')").arg(fileStr).arg(filePathName);
-    query.exec(sqlInsertStr);
+    QString sqlInsertStr=QString("insert into RemoteSensingSeaLine(name,OwnName) values('%1','%2')").arg(fileStr).arg(filePathName);
+    bool querySuccess=query.exec(sqlInsertStr);
+    qDebug()<<"querySuccess"<<querySuccess;
     //    设定当前位置的初值为入口位置；
     //      do{
     //        若当前位置可通，
@@ -1484,7 +1441,7 @@ void filedeal::lowPointsStart()
         }
         visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     }
-    emit complete(QString::fromLocal8Bit("降噪完成"));
+    emit complete(QStringLiteral("降噪完成"));
 
 }
 ////降噪函数
@@ -1761,7 +1718,7 @@ void filedeal::saveTif()
     if(!partImage.isNull())
     {
         partImage.save(fileStr.toStdString().c_str());
-        QString message=QString::fromLocal8Bit("文件已保存到");
+        QString message=QStringLiteral("文件已保存到");
         message=message+fileStr;
         emit messageInfo(message,0);
     }
@@ -1827,7 +1784,7 @@ void filedeal::saveBinary()
                 fwrite(&g,1,1,fp);
             }
         }
-        QString message=QString::fromLocal8Bit("文件已保存到");
+        QString message=QStringLiteral("文件已保存到");
         message=message+fileStr;
         emit messageInfo(message,0);
     }

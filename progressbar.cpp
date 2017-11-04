@@ -8,7 +8,7 @@ progressBar::progressBar(QWidget *parent) :
     ui->setupUi(this);
     this->setMaximumSize(400,150);
     this->setMinimumSize(400,150);
-    this->setWindowTitle(QString::fromLocal8Bit("任务进行中"));
+    this->setWindowTitle(QStringLiteral("任务进行中"));
     this->setWindowFlags(Qt::WindowStaysOnTopHint);//保持窗口最前
     this->setAttribute(Qt::WA_DeleteOnClose, true);
 }

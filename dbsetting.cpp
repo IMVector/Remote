@@ -6,7 +6,7 @@ dbsetting::dbsetting(QWidget *parent) :
     ui(new Ui::dbsetting)
 {
     ui->setupUi(this);
-    this->setWindowTitle(QString::fromLocal8Bit("数据库设置"));
+    this->setWindowTitle(QStringLiteral("数据库设置"));
 }
 
 dbsetting::~dbsetting()

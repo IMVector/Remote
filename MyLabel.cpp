@@ -12,7 +12,7 @@ MyLabel::MyLabel(QWidget *parent) :
 {
     time=new QTimer(this);
     connect(time,SIGNAL(timeout()),this,SLOT(updateSize()));
-    this->setWindowTitle(QString::fromLocal8Bit("图像"));
+    this->setWindowTitle(QStringLiteral("图像"));
 }
 void MyLabel::mousePressEvent(QMouseEvent *ev)//获取略缩图的鼠标位置
 {

@@ -1,21 +1,23 @@
 ﻿#include "database.h"
 #include "ui_database.h"
 #include <QSqlRecord>
-QSqlDatabase SqlSever;
+#include <qfile.h>
+#include <qpluginloader.h>
+QSqlDatabase Sql;
 int selectIndex=0;
 int queryFlag=0;
 int qualityIndex=0;
-QString thisDatabase="QODBC";
+QString thisDatabase="QMYSQL";
 QString thisUrl="127.0.0.1";
 QString thisDBName="RemoteSensing";
-QString thisUName="sa";
+QString thisUName="root";
 QString thisPassword="123456";
 database::database(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::database)
 {
     ui->setupUi(this);
-    this->setWindowTitle(QString::fromLocal8Bit("遥感数据库"));
+    this->setWindowTitle(QStringLiteral("遥感数据库"));
     OpenDatabase(thisDatabase,thisUrl,thisDBName,thisUName,thisPassword);
     ui->comboBox->setStyleSheet("QComboBox QAbstractItemView::item{height:20px;}");
     ui->comboBox->setView(new QListView());
@@ -40,7 +42,7 @@ void database::Setting(QString database,QString url,QString databseName,QString 
     thisDBName=databseName;
     thisUName=userName;
     thisPassword=password;
-    SqlSever.close();
+    Sql.close();
     OpenDatabase(database,url,databseName,userName,password);
 }
 /**
@@ -53,6 +55,8 @@ void database::Setting(QString database,QString url,QString databseName,QString 
  */
 void database::OpenDatabase(QString database, QString url,QString databaseName,QString userName,QString password)
 {
+    QPluginLoader loader;
+    loader.setFileName("/image/qsqlmysql.dll");
     QString thisdatabase="QODBC";
     QString thisUrl="127.0.0.1";
     QString thisDBName="RemoteSensing";
@@ -63,29 +67,26 @@ void database::OpenDatabase(QString database, QString url,QString databaseName,Q
     thisDBName=databaseName;
     thisUName=userName;
     thisPassword=password;
-    SqlSever=QSqlDatabase::addDatabase(thisdatabase);
-    SqlSever.setDatabaseName(QString("DRIVER={SQL SERVER};"
-                                     "SERVER=%1;" //服务器名称
-                                     "DATABASE=%2;"//数据库名
-                                     "UID=%3;"           //登录名
-                                     "PWD=%4;"        //密码
-                                     ).arg(thisUrl)
-                             .arg(thisDBName)
-                             .arg(thisUName)
-                             .arg(thisPassword)
-                             );
-    if (!SqlSever.open())
+    qDebug()<<thisDatabase<<"   "<<thisUrl<<"   "<<thisDBName<<"    "<<thisUName<<" "<<thisPassword;
+
+    Sql=QSqlDatabase::addDatabase(thisdatabase);
+    Sql.setHostName(thisUrl);
+    Sql.setDatabaseName(thisDBName);
+    Sql.setUserName(thisUName);
+    Sql.setPassword(thisPassword);
+
+    if (!Sql.open())
     {
         //数据库打开失败
         QMessageBox::warning(0, qApp->tr("      Cannot open database          "),
-                             SqlSever.lastError().databaseText(), QMessageBox::Ok);
+                             Sql.lastError().databaseText(), QMessageBox::Ok);
 
     }
     else
     {
         //数据库打开成功
         QMessageBox::information(0, qApp->tr("info"),
-                             "      database has been opened!        ", QMessageBox::Ok);
+                                 "      database has been opened!        ", QMessageBox::Ok);
     }
 }
 /**
@@ -100,7 +101,7 @@ void database::on_pushButton_clicked()//查询数据库图像
     ui->tableWidget->setColumnWidth(0,30);
     ui->tableWidget->setColumnWidth(1,500);
     QStringList header;
-    header<< "ID" <<QString::fromLocal8Bit("文件名称");;
+    header<< "ID" <<QStringLiteral("文件名称");;
     ui->tableWidget->setHorizontalHeaderLabels(header);//显示标题
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);//不允许修改
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中
@@ -134,7 +135,7 @@ void database::on_pushButton_2_clicked()//查询区分规则
     ui->tableWidget->setColumnWidth(1,200);
     ui->tableWidget->setColumnWidth(2,200);
     QStringList header;
-    header<< "ID" <<QString::fromLocal8Bit("规则")<<QString::fromLocal8Bit("规则所属图像")<<QString::fromLocal8Bit("规则质量");
+    header<< "ID" <<QStringLiteral("规则")<<QStringLiteral("规则所属图像")<<QStringLiteral("规则质量");
     ui->tableWidget->setHorizontalHeaderLabels(header);//显示标题
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);//不允许修改
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中
@@ -169,7 +170,7 @@ void database::on_pushButton_3_clicked()//查询已提取海岸线
     ui->tableWidget->setColumnWidth(1,250);
     ui->tableWidget->setColumnWidth(2,250);
     QStringList header;
-    header<< "ID" <<QString::fromLocal8Bit("海岸线")<<QString::fromLocal8Bit("海岸线所属图像");
+    header<< "ID" <<QStringLiteral("海岸线")<<QStringLiteral("海岸线所属图像");
     ui->tableWidget->setHorizontalHeaderLabels(header);//显示标题
     ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);//不允许修改
     ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中
@@ -278,7 +279,12 @@ void database::on_pushButton_5_clicked()//删除数据库中的数据
             query.next();
         }
         QString str=QString("delete from RemoteSensingRule where Name='%1'").arg(query.value("Name").toString());
-        query.exec(str);
+        QString name=query.value("Name").toString();
+        bool flag=query.exec(str);
+        if(flag)
+        {
+            deleteFile(name);
+        }
         on_pushButton_2_clicked();
     }
     else if(queryFlag==3)
@@ -288,8 +294,14 @@ void database::on_pushButton_5_clicked()//删除数据库中的数据
         {
             query.next();
         }
-        QString str=QString("delete from RemoteSensingSeaLine where Name='%1'").arg( query.value("Name").toString());
-        query.exec(str);
+        QString str=QString("delete from RemoteSensingSeaLine where Name='%1'").arg(query.value("Name").toString());
+        QString name=query.value("Name").toString();
+        bool flag=query.exec(str);
+        if(flag)
+        {
+            deleteFile(name);
+        }
+
         on_pushButton_3_clicked();
     }
     selectIndex=0;
@@ -318,13 +330,13 @@ void database::on_pushButton_6_clicked()
         warningMessage();
         break;
     case 1:
-        str=QString::fromLocal8Bit("好");//解决中文乱码
+        str=QStringLiteral("好");//解决中文乱码
         break;
     case 2:
-        str=QString::fromLocal8Bit("中");//解决中文乱码
+        str=QStringLiteral("中");//解决中文乱码
         break;
     case 3:
-        str=QString::fromLocal8Bit("差");//解决中文乱码
+        str=QStringLiteral("差");//解决中文乱码
         break;
 
     }
@@ -351,6 +363,14 @@ void database::on_comboBox_currentIndexChanged(int index)
  */
 void database::warningMessage()
 {
-    QMessageBox::warning(this, "Warning",QString::fromLocal8Bit("你未选中任何行"), QMessageBox::Ok);
+    QMessageBox::warning(this, "Warning",QStringLiteral("你未选中任何行"), QMessageBox::Ok);
 }
+void database::deleteFile(QString name)
+{
+    QFile file(name.toStdString().c_str());
+    if(file.exists())
+    {
+        file.remove();
+    }
 
+}

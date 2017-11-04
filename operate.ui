@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabImage">
       <attribute name="title">
@@ -195,10 +195,10 @@
           <string>区分查看</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QPushButton" name="showRule">
+          <item row="2" column="0">
+           <widget class="QPushButton" name="saveBinary">
             <property name="text">
-             <string>查看区分地物</string>
+             <string>保存二进制图像</string>
             </property>
            </widget>
           </item>
@@ -209,10 +209,17 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="saveBinary">
+          <item row="0" column="0">
+           <widget class="QPushButton" name="showRule">
             <property name="text">
-             <string>保存二进制图像</string>
+             <string>查看区分地物</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QPushButton" name="ruleOpenBtn">
+            <property name="text">
+             <string>打开区分规则</string>
             </property>
            </widget>
           </item>

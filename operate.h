@@ -96,6 +96,8 @@ private slots:
 
     void lowPointsComplete(QString message);
     void showMessage(QString message, int type);
+    void on_ruleOpenBtn_clicked();
+
 signals:
     void sendFileName(QString fileName);
     void showImage(int r,int g,int b);

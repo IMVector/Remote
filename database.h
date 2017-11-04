@@ -43,6 +43,7 @@ signals:
 private:
     Ui::database *ui;
     void warningMessage();
+    void deleteFile(QString name);
 };
 
 #endif // DATABASE_H

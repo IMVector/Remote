@@ -45,7 +45,7 @@ void classify::getdata_from_ui(simples data, int number)
 //    }
 //    delete[] data;
     Data=data;
-    emit setProgressValue(5);
+    emit setProgressValue(2);
     if(Extend==false)
     {
         thismain();
@@ -197,7 +197,7 @@ void classify::thismain()
     qDebug()<<"normal in prepar";
     for(int count=0;count<GeoNumber*(GeoNumber-1)/2;count++)
     {
-        emit setProgressValue(5+(count/GeoNumber*(GeoNumber-1)/2)*45);
+        emit setProgressValue(3+((count/GeoNumber)*(GeoNumber-1)/2)*45);
         switch (count) {
         case 0:
             Geographical_1 = 1;
@@ -596,7 +596,7 @@ void classify::thismain()
     DeleteTree(root->right);
 
     QSqlQuery query;
-    QString sqlInsertStr=QString("insert into RemoteSensingRule values('%1','%2','%3')").arg(fileStr).arg(ruleOwnName).arg("no");
+    QString sqlInsertStr=QString("insert into RemoteSensingRule(name,OwnName,quality) values('%1','%2','%3')").arg(fileStr).arg(ruleOwnName).arg("no");
     query.exec(sqlInsertStr);
     delete[] Data;
     Data=NULL;

@@ -24,7 +24,7 @@ operate::operate(QWidget *parent) :
     ui->setupUi(this);
     this->setMaximumSize(320,520);
     this->setMinimumSize(320,520);
-    this->setWindowTitle(QString::fromLocal8Bit("遥感系统"));
+    this->setWindowTitle(QStringLiteral("遥感系统"));
     empty_thread=new emptychild;//空线程
     fileDeal=new filedeal;//类
     fileDeal->moveToThread(empty_thread);//处理数据线程移入空线程
@@ -180,6 +180,13 @@ void operate::on_showRule_clicked()
     emit sortAlready(ruleName);
     ui->tabWidget->setCurrentWidget(ui->tabOutTree);
 }
+/**
+ * @brief operate::on_ruleOpenBtn_clicked 打开区分规则
+ */
+void operate::on_ruleOpenBtn_clicked()
+{
+
+}
 ////数据库查询打开海岸线
 void operate::openSeaLine(QString imageName)
 {
@@ -223,7 +230,7 @@ void operate::uiGetBand(int band)
         ui->fileBandWidget->setColumnWidth(0,120);
         ui->fileBandWidget->setColumnWidth(1,135);
         QStringList header;
-        header<< "ID" <<QString::fromLocal8Bit("波段");
+        header<< "ID" <<QStringLiteral("波段");
         ui->fileBandWidget->setHorizontalHeaderLabels(header);//显示标题
         ui->fileBandWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);//不允许修改
         ui->fileBandWidget->setSelectionBehavior(QAbstractItemView::SelectRows);//整行选中
@@ -232,7 +239,7 @@ void operate::uiGetBand(int band)
         {
             QString strID = QString::number(i+1);
             ui->fileBandWidget->setItem(i,0,new QTableWidgetItem(strID));
-            ui->fileBandWidget->setItem(i,1,new QTableWidgetItem(QString::fromLocal8Bit("波段")+strID));
+            ui->fileBandWidget->setItem(i,1,new QTableWidgetItem(QStringLiteral("波段")+strID));
         }
     }
 }
@@ -244,10 +251,10 @@ void operate::initShowBandWidget()
     ui->showBandWidget->setColumnWidth(0,120);
     ui->showBandWidget->setColumnWidth(1,135);
     QStringList header;
-    header<<"ID"<<QString::fromLocal8Bit("要显示的波段");
-    ui->showBandWidget->setItem(0,0,new QTableWidgetItem(QString::fromLocal8Bit("波段1")));
-    ui->showBandWidget->setItem(1,0,new QTableWidgetItem(QString::fromLocal8Bit("波段2")));
-    ui->showBandWidget->setItem(2,0,new QTableWidgetItem(QString::fromLocal8Bit("波段3")));
+    header<<"ID"<<QStringLiteral("要显示的波段");
+    ui->showBandWidget->setItem(0,0,new QTableWidgetItem(QStringLiteral("波段1")));
+    ui->showBandWidget->setItem(1,0,new QTableWidgetItem(QStringLiteral("波段2")));
+    ui->showBandWidget->setItem(2,0,new QTableWidgetItem(QStringLiteral("波段3")));
     ui->showBandWidget->setHorizontalHeaderLabels(header);//显示标题
     ui->showBandWidget->verticalHeader()->setVisible(false);//隐藏列表头
     ui->showBandWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);//不允许修改
@@ -263,19 +270,19 @@ void operate::on_fileBandWidget_clicked(const QModelIndex &index)
         qDebug()<<selectR;
         RGBselectCount++;
         strNumber = QString::number(selectR+1);//输入样本数量
-        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QString::fromLocal8Bit("波段")+strNumber));
+        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QStringLiteral("波段")+strNumber));
         break;
     case 1:
         selectG=index.row();
         RGBselectCount++;
         strNumber = QString::number(selectG+1);//输入样本数量
-        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QString::fromLocal8Bit("波段")+strNumber));
+        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QStringLiteral("波段")+strNumber));
         break;
     case 2:
         selectB=index.row();
         RGBselectCount++;
         strNumber = QString::number(selectB+1);//输入样本数量
-        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QString::fromLocal8Bit("波段")+strNumber));
+        ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QStringLiteral("波段")+strNumber));
         break;
     }
 
@@ -292,7 +299,7 @@ void operate::on_comboBox_3_activated(int index)
     {
         create_label=false;
         QString strNumber = QString::number(labelList.size()/2+1);//输入样本数量
-        ui->comboBox_3->addItem(QString::fromLocal8Bit("显示区")+strNumber);
+        ui->comboBox_3->addItem(QStringLiteral("显示区")+strNumber);
     }
     else
     {
@@ -303,7 +310,7 @@ void operate::on_comboBox_3_activated(int index)
 }
 void operate::initCombox()
 {
-    ui->comboBox_3->setItemText(0,QString::fromLocal8Bit("新建显示区"));
+    ui->comboBox_3->setItemText(0,QStringLiteral("新建显示区"));
     ui->comboBox->setStyleSheet("QComboBox QAbstractItemView::item{height:20px;}");
     ui->comboBox->setView(new QListView());
     ui->comboBox_3->setStyleSheet("QComboBox QAbstractItemView::item{height:20px;}");
@@ -456,22 +463,22 @@ bool operate::getDetails(bool flag)
 ////从ui选择样本
 void operate::on_getSampleBtn_clicked()
 {
-    if(ui->getSampleBtn->text()==QString::fromLocal8Bit("新建样本区域"))
+    if(ui->getSampleBtn->text()==QStringLiteral("新建样本区域"))
     {
         if(getDetails(false)==false)
         {
-            QMessageBox::warning(this, "Warning", QString::fromLocal8Bit("      你没有选择要区分的种类数量     "), QMessageBox::Ok);
+            QMessageBox::warning(this, "Warning", QStringLiteral("      你没有选择要区分的种类数量     "), QMessageBox::Ok);
         }
         else
         {
             initChoice();
-            ui->getSampleBtn->setText(QString::fromLocal8Bit("关闭样本选择功能"));
+            ui->getSampleBtn->setText(QStringLiteral("关闭样本选择功能"));
             choiceSample->show();
         }
     }
     else
     {
-        ui->getSampleBtn->setText(QString::fromLocal8Bit("新建样本区域"));
+        ui->getSampleBtn->setText(QStringLiteral("新建样本区域"));
         selectEnable=false;//样本选择功能关闭
         choiceSample->on_exitBtn_clicked();
         count_for_select_area=-1;
@@ -729,32 +736,32 @@ void operate::getFeature(QStringList feature)//将决策树显示到ui界面
             featureStr.append("end");
             switch (geoName[geoNameCount]) {
             case 1:
-                featureStr.append(QString::fromLocal8Bit("红色地区"));
+                featureStr.append(QStringLiteral("红色地区"));
                 break;
             case 2:
-                featureStr.append(QString::fromLocal8Bit("黄色地区"));
+                featureStr.append(QStringLiteral("黄色地区"));
                 break;
             case 3:
-                featureStr.append(QString::fromLocal8Bit("蓝色地区"));
+                featureStr.append(QStringLiteral("蓝色地区"));
                 break;
             case 4:
-                featureStr.append(QString::fromLocal8Bit("绿色地区"));
+                featureStr.append(QStringLiteral("绿色地区"));
                 break;
             case 5:
-                featureStr.append(QString::fromLocal8Bit("紫色地区"));
+                featureStr.append(QStringLiteral("紫色地区"));
                 break;
             case 6:
-                featureStr.append(QString::fromLocal8Bit("黑色地区"));
+                featureStr.append(QStringLiteral("黑色地区"));
                 break;
             default:
-                featureStr.append(QString::fromLocal8Bit("其他地区"));
+                featureStr.append(QStringLiteral("其他地区"));
             }
             geoNameCount++;
             ui->textEdit->append(featureStr+="\n");
         }
     }
     message=new showInfo;
-    message->setMessage(QString::fromLocal8Bit("地物区分完成"),0);
+    message->setMessage(QStringLiteral("地物区分完成"),0);
     message->show();
 }
 
@@ -800,7 +807,7 @@ void operate::on_openFromFileBtn_clicked()
     }
     else
     {
-        QMessageBox::information(this, "Warning",QString::fromLocal8Bit("你未选中任何文件"), QMessageBox::Ok);
+        QMessageBox::information(this, "Warning",QStringLiteral("你未选中任何文件"), QMessageBox::Ok);
     }
 
 }
@@ -808,11 +815,12 @@ void operate::on_openFromFileBtn_clicked()
 //{
 //    if(type=="warning")
 //    {
-//        QMessageBox::warning(this, "Warning",QString::fromLocal8Bit(info), QMessageBox::Ok);
+//        QMessageBox::warning(this, "Warning",QStringLiteral(info), QMessageBox::Ok);
 //    }
 //    else if(type=="info")
 //    {
-//        QMessageBox::information(this, "Warning",QString::fromLocal8Bit(info), QMessageBox::Ok);
+//        QMessageBox::information(this, "Warning",QStringLiteral(info), QMessageBox::Ok);
 //    }
 //}
+
 

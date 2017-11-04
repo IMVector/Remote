@@ -11,7 +11,7 @@ newProject::newProject(QWidget *parent) :
     this->setMinimumSize(1000,0);
     this->setGeometry(2,30,1000,0);
 
-    this->setWindowTitle(QString::fromLocal8Bit("遥感系统"));
+    this->setWindowTitle(QStringLiteral("遥感系统"));
     this->setWindowIcon(QIcon(":/Remote/img/main.png"));
     operateUI=new operate;
 
@@ -38,7 +38,7 @@ void newProject::on_openFileImage_triggered()//文件路径打开文件
     }
     else
     {
-        QMessageBox::information(this, "Warning",QString::fromLocal8Bit("       你未选中任何文件        "), QMessageBox::Ok);
+        QMessageBox::information(this, "Warning",QStringLiteral("       你未选中任何文件        "), QMessageBox::Ok);
     }
 }
 
@@ -72,7 +72,7 @@ void newProject::on_firstLine_triggered()
     else
     {
         // 用户取消选择
-        QMessageBox::information(this, "Warning", QString::fromLocal8Bit("你未选中任何文件"), QMessageBox::Ok);
+        QMessageBox::information(this, "Warning", QStringLiteral("你未选中任何文件"), QMessageBox::Ok);
     }
 }
 
@@ -90,7 +90,7 @@ void newProject::on_secondLine_triggered()
     else
     {
         // 用户取消选择
-        QMessageBox::information(this, "Warning", QString::fromLocal8Bit("      你未选中任何文件      "), QMessageBox::Ok);
+        QMessageBox::information(this, "Warning", QStringLiteral("      你未选中任何文件      "), QMessageBox::Ok);
     }
 }
 
@@ -106,7 +106,7 @@ void newProject::on_action_triggered()
 void newProject::closeEvent(QCloseEvent *event)
 {
     QMessageBox::StandardButton button;
-    button=QMessageBox::warning(this, "Warning", QString::fromLocal8Bit("             退出系统？                "), QMessageBox::Yes|QMessageBox::Cancel);
+    button=QMessageBox::warning(this, "Warning", QStringLiteral("             退出系统？                "), QMessageBox::Yes|QMessageBox::Cancel);
     if(button==QMessageBox::Yes)
     {
         qApp->exit();
