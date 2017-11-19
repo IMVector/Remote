@@ -67,7 +67,7 @@ void database::OpenDatabase(QString database, QString url,QString databaseName,Q
     thisDBName=databaseName;
     thisUName=userName;
     thisPassword=password;
-    qDebug()<<thisDatabase<<"   "<<thisUrl<<"   "<<thisDBName<<"    "<<thisUName<<" "<<thisPassword;
+    qInfo()<<thisDatabase<<"   "<<thisUrl<<"   "<<thisDBName<<"    "<<thisUName<<" "<<thisPassword;
 
     Sql=QSqlDatabase::addDatabase(thisdatabase);
     Sql.setHostName(thisUrl);

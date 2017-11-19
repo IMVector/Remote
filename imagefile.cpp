@@ -17,7 +17,7 @@ unsigned int ** imageFile::openFile(QString fileName)
     gdalData = ( GDALDataset* )GDALOpen(fileName.toStdString().c_str(), GA_ReadOnly );//打开文件
     if ( gdalData == NULL )
     {
-        qDebug()<<"ERROR,file is empty";
+        qWarning()<<QStringLiteral("数据集为空");
         return NULL;
     }
     QList<GDALRasterBand*> bandList;
@@ -40,7 +40,7 @@ unsigned int ** imageFile::openFile(QString fileName)
 
     if ( bandList.size() == 0 )
     {
-        qDebug()<<"ERROR out";
+        qWarning()<<QStringLiteral("数据集为空");
         return NULL;
     }
 
@@ -82,7 +82,7 @@ QImage imageFile::openFile(int r, int g, int b, QString fileName)
 
     if ( gdalData == NULL )
     {
-        qDebug()<<"ERROR";
+        qWarning()<<QStringLiteral("数据集为空");
         return image;
     }
     int Band=gdalData->GetRasterCount();

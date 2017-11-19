@@ -117,3 +117,17 @@ void newProject::closeEvent(QCloseEvent *event)
     }
 
 }
+/**
+ * @brief newProject::on_actiontest_triggered 基于空间格局的测试
+ */
+void newProject::on_actiontest_triggered()
+{
+    empty_thread=new emptychild;//空线程
+//    zone=new zonedeal;//类
+//    zone->moveToThread(empty_thread);//处理数据线程移入空线程
+//    empty_thread->start();//线程启动
+    classify=new svmclassify;//类
+    classify->moveToThread(empty_thread);//处理数据线程移入空线程
+    empty_thread->start();//线程启动
+
+}

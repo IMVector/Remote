@@ -59,7 +59,7 @@ operate::operate(QWidget *parent) :
     connect(this,SIGNAL(deleteCurrent(int)),fileDeal,SLOT(deleteDataFun(int)));//删除样本时信号
     connect(this,SIGNAL(newCurrent(int)),fileDeal,SLOT(currentFunction(int)));//新建样本时信号
     connect(this,SIGNAL(sendDetails(fileDetails)),mySort,SLOT(getDetails(fileDetails)));
-    connect(this,SIGNAL(sortAlready(QString)),fileDeal,SLOT(parser(QString)));
+    connect(this,SIGNAL(sortAlready(QString)),fileDeal,SLOT(newParser(QString)));
     connect(this,SIGNAL(lowPoiSignal()),fileDeal,SLOT(lowPointsStart()));
     connect(this,SIGNAL(mCombine(QString,QString)),fileDeal,SLOT(combineLine(QString,QString)));
     connect(this,SIGNAL(sendSimpleInfo(QString,int*)),fileDeal,SLOT(simpleInfo(QString,int*)));//读取样本并发送信息去文件处理
@@ -78,7 +78,7 @@ operate::operate(QWidget *parent) :
     connect(fileDeal,SIGNAL(fileDataDetails(int,int)),this,SLOT(getDataFileDetails(int,int)));
     connect(fileDeal,SIGNAL(messageInfo(QString,int)),this,SLOT(showMessage(QString,int)));
 
-    connect(mySort,SIGNAL(sortComplete(QString)),fileDeal,SLOT(parser(QString)));
+    connect(mySort,SIGNAL(sortComplete(QString)),fileDeal,SLOT(newParser(QString)));
     connect(seaLine,SIGNAL(getSealine(int*,int*)),fileDeal,SLOT(slotSealine(int*,int*)));//海岸线提取
 
     connect(Sqlsever,SIGNAL(sendImageName(QString)),this,SLOT(getImageName(QString)));//数据库发来的文件
@@ -267,7 +267,6 @@ void operate::on_fileBandWidget_clicked(const QModelIndex &index)
     switch (i) {
     case 0:
         selectR=index.row();
-        qDebug()<<selectR;
         RGBselectCount++;
         strNumber = QString::number(selectR+1);//输入样本数量
         ui->showBandWidget->setItem(i,1,new QTableWidgetItem(QStringLiteral("波段")+strNumber));
@@ -304,9 +303,9 @@ void operate::on_comboBox_3_activated(int index)
     else
     {
         labelIndex=2*index-2;
-        qDebug()  <<labelIndex<<"activated";
+        //        qDebug()  <<labelIndex<<"activated";
     }
-    qDebug()<<"labelList.size()"<<labelList.size();
+    qDebug()<<QStringLiteral("当前图片显示器的数量")<<labelList.size();
 }
 void operate::initCombox()
 {
@@ -349,17 +348,17 @@ void operate::getImage(QImage image, int status)
         {
             label=new MyLabel;
             labelList.append(label);
-            qDebug()<<"labelIndex"<<labelIndex;
+            //            qDebug()<<"labelIndex"<<labelIndex;
             labelList.at(labelIndex+1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
             labelList.at(labelIndex+1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
             create_label=true;
         }
         //显示略缩图
-        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
+//        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
         QPixmap mp;
-        mp=mp.fromImage(smallimage);
+        mp=mp.fromImage(image);
         labelList.at(labelIndex+1)->setPixmap(mp);
-        labelList.at(labelIndex+1)->resize(QSize(smallimage.width(),smallimage.height()));
+        labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
         labelList.at(labelIndex+1)->setScaledContents(true);
         labelList.at(labelIndex+1)->show();
 
@@ -378,7 +377,7 @@ void operate::getImage(QImage image, int status)
             }else{
                 labelList.at(labelIndex)->move(QApplication::desktop()->width()/10,50);
             }
-            qDebug()<<"labelIndex"<<labelIndex;
+            //            qDebug()<<"labelIndex"<<labelIndex;
             labelList.at(labelIndex)->connect(label,SIGNAL(currentOver()),this,SLOT(SampleOver()));//鼠标右键点击当前样本结束，从文件获取data
             labelList.at(labelIndex)->connect(label,SIGNAL(sendlocation(int,int)),this,SLOT(addPoint(int,int)));//鼠标左键获取坐标，label显示当前选择区域图像变化
             labelList.at(labelIndex)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(lineMouse(int,int)));//鼠标左键获取坐标，label显示当前选择区域图像变化
@@ -587,11 +586,11 @@ void operate::getDataFileDetails(int number, int geoNumber)
         choiceSample->show();
     }
     count_for_select_area++;
-    qDebug()<<count_for_select_area;
+    //    qDebug()<<count_for_select_area;
     choiceSample->fileDataRead();
     choiceSample->getinfo(number,count_for_select_area);
 
-    qDebug()<<"details.geoNumber"<<details.geoNumber;
+    //    qDebug()<<"details.geoNumber"<<details.geoNumber;
     details.eachnumberFlag[count_for_select_area]=1;
     if(count_for_select_area<=geoNumber-1)
     {
@@ -799,9 +798,9 @@ void operate::on_openFromFileBtn_clicked()
         {
             tempStr=List.at(i);
             number[i-1]=tempStr.toInt();
-            qDebug()<<number[i-1];
+            //            qDebug()<<number[i-1];
         }
-        qDebug()<<name;
+        //        qDebug()<<name;
         read.close();
         emit sendSimpleInfo(name,number);
     }

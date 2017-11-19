@@ -37,7 +37,10 @@ SOURCES += main.cpp\
     MyDialog.cpp \
     showinfo.cpp \
     progressbar.cpp \
-    imagefile.cpp
+    imagefile.cpp \
+    zonedeal.cpp \
+    svm.cpp \
+    svmclassify.cpp
 
 HEADERS  += newproject.h \
     emptychild.h \
@@ -52,7 +55,10 @@ HEADERS  += newproject.h \
     MyDialog.h \
     showinfo.h \
     progressbar.h \
-    imagefile.h
+    imagefile.h \
+    zonedeal.h \
+    svm.h \
+    svmclassify.h
 
 FORMS    += newproject.ui \
     operate.ui \

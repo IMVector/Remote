@@ -8,15 +8,15 @@ int N=4;
 int EN=N+1;
 int GeoNumber=1;
 int max_number=0;//样本数量的最大值
-int decide_number_only=0;
-int Number_average=0;
-int Sum_Number_of_Geographical_samples=0;//所有地物的样本总数量
-int Number_of_Geographical_1_samples=0;//每个地物中的样本数量
-int Number_of_Geographical_2_samples=0;
-int Number_of_Geographical_3_samples=0;
-int Number_of_Geographical_4_samples=0;
-int Number_of_Geographical_5_samples=0;
-int Number_of_Geographical_6_samples=0;
+int decide_number=0;
+int average_number=0;
+int sumSample=0;//所有地物的样本总数量
+int sample_1=0;//每个地物中的样本数量
+int sample_2=0;
+int sample_3=0;
+int sample_4=0;
+int sample_5=0;
+int sample_6=0;
 int resultCount = 0;
 int queeInCount=0;
 bool Extend=true;
@@ -34,16 +34,16 @@ classify::classify()
 /// number:样本区域点数量
 void classify::getdata_from_ui(simples data, int number)
 {
-//    int i,j;
-//    for(i=0;i<number;i++)
-//    {
-//        for(j=0;j<N;j++)
-//        {
-//            Data[i].bands[j]=data[i].bands[j];
-//        }
+    //    int i,j;
+    //    for(i=0;i<number;i++)
+    //    {
+    //        for(j=0;j<N;j++)
+    //        {
+    //            Data[i].bands[j]=data[i].bands[j];
+    //        }
 
-//    }
-//    delete[] data;
+    //    }
+    //    delete[] data;
     Data=data;
     emit setProgressValue(2);
     if(Extend==false)
@@ -61,45 +61,40 @@ void classify::getDetails(fileDetails fd)
 {
     emit setProgressRange(0,100);
     emit setProgressValue(1);
-//    Data=(Node*)malloc(200000* sizeof(Node));
+
     N=fd.bandNumber;
     EN=N+1;
-    Sum_Number_of_Geographical_samples=fd.sumNumber;
+    sumSample=fd.sumNumber;
     GeoNumber=fd.geoNumber;
     ruleOwnName=fd.fileName;
     Extend=fd.extend;
-    Number_of_Geographical_1_samples=fd.eachnumber[0];
-    Number_of_Geographical_2_samples=fd.eachnumber[1];
-    Number_of_Geographical_3_samples=fd.eachnumber[2];
-    Number_of_Geographical_4_samples=fd.eachnumber[3];
-    Number_of_Geographical_5_samples=fd.eachnumber[4];
-    Number_of_Geographical_6_samples=fd.eachnumber[5];
-    Number_average=(Number_of_Geographical_1_samples+
-                    Number_of_Geographical_2_samples+
-                    Number_of_Geographical_3_samples+
-                    Number_of_Geographical_4_samples+
-                    Number_of_Geographical_5_samples+
-                    Number_of_Geographical_6_samples)/GeoNumber;
-
-
-    decide_number_only=(Number_average+0.2*fd.eachmax);
-
+    sample_1=fd.eachnumber[0];
+    sample_2=fd.eachnumber[1];
+    sample_3=fd.eachnumber[2];
+    sample_4=fd.eachnumber[3];
+    sample_5=fd.eachnumber[4];
+    sample_6=fd.eachnumber[5];
+    average_number=(sample_1+
+                    sample_2+
+                    sample_3+
+                    sample_4+
+                    sample_5+
+                    sample_6)/GeoNumber;
+    decide_number=(average_number+0.2*fd.eachmax);
     max_number=fd.eachmax;
-
-//    memset(Data,0,100000*sizeof(Node));
-    qDebug()<<N<<"thisN";
-    qDebug()<<"geoNumber"<<GeoNumber;
-    qDebug()<<Number_of_Geographical_1_samples<<"this1";
-    qDebug()<<Number_of_Geographical_2_samples<<"this2";
-    qDebug()<<Number_of_Geographical_3_samples<<"this3";
-    qDebug()<<Number_of_Geographical_4_samples<<"this4";
-    qDebug()<<Number_of_Geographical_5_samples<<"this5";
-    qDebug()<<Number_of_Geographical_6_samples<<"this6";
-    qDebug()<<"thisSUM"<<Sum_Number_of_Geographical_samples;
-    qDebug()<<"thisdecide"<<decide_number_only;
-    qDebug()<<"thisMAX"<<max_number;
-    qDebug()<<"Number_average"<<Number_average;
-    qDebug()<<"extend"<<Extend;
+    qInfo()<<QStringLiteral("波段数量：")<<N;
+    qInfo()<<QStringLiteral("地物数量：")<<GeoNumber;
+    qInfo()<<QStringLiteral("第1种地物样本数量：")<<sample_1;
+    qInfo()<<QStringLiteral("第2种地物样本数量：")<<sample_2;
+    qInfo()<<QStringLiteral("第3种地物样本数量：")<<sample_3;
+    qInfo()<<QStringLiteral("第4种地物样本数量：")<<sample_4;
+    qInfo()<<QStringLiteral("第5种地物样本数量：")<<sample_5;
+    qInfo()<<QStringLiteral("第6种地物样本数量：")<<sample_6;
+    qInfo()<<QStringLiteral("所有样本总数量：")<<sumSample;
+    qInfo()<<QStringLiteral("阈值数量：")<<decide_number;
+    qInfo()<<QStringLiteral("单个样本数量最大值：")<<max_number;
+    qInfo()<<QStringLiteral("样本数量平均值：")<<average_number;
+    qInfo()<<QStringLiteral("是否启用超级扩展：")<<Extend;
 }
 
 void classify::thismain()
@@ -107,14 +102,10 @@ void classify::thismain()
 
     if(root==NULL)
     {
-        qDebug()<<"in";
         root= (Tree)malloc(sizeof(TreeNode));
     }
     resultCount = 0;
     queeInCount=0;
-    QTime time;
-    time.start();
-    qDebug()<<"start";
     root->bandi=-1;
     root->bandj=-1;
     root->bandk=-1;
@@ -131,7 +122,7 @@ void classify::thismain()
         quee[i].Threshold=-1;
         quee[i].visited=-1;
     }
-    int i = 0, j = 0, k = 0, /*p = 0,*/ judge1/*, judge2*/;
+    int i = 0, j = 0, k = 0,judge1;
     int Number_of_cycles_a = 0, Number_of_cycles_b = 0;//循环次数
     int zero_extend_Sum_Number = 0;//函数调用计数变量
     array(*a)[15];
@@ -156,23 +147,23 @@ void classify::thismain()
     }
     double(*data)[15];
     data = (double(*)[15])malloc(100000 *15* sizeof(double));
-    int number_item2 = Number_of_Geographical_1_samples + Number_of_Geographical_2_samples;
-    int number_item3 = number_item2 + Number_of_Geographical_3_samples;
-    int number_item4 = number_item3 + Number_of_Geographical_4_samples;
-    int number_item5 = number_item4 + Number_of_Geographical_5_samples;
-    int number_item6 = number_item5 + Number_of_Geographical_6_samples;
+    int number_item2 = sample_1 + sample_2;
+    int number_item3 = number_item2 + sample_3;
+    int number_item4 = number_item3 + sample_4;
+    int number_item5 = number_item4 + sample_5;
+    int number_item6 = number_item5 + sample_6;
 
-    for (i = 0; i < Sum_Number_of_Geographical_samples; i++)
+    for (i = 0; i < sumSample; i++)
     {
         for (j = 0; j < N; j++)
         {
             data[i][j]=Data[i].bands[j];//读取所有数据
         }
-        if (i < Number_of_Geographical_1_samples)
+        if (i < sample_1)
         {
             data[i][N] = 1;
         }
-        if (i >= Number_of_Geographical_1_samples && i < number_item2)
+        if (i >= sample_1 && i < number_item2)
         {
             data[i][N] = 2;
         }
@@ -193,8 +184,8 @@ void classify::thismain()
             data[i][N]=6;
         }
     }
+    qInfo()<<QStringLiteral("区分前准备工作正常");
     //数据输入模块
-    qDebug()<<"normal in prepar";
     for(int count=0;count<GeoNumber*(GeoNumber-1)/2;count++)
     {
         emit setProgressValue(3+((count/GeoNumber)*(GeoNumber-1)/2)*45);
@@ -202,7 +193,7 @@ void classify::thismain()
         case 0:
             Geographical_1 = 1;
             Geographical_2 = 2;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -211,7 +202,7 @@ void classify::thismain()
                 }
                 Number_of_cycles_a++;
             }
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -224,7 +215,7 @@ void classify::thismain()
         case 1:
             Geographical_1 = 1;
             Geographical_2 = 3;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -246,7 +237,7 @@ void classify::thismain()
         case 2:
             Geographical_1 = 2;
             Geographical_2 = 3;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -268,7 +259,7 @@ void classify::thismain()
         case 3:
             Geographical_1 = 1;
             Geographical_2 = 4;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -291,7 +282,7 @@ void classify::thismain()
         case 4:
             Geographical_1 = 2;
             Geographical_2 = 4;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -336,7 +327,7 @@ void classify::thismain()
         case 6:
             Geographical_1 = 1;
             Geographical_2 = 5;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -358,7 +349,7 @@ void classify::thismain()
         case 7:
             Geographical_1 = 2;
             Geographical_2 = 5;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -425,7 +416,7 @@ void classify::thismain()
         case 10:
             Geographical_1 = 1;
             Geographical_2 = 6;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -447,7 +438,7 @@ void classify::thismain()
         case 11:
             Geographical_1 = 2;
             Geographical_2 = 6;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -535,7 +526,7 @@ void classify::thismain()
             break;
         }
         //读取模块
-        qDebug()<<"normal in getData";
+        qInfo()<<QStringLiteral("获取数据正常");
         sort3(a, b, oneBand, Number_of_cycles_a, Number_of_cycles_b,N);
         for (j = 0; j < Number_of_cycles_a; j++)
         {
@@ -557,31 +548,17 @@ void classify::thismain()
     free(a);//将分配的内存释放
     free(b);//将分配的内存释放
     removeCharacteristics(characteristics);
-//    characteristics[0].band[0]=0;
-//    characteristics[1].band[0]=1;
-//    characteristics[2].band[0]=2;
-//    characteristics[3].band[0]=3;
-//    characteristics[4].band[0]=4;
-//    characteristics[5].band[0]=5;
-//    characteristics[6].band[0]=6;
-//    characteristics[7].band[0]=7;
-//    characteristics[8].band[0]=8;
-//    characteristics[9].band[0]=9;
-    qDebug()<<"normal in find before feature";
-    for(int i=0;characteristics[i].band[0]!=-1;i++)
-    {
-        qDebug()<<"i"<<characteristics[i].band[0]<<"j"<<characteristics[i].band[1]<<"k"<<characteristics[i].band[2];
-    }
+
     int Number_of_samples[6] = { 0 };
-    Number_of_samples[0] = Number_of_Geographical_1_samples;
-    Number_of_samples[1] = Number_of_Geographical_2_samples;
-    Number_of_samples[2] = Number_of_Geographical_3_samples;
-    Number_of_samples[3] = Number_of_Geographical_4_samples;
-    Number_of_samples[4] = Number_of_Geographical_5_samples;
-    Number_of_samples[5] = Number_of_Geographical_6_samples;
-    divide(characteristics, data, Sum_Number_of_Geographical_samples, Number_of_samples,root);//分离函数(递归)
-    qDebug()<<time.elapsed()<<"ms";
-    qDebug()<<"complete";
+    Number_of_samples[0] = sample_1;
+    Number_of_samples[1] = sample_2;
+    Number_of_samples[2] = sample_3;
+    Number_of_samples[3] = sample_4;
+    Number_of_samples[4] = sample_5;
+    Number_of_samples[5] = sample_6;
+    qInfo()<<QStringLiteral("开始递归分离");
+    divide(characteristics, data, sumSample, Number_of_samples,root);//分离函数(递归)
+    qInfo()<<QStringLiteral("递归分离正常");
     QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
     QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
     QString fileStr=ruleOwnName;
@@ -600,7 +577,7 @@ void classify::thismain()
     query.exec(sqlInsertStr);
     delete[] Data;
     Data=NULL;
-//    free(Data);
+    qInfo()<<QStringLiteral("地物分离一切正常");
     return;
 }
 ////排序模块
@@ -969,9 +946,8 @@ int number_of_Geographical_6_samples)
                 less_thanm1 = 0, less_thanm2 = 0, less_thanm3 = 0,
                 less_thanm4 = 0,less_thanm5 = 0,less_thanm6 = 0;
     }
-    //    qDebug()<< temp.Threshold<<"Threshold";
-    //    qDebug()<< temp.GainRatio<<"InfomationGainRatio";
-    qDebug()<<"i"<<characteristics.band[0]<<"j"<<characteristics.band[1]<<"k"<<characteristics.band[2]<<"GainRatio"<< temp.GainRatio<<"Threshold"<< temp.Threshold;
+
+    qInfo()<<QStringLiteral("波段i")<<characteristics.band[0]<<QStringLiteral("波段j")<<characteristics.band[1]<<"k"<<characteristics.band[2]<<QStringLiteral("增益比")<< temp.GainRatio<<QStringLiteral("阈值")<< temp.Threshold;
     temp.band[0] = characteristics.band[0];
     temp.band[1] = characteristics.band[1];
     temp.band[2] = characteristics.band[2];
@@ -981,7 +957,7 @@ int number_of_Geographical_6_samples)
 }
 
 void classify::Tree_divide(int sum_Number_of_Geographical_samples,
-                            double data[100000][15], Feature decision_makeing_Info,
+                           double data[100000][15], Feature decision_makeing_Info,
 double Resort_class_1_1[][15], double Resort_class_1_2[][15],
 int number_of_Geography_1_samples[6],//记录各个地物的数量
 int number_of_Geography_2_0_samples[6],//记录分开的数据
@@ -1210,13 +1186,18 @@ int number_of_Geography_2_1_samples[6],int bandNb)//记录分开的数据
 void  classify::divide(Feature characteristics[], double data[][15], int sumNumber, int eachNumber[],Tree treeNode)
 {
     divideCount++;
+    if(divideCount>70)
+    {
+        qFatal("此样本在地物区分时出现了错误,请点击忽略按钮");
+        return;
+    }
     emit setProgressValue(50+divideCount*5);
     int geoNameTh=N;
     if(Extend==true)
     {
         geoNameTh=EN;
     }
-    qDebug()<<"normal in divide";
+
     treeNode->left=(TreeNode*)malloc(sizeof(TreeNode));
     treeNode->right=(TreeNode*)malloc(sizeof(TreeNode));
     int i;
@@ -1291,7 +1272,7 @@ void  classify::divide(Feature characteristics[], double data[][15], int sumNumb
     treeNode->numbers=-1;
     treeNode->geoName=-1;
     treeNode->Threshold=decision_makeing_Info.Threshold;
-    if (sumNumber_below < decide_number_only)
+    if (sumNumber_below < decide_number)
     {
         if (decision_makeing_Info.band[0]!=-1&&decision_makeing_Info.band[1]==-1&&decision_makeing_Info.band[2] == -1)
         {
@@ -1456,7 +1437,7 @@ void  classify::divide(Feature characteristics[], double data[][15], int sumNumb
         treeNode->left->numbers=-1;
         divide(characteristics, outdata_below, sumNumber_below, eachNumber_below,treeNode->left);
     }
-    if (sumNumber_above < decide_number_only)
+    if (sumNumber_above < decide_number)
     {
         if (decision_makeing_Info.band[0]!=-1&&decision_makeing_Info.band[1]==-1&&decision_makeing_Info.band[2] == -1)
         {
@@ -1703,7 +1684,6 @@ void classify::DeleteTree(Tree T)
 {
     if ( T!=NULL )
     {
-        qDebug()<<"delete";
         DeleteTree(T->left);
         DeleteTree(T->right);
         free(T);
@@ -1812,12 +1792,9 @@ int Geographical_1, int Geographical_2,int oneBand[],int bandNb)
 //主函数
 void classify:: extendMain(void)
 {
-    //    hanshu = 1;
+
     resultCount = 0;
     queeInCount=0;
-    QTime time;
-    time.start();
-    qDebug()<<"start";
     root->bandi=-1;
     root->bandj=-1;
     root->bandk=-1;
@@ -1861,22 +1838,22 @@ void classify:: extendMain(void)
     }
     double(*data)[15];
     data = (double(*)[15])malloc(100000 *15* sizeof(double));
-    int number_item2 = Number_of_Geographical_1_samples + Number_of_Geographical_2_samples;
-    int number_item3 = number_item2 + Number_of_Geographical_3_samples;
-    int number_item4 = number_item3 + Number_of_Geographical_4_samples;
-    int number_item5 = number_item4 + Number_of_Geographical_5_samples;
-    int number_item6 = number_item5 + Number_of_Geographical_6_samples;
-    for (i = 0; i < Sum_Number_of_Geographical_samples; i++)
+    int number_item2 = sample_1 + sample_2;
+    int number_item3 = number_item2 + sample_3;
+    int number_item4 = number_item3 + sample_4;
+    int number_item5 = number_item4 + sample_5;
+    int number_item6 = number_item5 + sample_6;
+    for (i = 0; i < sumSample; i++)
     {
         for (j = 0; j < N; j++)
         {
             data[i][j]=Data[i].bands[j];//读取所有数据
         }
-        if (i < Number_of_Geographical_1_samples)
+        if (i < sample_1)
         {
             data[i][EN] = 1;
         }
-        if (i >= Number_of_Geographical_1_samples && i < number_item2)
+        if (i >= sample_1 && i < number_item2)
         {
             data[i][EN] = 2;
         }
@@ -1898,14 +1875,14 @@ void classify:: extendMain(void)
         }
     }
     //数据输入模块
-    qDebug()<<"normal in prepar";
+
     for(int count=0;count<GeoNumber*(GeoNumber-1)/2;count++)
     {
         switch (count) {
         case 0:
             Geographical_1 = 1;
             Geographical_2 = 2;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -1914,7 +1891,7 @@ void classify:: extendMain(void)
                 }
                 Number_of_cycles_a++;
             }
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -1927,7 +1904,7 @@ void classify:: extendMain(void)
         case 1:
             Geographical_1 = 1;
             Geographical_2 = 3;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -1949,7 +1926,7 @@ void classify:: extendMain(void)
         case 2:
             Geographical_1 = 2;
             Geographical_2 = 3;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -1971,7 +1948,7 @@ void classify:: extendMain(void)
         case 3:
             Geographical_1 = 1;
             Geographical_2 = 4;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -1994,7 +1971,7 @@ void classify:: extendMain(void)
         case 4:
             Geographical_1 = 2;
             Geographical_2 = 4;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -2039,7 +2016,7 @@ void classify:: extendMain(void)
         case 6:
             Geographical_1 = 1;
             Geographical_2 = 5;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -2061,7 +2038,7 @@ void classify:: extendMain(void)
         case 7:
             Geographical_1 = 2;
             Geographical_2 = 5;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -2128,7 +2105,7 @@ void classify:: extendMain(void)
         case 10:
             Geographical_1 = 1;
             Geographical_2 = 6;
-            for(i=0;i<Number_of_Geographical_1_samples;i++)
+            for(i=0;i<sample_1;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -2150,7 +2127,7 @@ void classify:: extendMain(void)
         case 11:
             Geographical_1 = 2;
             Geographical_2 = 6;
-            for(i=Number_of_Geographical_1_samples;i<number_item2;i++)
+            for(i=sample_1;i<number_item2;i++)
             {
                 for (j = 0; j < N; j++)
                 {
@@ -2238,7 +2215,6 @@ void classify:: extendMain(void)
             break;
         }
         //读取模块
-        qDebug()<<"normal in getdata";
         for (j = 0; j < Number_of_cycles_a; j++)
         {
             for (k = 0; k < Number_of_cycles_b; k++)
@@ -2269,7 +2245,6 @@ void classify:: extendMain(void)
             memset(first_extend, 0, sizeof(first_extend));
         }
     }
-    qDebug()<<"begin extend";
     extend(characteristics, data);//波段扩展
     for(int i=0;i<200;i++)
     {
@@ -2291,7 +2266,7 @@ void classify:: extendMain(void)
         case 0:
             Geographical_1 = 1;
             Geographical_2 = 2;
-            for (j = 0; j < Number_of_Geographical_1_samples; j++)
+            for (j = 0; j < sample_1; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2300,7 +2275,7 @@ void classify:: extendMain(void)
                 }
                 Number_of_cycles_a++;
             }
-            for (j = Number_of_Geographical_1_samples; j < number_item2; j++)
+            for (j = sample_1; j < number_item2; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2313,7 +2288,7 @@ void classify:: extendMain(void)
         case 1:
             Geographical_1 = 1;
             Geographical_2 = 3;
-            for (j = 0; j < Number_of_Geographical_1_samples; j++)
+            for (j = 0; j < sample_1; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2336,7 +2311,7 @@ void classify:: extendMain(void)
         case 2:
             Geographical_1 = 2;
             Geographical_2 = 3;
-            for (j = Number_of_Geographical_1_samples; j < number_item2; j++)
+            for (j = sample_1; j < number_item2; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2358,7 +2333,7 @@ void classify:: extendMain(void)
         case 3:
             Geographical_1 = 1;
             Geographical_2 = 4;
-            for (j = 0; j < Number_of_Geographical_1_samples; j++)
+            for (j = 0; j < sample_1; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2381,7 +2356,7 @@ void classify:: extendMain(void)
         case 4:
             Geographical_1 = 2;
             Geographical_2 = 4;
-            for (j = Number_of_Geographical_1_samples; j < number_item2; j++)
+            for (j = sample_1; j < number_item2; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2425,7 +2400,7 @@ void classify:: extendMain(void)
         case 6:
             Geographical_1 = 1;
             Geographical_2 = 5;
-            for (j = 0; j < Number_of_Geographical_1_samples; j++)
+            for (j = 0; j < sample_1; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2447,7 +2422,7 @@ void classify:: extendMain(void)
         case 7:
             Geographical_1 = 2;
             Geographical_2 = 5;
-            for (j = Number_of_Geographical_1_samples; j <number_item2 ; j++)
+            for (j = sample_1; j <number_item2 ; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2513,7 +2488,7 @@ void classify:: extendMain(void)
         case 10:
             Geographical_1 = 1;
             Geographical_2 = 6;
-            for (j = 0; j <Number_of_Geographical_1_samples ; j++)
+            for (j = 0; j <sample_1 ; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2535,7 +2510,7 @@ void classify:: extendMain(void)
         case 11:
             Geographical_1 = 2;
             Geographical_2 = 6;
-            for (j = Number_of_Geographical_1_samples; j <number_item2 ; j++)
+            for (j = sample_1; j <number_item2 ; j++)
             {
                 for (i = 0; i < EN; i++)
                 {
@@ -2621,7 +2596,6 @@ void classify:: extendMain(void)
             }
             break;
         }
-        qDebug()<<"normal in getting extend data";
         sort3(a, b, oneBand, Number_of_cycles_a, Number_of_cycles_b,EN);
         for (j = 0; j < Number_of_cycles_a; j++)
         {
@@ -2650,24 +2624,17 @@ void classify:: extendMain(void)
             memset(first_extend, 0, sizeof(first_extend));
         }
     }
-    qDebug()<<"normal in find before feature";
-    //    for(int i=0;characteristics[i].band[0]!=-1;i++)
-    //    {
-    //      qDebug()<<"i"<<characteristics[i].band[0]<<"j"<<characteristics[i].band[1]<<"k"<<characteristics[i].band[2]<<"上";
-    //    }
+
     removeCharacteristics(characteristics);
-    for(int i=0;characteristics[i].band[0]!=-1;i++)
-    {
-        qDebug()<<"i"<<characteristics[i].band[0]<<"j"<<characteristics[i].band[1]<<"k"<<characteristics[i].band[2]<<"下";
-    }
+
     int Number_of_samples[6] = { 0 };
-    Number_of_samples[0] = Number_of_Geographical_1_samples;
-    Number_of_samples[1] = Number_of_Geographical_2_samples;
-    Number_of_samples[2] = Number_of_Geographical_3_samples;
-    Number_of_samples[3] = Number_of_Geographical_4_samples;
-    Number_of_samples[4] = Number_of_Geographical_5_samples;
-    Number_of_samples[5] = Number_of_Geographical_6_samples;
-    divide(characteristics, data, Sum_Number_of_Geographical_samples, Number_of_samples,root);//分离函数(递归)
+    Number_of_samples[0] = sample_1;
+    Number_of_samples[1] = sample_2;
+    Number_of_samples[2] = sample_3;
+    Number_of_samples[3] = sample_4;
+    Number_of_samples[4] = sample_5;
+    Number_of_samples[5] = sample_6;
+    divide(characteristics, data, sumSample, Number_of_samples,root);//分离函数(递归)
     QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
     QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
     QString fileStr=ruleOwnName;
@@ -2699,17 +2666,16 @@ void classify::extend(Feature characteristics[], double data[][15])
                 temp = characteristics[i];
             }
     }
-    qDebug()<<"i"<<temp.band[0]<<"j"<<temp.band[1]<<"k"<<temp.band[2];
+    qInfo()<<"i"<<temp.band[0]<<"j"<<temp.band[1]<<"k"<<temp.band[2];
     if (temp.band[1]!=-1&&temp.band[2] == -1) //两波段的地物扩展
     {
         if (boolean == false)
         {
-            for (j = 0; j < Sum_Number_of_Geographical_samples; j++)
+            for (j = 0; j < sumSample; j++)
             {
                 data[j][N] = data[j][temp.band[0]] - data[j][temp.band[1]];
             }
-            //            printf("用%d-%d扩展\n", temp.band[0], temp.band[1]);
-            qDebug()<<"use"<<temp.band[0]<< temp.band[1]<<"extend";
+            qInfo()<<"use"<<temp.band[0]<< temp.band[1]<<"extend";
             boolean = true;
         }
     }
@@ -2717,19 +2683,17 @@ void classify::extend(Feature characteristics[], double data[][15])
     {
         if (boolean == false)
         {
-            for (j = 0; j < Sum_Number_of_Geographical_samples; j++)
+            for (j = 0; j < sumSample; j++)
             {
                 data[j][N] = (data[j][temp.band[0]] + data[j][temp.band[2]]) / 2 - data[j][temp.band[1]];
             }
-            //            printf("用（%d+%d）/2-%d扩展\n", temp.band[0], temp.band[2], temp.band[1]);
-            qDebug()<<"use("<<temp.band[0]<<"+"<< temp.band[2]<<")/2-"<<temp.band[1]<<"extend";
+            qInfo()<<"use("<<temp.band[0]<<"+"<< temp.band[2]<<")/2-"<<temp.band[1]<<"extend";
             boolean = true;
         }
     }
     if (boolean)
     {
-        qDebug()<<"all simples extend a band";
-        printf("全部样本已经扩展出一个波段\n");
+        qInfo()<<"all simples extend a band";
     }
 }
 

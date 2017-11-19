@@ -1,4 +1,5 @@
-﻿#include "filedeal.h"
+﻿
+#include "filedeal.h"
 int thisCount=0;
 int ERRORCount=0;
 QString filePathName=NULL;
@@ -23,6 +24,7 @@ Points areaPoint=(point*)malloc(100*sizeof(point));
 simples *dataCopyArea =NULL;
 QImage rawImage;
 QImage partImage;
+QImage scaleImage;
 int R[7]={255,   255,  255,    0,   0,   139,0};
 int G[7]={255,     0,  255,    0,   255, 0 ,0};
 int B[7]={255,     0  ,  0,  255,   0,   139   ,0};
@@ -37,14 +39,14 @@ filedeal::filedeal()
 ///获取图像波段和文件信息
 void filedeal::openPathFile(QString fileName)
 {
-    qDebug()<<fileName;
+    //    qInfo()<<QStringLiteral("文件名称：")<<fileName;
     filePathName=fileName;
     GDALAllRegister();//注册gdal驱动
     CPLSetConfigOption( "GDAL_FILENAME_IS_UTF8", "YES" );//中文路径中文名称支持
     gdalData = ( GDALDataset* )GDALOpen(fileName.toStdString().c_str(), GA_ReadOnly );//打开文件
     if ( gdalData == NULL )
     {
-        qDebug()<<"ERROR";
+        qWarning()<<QStringLiteral("数据集为空");
         return ;
     }
     Band=0;
@@ -53,9 +55,9 @@ void filedeal::openPathFile(QString fileName)
     Band=gdalData->GetRasterCount();
     Samples=gdalData->GetRasterXSize();
     Lines=gdalData->GetRasterYSize();
-    qDebug()<<"Band"<<Band;
-    qDebug()<<"Samples"<<Samples;
-    qDebug()<<"Lines"<<Lines;
+    qInfo()<<QStringLiteral("波段数量：")<<Band;
+    qInfo()<<QStringLiteral("图像宽度：")<<Samples;
+    qInfo()<<QStringLiteral("图像高度：")<<Lines;
 
     GDALClose(gdalData);
     emit bandToUi(Band);
@@ -71,8 +73,7 @@ void filedeal::openPathFile(QString fileName)
     }
     QSqlQuery query;
     QString sqlInsertStr=QString("insert into RemoteSensingImage(name)values('%1')").arg(fileName);
-    bool querySuccess=query.exec(sqlInsertStr);
-    qDebug()<<"querySuccess"<<querySuccess;
+    query.exec(sqlInsertStr);
 }
 ///获得rgb信息并显示图片
 void filedeal::getRGB(int r, int g, int b)
@@ -132,7 +133,7 @@ float ** filedeal::openFile()
     gdalData = ( GDALDataset* )GDALOpen(filePathName.toStdString().c_str(), GA_ReadOnly );//打开文件
     if ( gdalData == NULL )
     {
-        qDebug()<<"ERROR";
+        qWarning()<<QStringLiteral("数据集为空");
         return NULL;
     }
     QList<GDALRasterBand*> bandList;
@@ -154,7 +155,7 @@ float ** filedeal::openFile()
 
     if ( bandList.size() == 0 )
     {
-        qDebug()<<"ERROR out";
+        qWarning()<<QStringLiteral("数据集为空");
         return NULL;
     }
 
@@ -178,7 +179,6 @@ float ** filedeal::openFile()
     return rawData;
 }
 
-
 ///显示图片
 void filedeal::openFile(int r,int g,int b)
 {
@@ -192,7 +192,7 @@ void filedeal::openFile(int r,int g,int b)
 
     if ( gdalData == NULL )
     {
-        qDebug()<<"ERROR";
+        qWarning()<<QStringLiteral("数据集为空");
         return;
     }
     QList<GDALRasterBand*> bandList;
@@ -214,18 +214,87 @@ void filedeal::openFile(int r,int g,int b)
     int picWidth = bandList.at( 0 )->GetXSize();
     int picHeight = bandList.at( 0 )->GetYSize();
 
+
     unsigned char *processData_band1;
     unsigned char *processData_band2;
     unsigned char *processData_band3;
-    float *tempRaw_band1=new float [picHeight*picWidth];
-    float *tempRaw_band2=new float [picHeight*picWidth];
-    float *tempRaw_band3=new float [picHeight*picWidth];
-    bandList.at( r )->RasterIO( GF_Read, 0, 0, picWidth, picHeight, tempRaw_band1, picWidth, picHeight, GDT_Float32, 0, 0 );
-    bandList.at( g )->RasterIO( GF_Read, 0, 0, picWidth, picHeight, tempRaw_band2, picWidth, picHeight, GDT_Float32, 0, 0 );
-    bandList.at( b )->RasterIO( GF_Read, 0, 0, picWidth, picHeight, tempRaw_band3, picWidth, picHeight, GDT_Float32, 0, 0 );
-    processData_band1= picSketch( tempRaw_band1, bandList.at( r ), picWidth * picHeight, bandList.at( r )->GetNoDataValue() );
-    processData_band2= picSketch( tempRaw_band2, bandList.at( g ), picWidth * picHeight, bandList.at( g )->GetNoDataValue() );
-    processData_band3= picSketch( tempRaw_band3, bandList.at( b ), picWidth * picHeight, bandList.at( b )->GetNoDataValue() );
+    //    int readHeight=100;
+    //根据图片大小调整每次读的行数
+    //如果图片很大，每次读50行
+    if(Samples>7000)
+    {
+        readHeight=50;
+    }
+    else if(4000<=Samples&&Samples<=7000)
+    {
+        readHeight=100;
+    }
+    else if(Samples<4000)
+    {
+        readHeight=200;
+    }
+    float *tempRaw_band1=new float [readHeight*picWidth];
+    float *tempRaw_band2=new float [readHeight*picWidth];
+    float *tempRaw_band3=new float [readHeight*picWidth];
+
+    QImage image(Samples, Lines, QImage::Format_RGB32);
+    QRgb value;
+    image.fill(Qt::white);//将图片背景填充为白色
+    //以下r，g，b均不是形参的rgb意义
+    int colorR,colorG,colorB;
+
+    int startY=0,imageY=0;
+    for(int i=0;i<picHeight/readHeight;i++)
+    {
+        //读取数据
+        bandList.at( r )->RasterIO( GF_Read, 0, startY, picWidth, readHeight, tempRaw_band1, picWidth, readHeight, GDT_Float32, 0, 0 );
+        bandList.at( g )->RasterIO( GF_Read, 0, startY, picWidth, readHeight, tempRaw_band2, picWidth, readHeight, GDT_Float32, 0, 0 );
+        bandList.at( b )->RasterIO( GF_Read, 0, startY, picWidth, readHeight, tempRaw_band3, picWidth, readHeight, GDT_Float32, 0, 0 );
+        processData_band1= picSketch( tempRaw_band1,gdalData->GetRasterBand(r+1), picWidth * readHeight, bandList.at( r )->GetNoDataValue());
+        processData_band2= picSketch( tempRaw_band2,gdalData->GetRasterBand(g+1), picWidth * readHeight, bandList.at( g )->GetNoDataValue());
+        processData_band3= picSketch( tempRaw_band3,gdalData->GetRasterBand(b+1), picWidth * readHeight, bandList.at( b )->GetNoDataValue());
+
+        for( int y=0;y<readHeight;y++)
+        {
+            for(int x=0;x<Samples;x++)
+            {
+                colorR=processData_band1[y * Samples + x];
+                colorG=processData_band2[y * Samples + x];
+                colorB=processData_band3[y * Samples + x];
+                value = qRgb(colorR, colorG, colorB);
+                image.setPixel(x,imageY,value);
+            }
+            imageY++;
+        }
+        delete[] processData_band1;
+        delete[] processData_band2;
+        delete[] processData_band3;
+
+        //更改读取区域
+        startY+=readHeight;
+    }
+    int endOffset=picHeight%readHeight;
+
+    //读取数据
+    bandList.at( r )->RasterIO( GF_Read, 0, startY, picWidth,endOffset , tempRaw_band1, picWidth, endOffset, GDT_Float32, 0, 0 );
+    bandList.at( g )->RasterIO( GF_Read, 0, startY, picWidth,endOffset, tempRaw_band2, picWidth, endOffset, GDT_Float32, 0, 0 );
+    bandList.at( b )->RasterIO( GF_Read, 0, startY, picWidth,endOffset, tempRaw_band3, picWidth, endOffset, GDT_Float32, 0, 0 );
+    processData_band1= picSketch( tempRaw_band1,gdalData->GetRasterBand(r+1), picWidth * endOffset, bandList.at( r )->GetNoDataValue() );
+    processData_band2= picSketch( tempRaw_band2,gdalData->GetRasterBand(g+1), picWidth * endOffset, bandList.at( g )->GetNoDataValue() );
+    processData_band3= picSketch( tempRaw_band3,gdalData->GetRasterBand(b+1), picWidth * endOffset, bandList.at( b )->GetNoDataValue() );
+
+    for( int y=0;y<endOffset;y++)
+    {
+        for(int x=0;x<Samples;x++)
+        {
+            colorR=processData_band1[y * Samples + x];
+            colorG=processData_band2[y * Samples + x];
+            colorB=processData_band3[y * Samples + x];
+            value = qRgb(colorR, colorG, colorB);
+            image.setPixel(x,imageY,value);
+        }
+        imageY++;
+    }
 
     GDALClose(gdalData);
     delete[] tempRaw_band1;
@@ -234,23 +303,6 @@ void filedeal::openFile(int r,int g,int b)
     tempRaw_band1=NULL;
     tempRaw_band2=NULL;
     tempRaw_band3=NULL;
-    QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb value;
-    image.fill(Qt::white);//将图片背景填充为白色
-    //以下r，g，b均不是形参的rgb意义
-
-    for( int y=0;y<Lines;y++)
-    {
-        for(int x=0;x<Samples;x++)
-        {
-            r=processData_band1[y * Samples + x];
-            g=processData_band2[y * Samples + x];
-            b=processData_band3[y * Samples + x];
-            value = qRgb(r, g, b);
-            image.setPixel(x,y,value);
-        }
-    }
-    rawImage=image;
     delete[] processData_band1;
     delete[] processData_band2;
     delete[] processData_band3;
@@ -258,7 +310,72 @@ void filedeal::openFile(int r,int g,int b)
     processData_band2=NULL;
     processData_band3=NULL;
 
+    rawImage=image;
 }
+///返回原始数据
+/**
+ * @brief filedeal::openFile 传入矩形的左上顶点和右下定点
+ * @param rectangle
+ * @return
+ */
+float ** filedeal::openFile(Points rectangle)
+{
+    int startX=rectangle[0].x,startY=rectangle[0].y,
+            xOffset=rectangle[1].x-rectangle[0].x,
+            yOffset=rectangle[1].y-rectangle[0].y;
+    //qDebug()<<QStringLiteral("打开文件起始坐标")<<startX<<startY;
+    //qDebug()<<QStringLiteral("打开文件结束坐标")<<rectangle[1].x<<rectangle[1].y;
+    GDALAllRegister();//注册gdal驱动
+    CPLSetConfigOption( "GDAL_FILENAME_IS_UTF8", "YES" );//中文路径中文名称支持
+    gdalData = ( GDALDataset* )GDALOpen(filePathName.toStdString().c_str(), GA_ReadOnly );//打开文件
+    if ( gdalData == NULL )
+    {
+        qWarning()<<QStringLiteral("数据集为空");
+        return NULL;
+    }
+    QList<GDALRasterBand*> bandList;
+    qDeleteAll(bandList);
+    bandList.clear();
+    if(Band>=3)
+    {
+        for(int i=1;i<=Band;i++)
+        {
+            bandList.append(gdalData->GetRasterBand(i));//将所有的第i波段存入Qlist，以整体存入
+        }
+    }
+    else
+    {
+        bandList.append(gdalData->GetRasterBand(1));
+        bandList.append(gdalData->GetRasterBand(1));
+        bandList.append(gdalData->GetRasterBand(1));
+    }
+
+    if ( bandList.size() == 0 )
+    {
+        qWarning()<<QStringLiteral("数据集为空");
+        return NULL;
+    }
+
+    //    int picWidth = bandList.at( 0 )->GetXSize();
+    //    int picHeight = bandList.at( 0 )->GetYSize();
+
+    QList<float*> rawList;
+    for(int i=0;i<Band;i++)
+    {
+        float *tempRaw=new float [xOffset*yOffset];//GDT_Float32
+        bandList.at( i )->RasterIO( GF_Read, startX, startY, xOffset, yOffset, tempRaw, xOffset, yOffset, GDT_Float32, 0, 0 );
+        rawList.append(tempRaw);
+    }
+    float **rawData=NULL;
+    rawData=new float *[Band];
+    for(int i=0;i<Band;i++)
+    {
+        rawData[i]=rawList.at(i);
+    }
+    GDALClose(gdalData);
+    return rawData;
+}
+
 ////图像线性拉伸(将rgb转化到0-255内)
 unsigned char* filedeal::picSketch( float* buffer , GDALRasterBand* currentBand, int bandSize, double noValue )
 {
@@ -298,8 +415,21 @@ unsigned char* filedeal::picSketch( float* buffer , GDALRasterBand* currentBand,
 void filedeal::visiualdraw(point p,int visiualHeight,int visiualWidth,QImage visiualImage)
 {
     int startX=0,startY=0;
-
-    QImage image=visiualImage;
+    int scaleHeight;
+    int scaleWidth;
+    if(visiualImage.width()>visiualImage.height())
+    {
+        scaleHeight=QApplication::desktop()->height()/4;
+        scaleWidth= visiualImage.width()*scale;
+    }
+    else
+    {
+        scaleWidth=QApplication::desktop()->width()/12;
+        scaleHeight=visiualImage.height()*scale;
+    }
+    //    qDebug()<<QStringLiteral("略缩图宽度：")<<scaleWidth;
+    //    qDebug()<<QStringLiteral("略缩图高度：")<<scaleHeight;
+    QImage image=visiualImage.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节;
     int r=255, g=0, b=0;//用来接收颜色
     QRgb value=qRgb(r, g, b);
     visiualDrawP=p;
@@ -338,39 +468,85 @@ void filedeal::visiualdraw(point p,int visiualHeight,int visiualWidth,QImage vis
     //startY,startX;//起点的样本位置
     //将一维坐标转换成二维坐标
 
-    int x=startX;
-    int y=startY;
+    int x=startX*scale;
+    int y=startY*scale;
     int w=0;
-    while(w<visiualWidth)
+    int viewWidth=visiualWidth*scale;
+    int viewHeight=visiualHeight*scale;
+
+    if(x+viewWidth==scaleWidth)
     {
-        for(int i=0;i<1/scale;i++)
-        {
-            image.setPixel(x, y+i, value);
-        }
-        for(int i=1/scale;i>0;i--)
-        {
-            image.setPixel(x, y+visiualHeight-i, value);
-        }
+        //x开始点减小1
+        x--;
+    }
+    if(y+viewHeight==scaleHeight)
+    {
+        //y开始点减小1
+        y--;
+    }
+
+    while(w<viewWidth)
+    {
+        image.setPixel(x, y, value);
+        image.setPixel(x, y+viewHeight, value);
         x++;
         w++;
     }
     w=0;
-    x=startX;
-    y=startY;
-    while(w<visiualHeight)
+    x=startX*scale;
+    y=startY*scale;
+    if(x+viewWidth==scaleWidth)
     {
-
-        for(int i=0;i<1/scale;i++)
-        {
-            image.setPixel(x+i, y, value);
-        }
-        for(int i=1/scale;i>0;i--)
-        {
-            image.setPixel(x+visiualWidth-i, y, value);
-        }
+        //x开始点减小1
+        x--;
+    }
+    if(y+viewHeight==scaleHeight)
+    {
+        //y开始点减小1
+        y--;
+    }
+    while(w<viewHeight)
+    {
+        image.setPixel(x, y, value);
+        image.setPixel(x+viewWidth, y, value);
         y++;
         w++;
     }
+
+
+    //    int x=startX;
+    //    int y=startY;
+    //    int w=0;
+    //    while(w<visiualWidth)
+    //    {
+    //        for(int i=0;i<1/scale;i++)//将红框加粗
+    //        {
+    //            image.setPixel(x, y+i, value);
+    //        }
+    //        for(int i=1/scale;i>0;i--)//将红框加粗
+    //        {
+    //            image.setPixel(x, y+visiualHeight-i, value);
+    //        }
+    //        x++;
+    //        w++;
+    //    }
+    //    w=0;
+    //    x=startX;
+    //    y=startY;
+    //    while(w<visiualHeight)
+    //    {
+
+    //        for(int i=0;i<1/scale;i++)//将红框加粗
+    //        {
+    //            image.setPixel(x+i, y, value);
+    //        }
+    //        for(int i=1/scale;i>0;i--)//将红框加粗
+    //        {
+    //            image.setPixel(x+visiualWidth-i, y, value);
+    //        }
+    //        y++;
+    //        w++;
+    //    }
 
     //矩形可视框的终点坐标是x=x+50,y=y+50
     //显示文件
@@ -390,7 +566,7 @@ void filedeal::loadPartImage(int startX,int startY,int visiualHeight,int visiual
     //将一维坐标转换成二维坐标
     //显示文件pixelIndex(int x, int y)不支持32-bppimage
     //详情看QT文档
-    //qDebug()<<  MainImage.pixelColor(startX,startY);
+    //qInfo()<<  MainImage.pixelColor(startX,startY);
     int x=0;
     int y=0;
     for(int h=startY;h<startY+visiualHeight;h++)
@@ -475,7 +651,7 @@ void filedeal::findEdge(Points selectPoint,int number)
     minx=selectPoint[0].x;
     for(i=0;i<number;i++)
     {
-        //        qDebug()<<selectPoint[i].x;
+        //        qInfo()<<selectPoint[i].x;
         if(minx>selectPoint[i].x)
             minx=selectPoint[i].x;
     }
@@ -504,7 +680,8 @@ void filedeal::findEdge(Points selectPoint,int number)
             maxy=selectPoint[i].y;
     }
     tempPoint[1].y=maxy;
-    getAimData(tempPoint,openFile());
+    //    getAimData(tempPoint,openFile());
+    newGetAimData(tempPoint,openFile(tempPoint));
 }
 ////从文件获取数据
 void filedeal::getAimData(Points mPoints,float **data)
@@ -529,7 +706,49 @@ void filedeal::getAimData(Points mPoints,float **data)
             }
         }
     }
-    qDebug()<<time.elapsed()<<"ms";
+    //    qInfo()<<time.elapsed()<<"ms";
+
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+    emit dataDetails(pointCount[current]);
+    for(int i=0;i<Band;i++)
+    {
+        delete []data[i];
+        data[i]=NULL;
+    }
+    delete[] data;
+    data=NULL;
+}
+void filedeal::newGetAimData(Points rectangle,float **data)
+{
+    int startX=rectangle[0].x,startY=rectangle[0].y,
+            xOffset=rectangle[1].x-rectangle[0].x,
+            yOffset=rectangle[1].y-rectangle[0].y;
+    //    qDebug()<<QStringLiteral("使用样本起始坐标")<<startX<<startY;
+    //    qDebug()<<QStringLiteral("使用样本结束坐标")<<rectangle[1].x<<rectangle[1].y;
+    //    QTime time;
+    //    time.start();
+    QRgb value = qRgb(R[current+1], G[current+1], B[current+1]);
+    //传入待测试的点
+    for(int h=rectangle[0].y;h<rectangle[1].y;h++)
+    {
+        for(int w=rectangle[0].x;w<rectangle[1].x;w++)
+        {
+            if(judgeArea(samplePointNum,areaPoint,w,h))//判断点是否在区域中
+            {
+                //样本在区域中
+                partImage.setPixel(w, h, value);
+                for(int i=0;i<Band;i++)
+                {
+                    dataCopyArea[current][pointCount[current]].bands[i]=data[i][(h-startY)*xOffset+(w-startX)];
+                    //qDebug()<<QStringLiteral("当前运行坐标")<<w<<h;
+                    //qDebug()<<QStringLiteral("数据运行坐标")<<w-startX<<h-startY;
+                    //qDebug()<<QStringLiteral("数据运行值")<<(h-startY)*xOffset+(w-startX);
+                }
+                pointCount[current]++;
+            }
+        }
+    }
+    //    qInfo()<<time.elapsed()<<"ms";
 
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     emit dataDetails(pointCount[current]);
@@ -609,10 +828,6 @@ void filedeal::simpleInfo(QString name, int *number)
         {
             emit fileDataDetails(number[i],geoNumber);//将样本数量发送到UI
         }
-        else
-        {
-            qDebug()<<"this data is null";
-        }
     }
 
     QFile read(name.toStdString().c_str());
@@ -633,7 +848,7 @@ void filedeal::simpleInfo(QString name, int *number)
             count++;
         }
     }
-    qDebug()<<"data size is"<<dataList.size();
+    //    qInfo()<<"data size is"<<dataList.size();
     read.close();
     emit sendData(data,count);
 }
@@ -677,7 +892,7 @@ void filedeal::deleteDataFun(int currentIndex)
 {
     current=currentIndex;
     pointCount[current]=0;
-    qDebug()<<"currentIndex:"<<currentIndex;
+    //    qInfo()<<"currentIndex:"<<currentIndex;
 }
 ////解析分类结果，将图片变色
 void filedeal::parser(QString ruleName)
@@ -685,15 +900,15 @@ void filedeal::parser(QString ruleName)
     sorted=true;
     float **rawData=NULL;
     rawData=openFile();
-//    if(!rawImage.isNull())
-//    {
-//        partImage=rawImage;
-//    }
-//    else
-//    {
-//        openFile(1,2,3);
-//        partImage=rawImage;
-//    }
+    //    if(!rawImage.isNull())
+    //    {
+    //        partImage=rawImage;
+    //    }
+    //    else
+    //    {
+    //        openFile(1,2,3);
+    //        partImage=rawImage;
+    //    }
     QImage image(Samples, Lines, QImage::Format_RGB32);
     image.fill(Qt::white);//将图片背景填充为白色
     QRgb value;
@@ -710,7 +925,7 @@ void filedeal::parser(QString ruleName)
     for(int i=0;i<List.size()-1;i++)
     {
         str[i]=List.at(i);
-        qDebug()<<str[i];
+        //        qInfo()<<str[i];
     }
 
     for(int i=0;i<List.size()-1;i++)
@@ -757,20 +972,20 @@ void filedeal::parser(QString ruleName)
             }
             if((j+1)%6==0)
             {
-                qDebug()<< bandI[q-1]<<"i";
-                qDebug()<< bandJ[q-1]<<"j";
-                qDebug()<< bandK[q-1]<<"k";
-                qDebug()<<compare[q-1]<<"compare";
-                qDebug()<<  Threshold[q-1]<<"  Threshold[j]";
+                qInfo()<<QStringLiteral("波段i")<< bandI[q-1];
+                qInfo()<<QStringLiteral("波段j")<< bandJ[q-1];
+                qInfo()<<QStringLiteral("波段k")<< bandK[q-1];
+                qInfo()<<QStringLiteral("比较符")<<compare[q-1];
+                qInfo()<<QStringLiteral("阈值")<<  Threshold[q-1];
             }
-            //            qDebug()<<strList[i].at(j);
+            //            qInfo()<<strList[i].at(j);
         }
         if(j!=0)
         {
             QString geoStr=strList[i].at(j+6);
             geoName[geoNameCount]=geoStr.toInt();
-            qDebug()<<geoName[geoNameCount]<<"geoName";
-            qDebug()<<"--------------------------------";
+            qInfo()<<QStringLiteral("第")<<geoName[geoNameCount]<<QStringLiteral("种地物");
+            qInfo()<<"--------------------------------";
             for(int k=0;k<Samples*Lines;k++)
             {
                 memset(flag,0,30*sizeof(int));
@@ -935,6 +1150,323 @@ void filedeal::parser(QString ruleName)
     //    }
     //    fclose(fp);
 }
+void filedeal::newParser(QString ruleName)
+{
+    sorted=true;
+
+    QImage image(Samples, Lines, QImage::Format_RGB32);
+    image.fill(Qt::white);//将图片背景填充为白色
+    QRgb value;
+
+    QVector<QString>str(30);
+    QVector<QStringList>strList(30);
+    QFile read(ruleName.toStdString().c_str());
+    read.open(QFile::ReadOnly);
+    QTextStream in(&read);
+    QString oldString;
+    in>>oldString;
+    QStringList List=oldString.split("#end#");
+    emit sendFeature(List);
+    for(int i=0;i<List.size()-1;i++)
+    {
+        str[i]=List.at(i);
+    }
+
+    for(int i=0;i<List.size()-1;i++)
+    {
+        strList[i]=str[i].split(",");
+    }
+
+    //字符串已经全部解析
+    QString tempStr;
+    int bandI[30],bandJ[30],bandK[30];
+    int compare[30];
+    double Threshold[30];
+    int geoName[30];
+    int i=0,j=0,p=0,q=0,flag[30]={0};
+    bool thisbool=true;
+    int geoNameCount=0;
+    for(i=0;i<strList.size();i++)
+    {
+        q=0;
+        for(j=0;j<strList[i].size()-7;j++)
+        {
+            tempStr=strList[i].at(j);
+            if((j+1)%6==1)
+            {
+                bandI[q]=tempStr.toInt(); //bandi
+            }
+            if((j+1)%6==2)
+            {
+                bandJ[q]=tempStr.toInt();  //bandj
+            }
+            if((j+1)%6==3)
+            {
+                bandK[q]=tempStr.toInt();//bandk
+            }
+            if((j+1)%6==4)
+            {
+                QString str=strList[i].at(j+6);
+                compare[q]=str.toInt();//>or<   要用j+5来计算
+            }
+            if((j+1)%6==5)
+            {
+                Threshold[q]=tempStr.toDouble(); //Threshold
+                q++;
+            }
+            if((j+1)%6==0)
+            {
+                qInfo()<<QStringLiteral("波段i")<< bandI[q-1];
+                qInfo()<<QStringLiteral("波段j")<< bandJ[q-1];
+                qInfo()<<QStringLiteral("波段k")<< bandK[q-1];
+                qInfo()<<QStringLiteral("比较符")<<compare[q-1];
+                qInfo()<<QStringLiteral("阈值")<<  Threshold[q-1];
+            }
+        }
+        if(j!=0)
+        {
+            QString geoStr=strList[i].at(j+6);
+            geoName[geoNameCount]=geoStr.toInt();
+            //qInfo()<<QStringLiteral("第")<<geoName[geoNameCount]<<QStringLiteral("种地物");
+            //qInfo()<<"--------------------------------";
+
+            ////////////////////////////////////////////////////// int times=Lines/readHeight;
+            //            int readHeight=100;//每次读取文件的数量100行
+            int startHeight=0;//游标的初始位置
+            int endHeight=startHeight+readHeight;//当前游标的结束位置
+
+            point *rectangle=new point[2];
+            //开始坐标
+            rectangle[0].x=0;
+            rectangle[0].y=startHeight;
+            //结束坐标
+            rectangle[1].x=Samples;
+            rectangle[1].y=endHeight;
+            //二维坐标一维化
+            int startNumber=rectangle[0].y*Samples+rectangle[0].x;
+            //真实的坐标（一维）
+            int realLocationNum=0;
+            //整除100剩余的余数处理
+            int restHeight=Lines%readHeight;
+
+            /////////////////////////////////////////////////////////////////////
+            for(int m=0;m<Lines/readHeight;m++)
+            {
+                float **rawData=NULL;
+                rawData=openFile(rectangle);
+                //k=0;k<readHeight;k++;//当前虚拟坐标（一维的）
+                //当前真实坐标（一维的）realLocationNum
+                //startNumber=rectangle[0].y*Samples+rectangle[0].x;
+                startNumber=rectangle[0].y*Samples+rectangle[0].x;
+
+                for(int k=0;k<Samples*readHeight;k++)
+                {
+                    realLocationNum=startNumber+k;
+                    //标志位置0
+                    for(int tn=0;tn<30;tn++)
+                    {
+                        flag[tn]=0;
+                    }
+                    for(p=0;p<q;p++)
+                    {
+                        if(bandJ[p]!=-1&&bandK[p]!=-1&&compare[p]==-2)
+                        {
+                            if((rawData[bandI[p]][k]+rawData[bandK[p]][k])*1.0/2-rawData[bandJ[p]][k]<=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                        else if(bandJ[p]!=-1&&bandK[p]!=-1&&compare[p]==2)
+                        {
+                            if((rawData[bandI[p]][k]+rawData[bandK[p]][k])*1.0/2-rawData[bandJ[p]][k]>=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                        else if(bandJ[p]!=-1&&bandK[p]==-1&&compare[p]==-2)
+                        {
+                            if(rawData[bandI[p]][k]-rawData[bandJ[p]][k]<=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                        else if(bandJ[p]!=-1&&bandK[p]==-1&&compare[p]==2)
+                        {
+                            if(rawData[bandI[p]][k]-rawData[bandJ[p]][k]>=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                        else if(bandJ[p]==-1&&compare[p]==-2)
+                        {
+                            if(rawData[bandI[p]][k]<=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                        else if(bandJ[p]==-1&&compare[p]==2)
+                        {
+                            if(rawData[bandI[p]][k]>=Threshold[p])
+                            {
+                                flag[p]=1;
+                            }else
+                            {
+                                flag[p]=0;
+                            }
+                        }
+                    }//判断是否要变色循环
+                    thisbool=true;
+                    for(p=0;p<q;p++)
+                    {
+                        if(flag[p]!=1)
+                        {
+                            thisbool=false;
+                        }
+                    }
+                    if(thisbool)
+                    {
+                        value = qRgb(R[geoName[geoNameCount]], G[geoName[geoNameCount]], B[geoName[geoNameCount]]);
+                        image.setPixel(realLocationNum%Samples,realLocationNum/Samples,value);
+                    }
+                }
+                startHeight+=readHeight;
+                endHeight+=readHeight;
+                rectangle[0].x=0;
+                rectangle[0].y=startHeight;
+                rectangle[1].x=Samples;
+                rectangle[1].y=endHeight;
+                for(int i=0;i<Band;i++)
+                {
+                    delete []rawData[i];
+                    rawData[i]=NULL;
+                }
+                delete[] rawData;
+                rawData=NULL;
+
+            }//样本循环
+            //余数   剩余部分处理
+            rectangle[1].y=Lines;
+            float **rawData=NULL;
+            rawData=openFile(rectangle);
+            startNumber=rectangle[0].y*Samples+rectangle[0].x;
+            for(int k=0;k<Samples*restHeight;k++)
+            {
+                realLocationNum=startNumber+k;
+                //标志位置0
+                for(int tn=0;tn<30;tn++)
+                {
+                    flag[tn]=0;
+                }
+                for(p=0;p<q;p++)
+                {
+                    if(bandJ[p]!=-1&&bandK[p]!=-1&&compare[p]==-2)
+                    {
+                        if((rawData[bandI[p]][k]+rawData[bandK[p]][k])*1.0/2-rawData[bandJ[p]][k]<=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                    else if(bandJ[p]!=-1&&bandK[p]!=-1&&compare[p]==2)
+                    {
+                        if((rawData[bandI[p]][k]+rawData[bandK[p]][k])*1.0/2-rawData[bandJ[p]][k]>=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                    else if(bandJ[p]!=-1&&bandK[p]==-1&&compare[p]==-2)
+                    {
+                        if(rawData[bandI[p]][k]-rawData[bandJ[p]][k]<=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                    else if(bandJ[p]!=-1&&bandK[p]==-1&&compare[p]==2)
+                    {
+                        if(rawData[bandI[p]][k]-rawData[bandJ[p]][k]>=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                    else if(bandJ[p]==-1&&compare[p]==-2)
+                    {
+                        if(rawData[bandI[p]][k]<=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                    else if(bandJ[p]==-1&&compare[p]==2)
+                    {
+                        if(rawData[bandI[p]][k]>=Threshold[p])
+                        {
+                            flag[p]=1;
+                        }else
+                        {
+                            flag[p]=0;
+                        }
+                    }
+                }//判断是否要变色循环
+                thisbool=true;
+                for(p=0;p<q;p++)
+                {
+                    if(flag[p]!=1)
+                    {
+                        thisbool=false;
+                    }
+                }
+                if(thisbool)
+                {
+                    value = qRgb(R[geoName[geoNameCount]], G[geoName[geoNameCount]], B[geoName[geoNameCount]]);
+                    image.setPixel(realLocationNum%Samples,realLocationNum/Samples,value);
+                }
+            }
+            for(int i=0;i<Band;i++)
+            {
+                delete []rawData[i];
+                rawData[i]=NULL;
+            }
+            delete[] rawData;
+            rawData=NULL;
+            geoNameCount++;
+            delete[] rectangle;
+            rectangle=NULL;
+        }
+    }
+    //显示区分后的图像
+    rawImage=image;
+    partImage=image;
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+
+}
 /**
  * @brief filedeal::slotSealine 提取海岸线信号
  * @param seaColor
@@ -968,7 +1500,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     QImage image(Samples+1, Lines+1, QImage::Format_RGB32);
     image.fill(Qt::white);//将图片背景填充为白色
     QRgb valueA=qRgb(0,0,0);
-    QRgb valueB=qRgb(255,0,0);
+    //QRgb valueB=qRgb(255,0,0);
 
     bool gotoFlag=false;
     //线的下标
@@ -1149,7 +1681,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     partImage=image;
     rawImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
-    qDebug()<<"normal3";
+    //    qInfo()<<"normal3";
     //将原来的海岸线数组变成标记数组
     for(int h=0;h<Lines;h++)
     {
@@ -1163,7 +1695,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                       {-2,2},{-1,2},{0,2},{1,2},{2,2},{2,1},{2,0},{2,-1},
                       {2,-2},{1,-2},{0,-2},{-1,-2},{-2,-2},{-2,-1},{-2,0},{-2,1}
                     };
-    qDebug()<<"normal4";
+    //    qInfo()<<"normal4";
     int extends=2;
     int footPath=24;
     int nx=0,ny=0;//移动点
@@ -1173,7 +1705,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
         {
             for(int w=0;w<Samples;w++)
             {
-                 emit setProgressValue((h*Samples+w)/(Samples*Lines*2));
+                emit setProgressValue((h*Samples+w)/(Samples*Lines*2));
                 pointCount=0;
                 currentMaxNum=0;
 
@@ -1233,11 +1765,11 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                     {
                         maxLineIndex=lineCount;
                         maxPointNum=currentMaxNum;
-//                        if(maxPointNum>100)
-//                            qDebug()<<"maxPointNum"<<maxPointNum;
+                        //                        if(maxPointNum>100)
+                        //                            qInfo()<<"maxPointNum"<<maxPointNum;
                     }
                     lineCount++;
-                    //qDebug()<<"-----------------------------------------";
+                    //qInfo()<<"-----------------------------------------";
                 }
 
             }
@@ -1245,13 +1777,13 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     }
     catch(QString exception)
     {
-        qDebug()<<exception;
+        qInfo()<<exception;
     }
     partImage=image;
     rawImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
-    qDebug()<<"firstLineCount"<<lineCount;
-    qDebug()<<"firstMaxLineIndex"<<maxLineIndex;
+    qInfo()<<QStringLiteral("最长海岸线的点的数量")<<lineCount;
+    qInfo()<<QStringLiteral("最长海岸线的下标")<<maxLineIndex;
     //重置标记
     for(int h=0;h<Lines;h++)
     {
@@ -1333,14 +1865,14 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 
         }
     }
-    //    qDebug()<<"lineCount"<<lineCount;
-    //    qDebug()<<"maxPointNum"<<maxPointNum;
+    //    qInfo()<<"lineCount"<<lineCount;
+    //    qInfo()<<"maxPointNum"<<maxPointNum;
     image.fill(Qt::white);
     for(int i=0;i<maxPointNum;i++)
     {
-        image.setPixel(line[i].x,line[i].y,valueB);
+        image.setPixel(line[i].x,line[i].y,valueA);
     }
-    image.setPixel(nx,ny,valueB);
+    image.setPixel(nx,ny,valueA);
     partImage=image;
     rawImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
@@ -1350,7 +1882,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     QSqlQuery query;
     QString sqlInsertStr=QString("insert into RemoteSensingSeaLine(name,OwnName) values('%1','%2')").arg(fileStr).arg(filePathName);
     bool querySuccess=query.exec(sqlInsertStr);
-    qDebug()<<"querySuccess"<<querySuccess;
+    qInfo()<<QStringLiteral("海岸线插入数据库成功")<<querySuccess;
     //    设定当前位置的初值为入口位置；
     //      do{
     //        若当前位置可通，
@@ -1446,7 +1978,7 @@ void filedeal::lowPointsStart()
 }
 ////降噪函数
 void filedeal::lowBadPoints(int w,int h){
-    //    qDebug()<<"lowPoints in";
+    //    qInfo()<<"lowPoints in";
     //    int h=Lines/hNumber;//降噪块的高度
     //    int w=Samples/wNumber;//降噪块的宽度
     QRgb value;
@@ -1541,16 +2073,16 @@ void filedeal::lowBadPoints(int w,int h){
             }
             if(boxNumber==0)
             {
-                //                qDebug()<<"there is /0";
+                //                qInfo()<<"there is /0";
                 continue;
             }
-            //            qDebug()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
+            //            qInfo()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
             int centerY=(double)(j*h+(j+1)*h)/2;//圆心y坐标
             int centerX=(double)(i*w+(i+1)*w)/2;//圆心x坐标
             int radius=centerX-i*w;//半径
-            if(((double)tempNumber/boxNumber)>=0.987)//直径100时98.7基本不动边界//直径50时96基本不动边界
+            if(((double)tempNumber/boxNumber)>=0.97)//直径100时98.7基本不动边界//直径50时96基本不动边界
             {
-                //                qDebug()<<tempIndex;
+                //                qInfo()<<tempIndex;
                 for(int y=j*h;y<(j+1)*h;y++)
                 {
                     for(int x=i*w;x<(i+1)*w;x++)
@@ -1608,7 +2140,7 @@ void filedeal::lowBadPoints(int w,int h){
                     if((x-centerX)*(x-centerX)+(y-centerY)*(y-centerY)<=radius*radius)//点在内切圆内部
                     {
                         //                            int location=y*Samples+x;//二维坐标一维化
-                        //                            qDebug()<<location<<"location";
+                        //                            qInfo()<<location<<"location";
                         if(QColor(partImage.pixel(x,y)).red()==255&&
                                 QColor(partImage.pixel(x,y)).green()==0&&
                                 QColor(partImage.pixel(x,y)).blue()==0)
@@ -1674,10 +2206,10 @@ void filedeal::lowBadPoints(int w,int h){
             }
             if(boxNumber==0)
             {
-                //                qDebug()<<"there is /0";
+                //                qInfo()<<"there is /0";
                 continue;
             }
-            //            qDebug()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
+            //            qInfo()<<"tempNumber/boxNumber:"<<(double)tempNumber/boxNumber<<"tempIndex:"<<tempIndex;
             int centerY=(double)(j*h+hDeviation+(j-1)*h+hDeviation)/2;//圆心y坐标
             int centerX=(double)(i*w+wDeviation+(i-1)*w+wDeviation)/2;//圆心x坐标
             int radius=centerX-(i*w+wDeviation);//半径
@@ -1701,8 +2233,8 @@ void filedeal::lowBadPoints(int w,int h){
 
         }
     }
-    //        qDebug()<<i<<"i";
-    //        qDebug()<<j<<"j";
+    //        qInfo()<<i<<"i";
+    //        qInfo()<<j<<"j";
 
 }
 
@@ -1735,7 +2267,7 @@ void filedeal::saveBinary()
     fp=fopen(fileStr.toLocal8Bit().data(),"wb");
     if(fp==NULL)
     {
-        qDebug()<<"ERROR";
+        qWarning()<<QStringLiteral("文件为空");
         return;
     }
     int g;
@@ -1801,7 +2333,7 @@ void filedeal::moveLine(int x,int y)
     //    1650 192
     standPoint.x=x;
     standPoint.y=y;
-    qDebug()<<"location"<<x<<" "<<y;
+    //    qInfo()<<"location"<<x<<" "<<y;
     move(loadLine(lineImage[0],lineImage[1]),standPoint,linePointNb);
     //    oldMove(loadLine(lineImage[0],lineImage[1]),standPoint,linePointNb);
 }
@@ -1813,8 +2345,8 @@ point** filedeal::loadLine(QString imageStrF,QString imageStrS)
     imageS.load(imageStrS);
     Samples=imageF.width();
     Lines=imageF.height();
-    qDebug()<<Samples;
-    qDebug()<<Lines;
+    //    qInfo()<<Samples;
+    //    qInfo()<<Lines;
     //emit sendSize(Samples,Lines);
     //fLine是靠近海的那条海岸线
     //sLine是靠近陆地的那条海岸线
@@ -1824,13 +2356,13 @@ point** filedeal::loadLine(QString imageStrF,QString imageStrS)
 
     if(Samples>Lines)
     {
-        fLine=new point[Samples*10];
-        sLine=new point[Samples*10];
+        fLine=new point[Samples*50];
+        sLine=new point[Samples*50];
     }
     else
     {
-        fLine=new point[Lines*10];
-        sLine=new point[Lines*10];
+        fLine=new point[Lines*50];
+        sLine=new point[Lines*50];
     }
     int x=0,y=0;
     for(int h=0;h<Lines;h++)
@@ -1860,34 +2392,6 @@ point** filedeal::loadLine(QString imageStrF,QString imageStrS)
         }
     }
     //是否保存数组
-    if(1)
-    {
-        FILE *fp;
-        fp=fopen("D://Line1","wb");
-        if(fp==NULL)
-        {
-            return NULL;
-        }
-        for(int i=0;i<x;i++)
-        {
-            fprintf(fp,"%d\n",fLine[i].x);
-            fprintf(fp,"%d\n",fLine[i].y);
-        }
-        fclose(fp);
-
-        FILE *fp1;
-        fp1=fopen("D://Line1Y","wb");
-        if(fp1==NULL)
-        {
-            return NULL;
-        }
-        for(int i=0;i<x;i++)
-        {
-            fprintf(fp1,"%d\n",sLine[i].x);
-            fprintf(fp1,"%d\n",sLine[i].y);
-        }
-        fclose(fp1);
-    }
 
     int min=0;
     int max=0;
@@ -1924,8 +2428,9 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     imageS.load(imageStrS);
     Samples=imageF.width();
     Lines=imageF.height();
-    qDebug()<<Samples;
-    qDebug()<<Lines;
+     QRgb valueC=qRgb(0,0,0);
+    //    qInfo()<<Samples;
+    //    qInfo()<<Lines;
     if(Samples<500)
     {
         currentWidth=Samples;
@@ -1943,14 +2448,14 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
 
     if(Samples>Lines)
     {
-        fLine=new point[Samples*10];
-        sLine=new point[Samples*10];
+        fLine=new point[Samples*100];
+        sLine=new point[Samples*100];
         scale=(double)(QApplication::desktop()->height()/4)/Lines;//要想正常显示略缩图必须首先设置缩放率
     }
     else
     {
-        fLine=new point[Lines*10];
-        sLine=new point[Lines*10];
+        fLine=new point[Lines*100];
+        sLine=new point[Lines*100];
         scale=(double)(QApplication::desktop()->width()/12)/Samples;//要想正常显示略缩图必须首先设置缩放率
     }
 
@@ -1964,6 +2469,7 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
                     QColor(imageF.pixel(w,h)).green()==0&&
                     QColor(imageF.pixel(w,h)).blue()==0)
             {
+                imageF.setPixel(w,h,valueC);
                 fLine[x].x=w;
                 fLine[x].y=h;
                 x++;
@@ -1974,6 +2480,7 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
                     QColor(imageS.pixel(w,h)).green()==0&&
                     QColor(imageS.pixel(w,h)).blue()==0)
             {
+                imageF.setPixel(w,h,valueC);
                 sLine[y].x=w;
                 sLine[y].y=h;
                 y++;
@@ -1981,8 +2488,39 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
 
         }
     }
+    imageF.save(imageStrF);
+    imageS.save(imageStrS);
     --x;
     --y;
+    if(1)
+    {
+        FILE *fp;
+        fp=fopen("D://Line1","wb");
+        if(fp==NULL)
+        {
+            return;
+        }
+        for(int i=0;i<x;i++)
+        {
+            fprintf(fp,"%d\n",fLine[i].x);
+            fprintf(fp,"%d\n",fLine[i].y);
+        }
+        fclose(fp);
+
+        FILE *fp1;
+        fp1=fopen("D://Line2","wb");
+        if(fp1==NULL)
+        {
+            return;
+        }
+        for(int i=0;i<y;i++)
+        {
+            fprintf(fp1,"%d\n",sLine[i].x);
+            fprintf(fp1,"%d\n",sLine[i].y);
+        }
+        fclose(fp1);
+    }
+
     calculateDiffer(fLine,sLine,x,y);
     int min=0;
     int max=0;
@@ -1997,13 +2535,13 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
         max=y;
     }
     linePointNb=max;
-    qDebug()<<"min"<<min;
-    qDebug()<<"max"<<max;
+    //    qInfo()<<"min"<<min;
+    //    qInfo()<<"max"<<max;
     //    sLine=reorderSLine(fLine,sLine,min);
     //    for(int i=0;i<min;i++)
     //    {
-    //        qDebug()<<"fLine:"<<i<<" x:"<<fLine[i].x<<" y:"<<fLine[i].y;
-    //        qDebug()<<"sLine:"<<i<<" x:"<<sLine[i].x<<" y:"<<sLine[i].y<<"\n";
+    //        qInfo()<<"fLine:"<<i<<" x:"<<fLine[i].x<<" y:"<<fLine[i].y;
+    //        qInfo()<<"sLine:"<<i<<" x:"<<sLine[i].x<<" y:"<<sLine[i].y<<"\n";
     //    }
     QImage image(Samples, Lines, QImage::Format_RGB32);
     QRgb valueF=qRgb(0,0,255);
@@ -2091,7 +2629,7 @@ void filedeal::move(point**lineSet,point standPoint,int number)
         //        image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
         //        image.setPixel(sLineP[i].x,sLineP[i].y,valueS);
         image.setPixel(tLine[i].x,tLine[i].y,valueT);
-        //qDebug()<<"tLine"<<i<<"    "<<tLine[i].x<<"   "<<tLine[i].y;
+        //qInfo()<<"tLine"<<i<<"    "<<tLine[i].x<<"   "<<tLine[i].y;
     }
     rawImage=image;
     partImage=image;
@@ -2296,10 +2834,10 @@ double filedeal::ratio(point standPoint,point sLine,point *fLine,int number)
     if(distance(sLine,fLine[fIndex])!=0.0&&distance(standPoint,sLine)!=0.0)
     {
         ratio=distance(standPoint,sLine)/distance(sLine,fLine[fIndex]);
-        //qDebug()<<"standPoint.x"<<standPoint.x<<"standPoint.y"<<standPoint.y;
-        //qDebug()<<"fLine.x"<<fLine[fIndex].x<<"fLine.y"<<fLine[fIndex].y;
-        //qDebug()<<"distance"<<distance(standPoint,sLine)<<" distance(sLine[sIndex],fLine[fIndex])"<<distance(sLine,fLine[fIndex]);
-        //qDebug()<<"ratio"<<ratio;
+        //qInfo()<<"standPoint.x"<<standPoint.x<<"standPoint.y"<<standPoint.y;
+        //qInfo()<<"fLine.x"<<fLine[fIndex].x<<"fLine.y"<<fLine[fIndex].y;
+        //qInfo()<<"distance"<<distance(standPoint,sLine)<<" distance(sLine[sIndex],fLine[fIndex])"<<distance(sLine,fLine[fIndex]);
+        //qInfo()<<"ratio"<<ratio;
     }
     else
     {
@@ -2520,11 +3058,11 @@ double filedeal::oldRatio(point *fLine,point *sLine,int number,point standPoint,
     if(distance(sLine[sIndex],fLine[fIndex])!=0.0&&distance(standPoint,sLine[sIndex])!=0.0)
     {
         ratio=distance(standPoint,sLine[sIndex])/distance(sLine[sIndex],fLine[fIndex]);
-        //qDebug()<<"standPoint.x"<<standPoint.x<<"standPoint.y"<<standPoint.y;
-        //qDebug()<<"fLine.x"<<fLine[fIndex].x<<"fLine.y"<<fLine[fIndex].y;
-        //qDebug()<<"sLine.x"<<sLine[sIndex].x<<"sLine.y"<<sLine[sIndex].y;
-        //qDebug()<<"distance(standPoint,sLine[sIndex])"<<distance(standPoint,sLine[sIndex])<<" distance(sLine[sIndex],fLine[fIndex])"<<distance(sLine[sIndex],fLine[fIndex]);
-        //qDebug()<<"ratio"<<ratio;
+        //qInfo()<<"standPoint.x"<<standPoint.x<<"standPoint.y"<<standPoint.y;
+        //qInfo()<<"fLine.x"<<fLine[fIndex].x<<"fLine.y"<<fLine[fIndex].y;
+        //qInfo()<<"sLine.x"<<sLine[sIndex].x<<"sLine.y"<<sLine[sIndex].y;
+        //qInfo()<<"distance(standPoint,sLine[sIndex])"<<distance(standPoint,sLine[sIndex])<<" distance(sLine[sIndex],fLine[fIndex])"<<distance(sLine[sIndex],fLine[fIndex]);
+        //qInfo()<<"ratio"<<ratio;
     }
     else
     {
@@ -2597,7 +3135,7 @@ void filedeal::oldMove(point**lineSet,point standPoint,int number)
         image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
         image.setPixel(sLineP[i].x,sLineP[i].y,valueS);
         image.setPixel(tLine[i].x,tLine[i].y,valueT);
-        //        qDebug()<<"tLine"<<i<<"    "<<tLine[i].x<<"   "<<tLine[i].y;
+        //        qInfo()<<"tLine"<<i<<"    "<<tLine[i].x<<"   "<<tLine[i].y;
     }
     rawImage=image;
     partImage=image;
@@ -2761,7 +3299,7 @@ point* filedeal::averagePoint(point* line,int number,point* minDistanceLine)
         }
         else
         {
-            //            qDebug()<<"this is a point ............";
+            //            qInfo()<<"this is a point ............";
             dealLine[i]=minDistanceLine[i];
         }
 
@@ -2840,7 +3378,7 @@ void filedeal::linkPoint(QImage image,int width,int height)
             }
         }
     }
-    qDebug()<<"found point numebr is "<<count;
+    qInfo()<<"found point numebr is "<<count;
     //    printPointSet(count,tempPoint);
     //判断点是否在线段上
     //或者过定点的曲线
@@ -2958,7 +3496,7 @@ void filedeal::linkPoint(QImage image,int width,int height)
     //    fp=fopen("D:\\binaryLine","wb");
     //    if(fp==NULL)
     //    {
-    //        qDebug()<<"ERROR";
+    //        qWarning()<<QStringLiteral("文件为空");
     //        return;
     //    }
     //    for(int i=0;i<count;i++)
@@ -3023,7 +3561,7 @@ int filedeal::ptpMinDisIndex(int index,point*p,int pNumber,QSet<int> indexSet)
 
         }
     }
-    //    qDebug()<<"mindistance is "<<distance(p[index],p[minIndex])<<"\n";
+    //    qInfo()<<"mindistance is "<<distance(p[index],p[minIndex])<<"\n";
 
     delete[] dis;
     dis=NULL;
@@ -3112,9 +3650,9 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
         stdSum+=distance(stdLine[index1],calLine[index2]);
     }
     stdAverage=stdSum/stdNumber;
-    qDebug()<<"calAverage"<<calAverage;
-    qDebug()<<"stdAverage"<<stdAverage;
-    qDebug()<<calAverage-stdAverage;
+    //    qInfo()<<"calAverage"<<calAverage;
+    //    qInfo()<<"stdAverage"<<stdAverage;
+    //    qInfo()<<calAverage-stdAverage;
 }
 
 ///**
@@ -3166,8 +3704,8 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //            count++;
 //        }
 //    }
-//    //    qDebug()<<"number"<<number;
-//    //    qDebug()<<"不在线上的点的数量是："<<count;
+//    //    qInfo()<<"number"<<number;
+//    //    qInfo()<<"不在线上的点的数量是："<<count;
 //    for(int i=0;i<count;i++)
 //    {
 //        image.setPixel(Line[index[i]].x,Line[index[i]].y,value);
@@ -3555,8 +4093,8 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //            areaBG=300;
 //            areaBB=300;
 //        }
-//        qDebug()<<areaAR<<"    "<<areaAG<<"   "<<areaAB<<"A";
-//        qDebug()<<areaBR<<"    "<<areaBG<<"   "<<areaBB<<"B";
+//        qInfo()<<areaAR<<"    "<<areaAG<<"   "<<areaAB<<"A";
+//        qInfo()<<areaBR<<"    "<<areaBG<<"   "<<areaBB<<"B";
 //        for(int h=0;h<Lines;h++)
 //        {
 //            for(int w=0;w<Samples;w++)
@@ -3592,7 +4130,7 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //        //        }
 //    }
 //    //淤泥与养殖区的交界线是海岸线或海水与养殖区的交界线是海岸线
-//    qDebug()<<"normal in mark";
+//    qInfo()<<"normal in mark";
 //    /***************************去噪声点 9宫格*********************************************/
 //    /* int time=0;
 //     for(time=1;time<=5;time++) {
@@ -3682,7 +4220,7 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //    }
 
 
-//    qDebug()<<"normal in down point";
+//    qInfo()<<"normal in down point";
 //    /******************************************49宫格***************************************/
 //    //    int time=0;
 //    //    for(time=1;time<=1;time++)
@@ -3765,7 +4303,7 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //    //            }
 //    //        }
 //    //    }
-//    qDebug()<<"longLineMark complete";
+//    qInfo()<<"longLineMark complete";
 
 //    for(i=1;i<=Lines-2;i++)
 //    {
@@ -3778,7 +4316,7 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 
 
 //    /******************************************修改数据************************************************************************/
-//    qDebug()<<"before dfs";
+//    qInfo()<<"before dfs";
 
 //    for(i=1;i<=Lines-2;i++)
 //    {
@@ -3792,10 +4330,10 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //        }
 //    }
 
-//    qDebug()<<count1<<"count1";
-//    qDebug()<< regist_x[count1]<<"regist_x[count1]";
-//    qDebug()<< regist_y[count1]<<"regist_x[count1]";
-//    qDebug()<<maxLine<<"max";
+//    qInfo()<<count1<<"count1";
+//    qInfo()<< regist_x[count1]<<"regist_x[count1]";
+//    qInfo()<< regist_y[count1]<<"regist_x[count1]";
+//    qInfo()<<maxLine<<"max";
 
 //    maxLine=0;
 //    for(i=1;i<=count1;i++)
@@ -3807,7 +4345,7 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //        }
 //    }
 
-//    qDebug()<<final<<"final";
+//    qInfo()<<final<<"final";
 
 //    for(i=1;i<=Lines-2;i++)
 //    {
@@ -3817,8 +4355,8 @@ void filedeal::calculateDiffer(point*calLine,point *stdLine,int calNumber,int st
 //        }
 //    }
 
-//    qDebug()<<regist_x[final]<<"regist_x[final]";
-//    qDebug()<<regist_y[final]<<"regist_y[final]";
+//    qInfo()<<regist_x[final]<<"regist_x[final]";
+//    qInfo()<<regist_y[final]<<"regist_y[final]";
 
 //    mark[regist_x[final]][regist_y[final]]=1;
 //    longLineMark[regist_x[final]][regist_y[final]]=2;     //change1=2记录的是最长的线

@@ -29,6 +29,7 @@ private:
     double scale;
     GDALDataset *gdalData;    // 图像gdal数据集
     bool selectEnable=false;
+    int readHeight=100;
     int visiualX=0;
     int visiualY=0;
     int currentHeight=500;
@@ -41,8 +42,6 @@ private:
     void getAimData(Points mPoints, float **data);
     void addPoint(float x0, float y0);
     void loadPartImage(int startX, int startY, int visiualHeight, int visiualWidth, QImage visiualImage);
-//    void redfs(int x, int y);
-//    void dfs(int x, int y);
     void lowBadPoints(int w, int h);
     point *reorderSLine(point *fLineP, point *sLineP, int number);
     double distance(point p1, point p2);
@@ -74,7 +73,11 @@ private:
     void calculateDiffer(point *calLine, point *stdLine, int calNumber, int stdNumber);
     point *averagePoint(point *line, int number, point *minDistanceLine);
     void seaLineGet(QImage partImage, int *seaColor, int *landColor);
+    float **openFile(Points rectangle);
+    void newGetAimData(Points rectangle, float **data);
+
 private slots:
+    //    void seaLineGet(int *seaColor, int *landColor);
     void openPathFile(QString fileName);
     void getRGB(int r,int g,int b);
     void getMouse(int x,int y);
@@ -85,7 +88,8 @@ private slots:
     void currentFunction(int currentCount);
     void deleteDataFun(int currentIndex);
     void parser(QString ruleName);
-//    void seaLineGet(int *seaColor, int *landColor);
+    void newParser(QString ruleName);
+
     void lowPointsStart();
     void combineLine(QString imageF, QString imageS);
     void saveSample(QString name);

@@ -62,10 +62,17 @@
     </property>
     <addaction name="action"/>
    </widget>
+   <widget class="QMenu" name="menu_5">
+    <property name="title">
+     <string>空间位置</string>
+    </property>
+    <addaction name="actiontest"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
+   <addaction name="menu_5"/>
   </widget>
   <action name="openFileImage">
    <property name="text">
@@ -106,6 +113,11 @@
   <action name="action">
    <property name="text">
     <string>数据库设置</string>
+   </property>
+  </action>
+  <action name="actiontest">
+   <property name="text">
+    <string>test</string>
    </property>
   </action>
  </widget>

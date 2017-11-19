@@ -1,5 +1,5 @@
 ﻿#include "MyLabel.h"
-#include <QDebug>
+#include<qdebug.h>
 #include<QLabel>
 #include<QMouseEvent>
 int labelHeight;
@@ -34,8 +34,8 @@ void MyLabel::mousePressEvent(QMouseEvent *ev)//获取略缩图的鼠标位置
 
 void MyLabel::updateSize()
 {
-    qDebug()<<labelHeight;
-    qDebug()<<labelWidth;
+    //    qInfo()<<labelHeight;
+    //    qInfo()<<labelWidth;
     emit sendLabelSize(labelHeight,labelWidth);
     if(time->isActive())
     {
