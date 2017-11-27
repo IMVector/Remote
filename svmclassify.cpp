@@ -2,15 +2,15 @@
 
 svmclassify::svmclassify(QObject *parent) : QObject(parent)
 {
-    main();
+//    main();
 }
 
 svm_parameter param;
 
-void init_param() {
+void init_param(int bandNumebr) {
     param.svm_type = C_SVC;//支持向量机类型
     param.kernel_type = RBF;//核函数类型
-    param.degree = 4;       //波段个数+1
+    param.degree = bandNumebr+1;       //波段个数+1
     param.gamma = 0;
     param.coef0 = 0;
 
@@ -24,6 +24,51 @@ void init_param() {
     param.p = 0.1; //for EPSILON_SVR
     param.shrinking = 1;//指明训练过程是否使用压缩
     param.probability = 0; //指明是否要做概率估计
+}
+void svmclassify::train(int band,simples data,int geoTypeNumber,int *eachNumber,int sumNumber)
+{
+    int dimension=band+1;
+    unsigned short int *geoLabel=NULL;
+    geoLabel=labelProcess(infoProcess(geoTypeNumber,eachNumber),geoTypeNumber);
+
+    init_param(band);
+    svm_problem prob;
+
+    prob.l=sumNumber;//样本数量
+
+    if (param.gamma == 0) param.gamma = 0.5;
+    svm_node *x_space = new svm_node[dimension*prob.l];//样本特征存储空间
+    prob.y=new double[prob.l];//标签
+    prob.x = new svm_node *[prob.l]; //每一个X指向一个样本
+
+    for(int i=0;i<sumNumber;i++)
+    {
+        for(int b=0;b<band;b++)
+        {
+            x_space[dimension*i+b].index=b+1;
+            x_space[dimension*i+b].value=data[i].bands[b];
+        }
+        x_space[dimension*i+band].index=-1;
+        x_space[dimension*i+band].value=0;
+        prob.x[i]=&x_space[dimension*i];
+        prob.y[i]=geoLabel[i];
+    }
+
+    svm_model *model = svm_train(&prob, &param);
+    //保存训练结果集
+    //    svm_save_model("D:\\traindata",model);
+
+    //释放内存
+
+    //    delete[] x_space;
+    //    delete[] prob.x;
+    //    delete[] prob.y;
+
+    delete[] data;
+    data=NULL;
+    delete[] geoLabel;
+    geoLabel=NULL;
+    emit sendModel(model);
 }
 void svmclassify::main()
 {
@@ -91,8 +136,11 @@ void svmclassify::main()
             }
         }
     }
-
-    init_param();
+    int geoTypeNumber=4;
+    int eachNumber[4]={7000,7000,7000,7000};
+    unsigned short int *geoLabel=NULL;
+    geoLabel=labelProcess(infoProcess(geoTypeNumber,eachNumber),geoTypeNumber);
+    init_param(band);
     svm_problem prob;
 
     prob.l=num*4;//样本数量
@@ -101,26 +149,41 @@ void svmclassify::main()
     svm_node *x_space = new svm_node[4*prob.l];//样本特征存储空间
     prob.y=new double[prob.l];//标签
     prob.x = new svm_node *[prob.l]; //每一个X指向一个样本
+
     for(int i=0;i<num*4;i++)
     {
-        x_space[4*i].index=1;
-        x_space[4*i].value=geo[i][0];
-        x_space[4*i+1].index=2;
-        x_space[4*i+1].value=geo[i][1];
-        x_space[4*i+2].index=3;
-        x_space[4*i+2].value=geo[i][2];
-        x_space[4*i+3].index=-1;
-        x_space[4*i+3].value=0;
-        prob.x[i]=&x_space[4*i];
-        if(i<num)
-            prob.y[i]=1;
-        else if(num<=i&&i<2*num)
-            prob.y[i]=2;
-        else if(2*num<=i&&i<3*num)
-            prob.y[i]=3;
-        else if(3*num<=i)
-            prob.y[i]=4;
+        for(int b=0;b<band;b++)
+        {
+            x_space[(band+1)*i+b].index=b+1;
+            x_space[(band+1)*i+b].value=geo[i][b];
+        }
+        x_space[(band+1)*i+band].index=-1;
+        x_space[(band+1)*i+band].value=0;
+        prob.x[i]=&x_space[(band+1)*i];
+        prob.y[i]=geoLabel[i];
     }
+
+
+//    for(int i=0;i<num*4;i++)
+//    {
+//        x_space[4*i].index=1;
+//        x_space[4*i].value=geo[i][0];
+//        x_space[4*i+1].index=2;
+//        x_space[4*i+1].value=geo[i][1];
+//        x_space[4*i+2].index=3;
+//        x_space[4*i+2].value=geo[i][2];
+//        x_space[4*i+3].index=-1;
+//        x_space[4*i+3].value=0;
+//        prob.x[i]=&x_space[4*i];
+//        if(i<num)
+//            prob.y[i]=1;
+//        else if(num<=i&&i<2*num)
+//            prob.y[i]=2;
+//        else if(2*num<=i&&i<3*num)
+//            prob.y[i]=3;
+//        else if(3*num<=i)
+//            prob.y[i]=4;
+//    }
 
     //    for(int i=0;i<10;i++){
     //        qDebug()<<x_space[i].index;
@@ -128,20 +191,11 @@ void svmclassify::main()
     //    }
 
     svm_model *model = svm_train(&prob, &param);
-    svm_node xnode[16];
-    xnode[0].index = 1;
-    xnode[0].value = 8;
-    xnode[1].index = 2;
-    xnode[1].value = 10;
-    xnode[2].index = 3;
-    xnode[2].value = 93;
-    xnode[3].index = -1;
-    d = svm_predict(model, xnode);
+
     //red
     //    73	101	125
     //    74	96	96
     //    77	97	108
-    qDebug()<<d;
     svm_node xnode1[4];
     xnode1[0].index = 1;
     xnode1[0].value = 73;
@@ -216,4 +270,76 @@ void svmclassify::main()
     delete[] geoTemp;
     delete[] geo;
 
+}
+/**
+ * @brief svmclassify::infoProcess 以 以下形式返回累加数组
+ * //numberArray[0]=number0;
+ * //numberArray[1]=number0+number1;
+ * //numberArray[2]=number0+number1+number3;
+ * @param geoTypeNumber
+ * @param eachNumber
+ * @return
+ */
+int * svmclassify::infoProcess(int geoTypeNumber,int *eachNumber)
+{
+    int *numberArray=new int [geoTypeNumber];
+    ///////////////////多地物解决方案//////////////////////
+    //初始化
+    for(int i=0;i<geoTypeNumber;i++)
+    {
+        numberArray[i]=0;
+    }
+    //将地物数量累计
+    //numberArray[0]=number0;
+    //numberArray[1]=number0+number1;
+    //numberArray[2]=number0+number1+number3;
+    //依次类推
+    for(int i=0;i<=geoTypeNumber;i++)
+    {
+        for(int j=i;j>-1;j--)
+        {
+            numberArray[i]+=eachNumber[j];
+        }
+
+    }
+    //debug输出验证
+    //    for(int i=0;i<geoTypeNumber;i++)
+    //    {
+    //        qDebug()<<numberArray[i];
+    //    }
+    return numberArray;
+}
+unsigned short int * svmclassify::labelProcess(int *numberArray,int geoTypeNumber)
+{
+    unsigned short int *geoLabel=new unsigned short int [numberArray[geoTypeNumber-1]];
+    for(int i=0;i<geoTypeNumber;i++)
+    {
+        if((i-1)>-1)
+        {
+            for(int j=numberArray[i-1];j<numberArray[i];j++)
+            {
+                geoLabel[j]=i;
+            }
+        }
+        else
+        {
+            for(int j=0;j<numberArray[i];j++)
+            {
+                geoLabel[j]=0;
+            }
+        }
+    }
+    //debug输出验证
+    //    for(int i=0;i<numberArray[geoTypeNumber-1];i++)
+    //    {
+    //        if(i%100==0)
+    //        {
+    //            qDebug()<<geoLabel[i];
+    //        }
+    //    }
+    //    delete[] numberArray;不知道为什么一释放内存就出错
+    //    numberArray=NULL;
+
+
+    return geoLabel;
 }

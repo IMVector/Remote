@@ -78,3 +78,5 @@ DEPENDPATH += $$PWD/../../../../../warmerda/bld/include
 RESOURCES += \
     styleresource.qrc
 
+DISTFILES +=
+

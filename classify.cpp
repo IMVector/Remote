@@ -57,7 +57,7 @@ void classify::getdata_from_ui(simples data, int number)
 
 }
 
-void classify::getDetails(fileDetails fd)
+void classify::getDetails(SamplesDetails fd)
 {
     emit setProgressRange(0,100);
     emit setProgressValue(1);

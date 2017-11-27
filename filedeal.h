@@ -13,6 +13,8 @@
 #include <String>
 #include <algorithm>
 #include <showinfo.h>
+#include <svmclassify.h>
+#include <emptychild.h>
 typedef struct{
     unsigned short int x;
     unsigned short int y;
@@ -22,11 +24,12 @@ class filedeal : public QObject
     Q_OBJECT
 public:
     filedeal();
-    void startSort();
-    void saveBinary();
-    void saveTif();
+
 private:
+    svmclassify *classify;
+    QThread *empty_thread;
     double scale;
+    double maxDataValue;
     GDALDataset *gdalData;    // 图像gdal数据集
     bool selectEnable=false;
     int readHeight=100;
@@ -97,6 +100,13 @@ private slots:
     void lineMouse(int x, int y);
 
     void slotSealine(int *seaColor, int *landColor);
+    void dataInfoGet(SamplesDetails details);
+    void getSvmModel(svm_model* model);
+    void startSort();
+    void saveBinary();
+    void saveTif();
+    void loadsvmModel(QString modelName);
+
 signals:
     void sendVisiualP(int x,int y);
     void bandToUi(int band);
@@ -110,6 +120,9 @@ signals:
     void setProgressRange(int startRange,int endRange);
     void complete(QString message);
     void messageInfo(QString message,int type);
+    void invokeTrain(int band,simples data,int geoNumber,int*eachNumber,int sumNumber);
+    void initProgressbar();
+    void complete();
 };
 
 #endif // FILEDEAL_H

@@ -27,7 +27,8 @@ typedef struct TreeNode{
 }TreeNode,*Tree;
 
 typedef struct{
-    unsigned short int bands[13];
+    float bands[13];
+//    float *bands;暂时不能使用，要使用的话很复杂
 }Node, *simples;
 
 typedef struct QueeNode{
@@ -54,7 +55,7 @@ typedef struct
     int extend;//扩展波段是否开启
     int fileOpen;//是否从文件打开样本
     QString fileName;//文件名称
-}fileDetails;
+}SamplesDetails;
 
 
 typedef struct array
@@ -117,7 +118,7 @@ public:
     void display(int reorder[][15], int first_extend[][15][15], int zero_extend_Sum_Number, int frist_extend_Sum_Number, Feature characteristics[], int Geographical_1, int Geographical_2);
     void display(int reorder[][15], int first_extend[][15][15], int zero_extend_Sum_Number, int frist_extend_Sum_Number, Feature characteristics[], int Geographical_1, int Geographical_2, int oneBand[], int bandNb);
 private slots:
-    void getDetails(fileDetails fd);
+    void getDetails(SamplesDetails fd);
     void getdata_from_ui(simples data,int number);
 signals:
     void sortComplete(QString ruleName);

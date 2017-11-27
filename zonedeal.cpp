@@ -4,7 +4,7 @@ zonedeal::zonedeal()
 {
     //输入一个图片地址
     QImage image;
-    image.load("C:\\Users\\25235\\Desktop\\aaa.tif");
+    image.load("F:\\aaa.tif");
     if(!image.isNull())
     {
         main(image);
@@ -54,9 +54,26 @@ void zonedeal::main(QImage image)
         }
     }
     //获得图像地物数组
+    //将每一块地物找出来，把每一块合成一个节点，节点此节点到与它相同的节点的距离小于一定距离的（当中隔着一个其他地物）
+    //则认为他们是一排，一排的保留，不是一排的将其剔除（换成相近的地物）
+
     everyLandNum *everyNum=countEveryNumber(imageArray,Samples,Lines);
+    qDebug()<<"normal";
+
     for(int i=0;everyNum[i].number!=0;i++)
     {
+        //        qDebug()<<"pointNumber is"<<everyNum[i].number;
+        //        Area a=pointIterator(imageArray,Samples,Lines,everyNum[i]);
+        //        delete[] a.p;
+        //        a.p=NULL;
+        if(everyNum[i].colorTh==2)
+        {
+            if(everyNum[i].number>1000)
+            {
+                getRALLink(imageArray,Samples,Lines,everyNum[i]);
+            }
+
+        }
         ////一个地物块的点的数量很小，可以认为它是误分区域
         //        if(everyNum[i].number<(Samples*Lines)/40)
         //        {
@@ -82,8 +99,8 @@ void zonedeal::main(QImage image)
     //    image.save("C:\\Users\\25235\\Desktop\\b.tif");
 
     //    linjie(imageArray,Samples,Lines);
-delete[] imageArray;
-imageArray=NULL;
+    delete[] imageArray;
+    imageArray=NULL;
 }
 /**
  * @brief zonedeal::countEveryNumber 统计每一个独立地物块的点的数量以及回溯的入口地址
@@ -215,11 +232,12 @@ everyLandNum* zonedeal::countEveryNumber(unsigned short int *imageArray,int Samp
  * @param nodeinfo
  * @return
  */
-point*zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lines,everyLandNum nodeinfo)
+Area zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lines,everyLandNum nodeinfo)
 {
     //定义一个方向数组
     int next[8][2]={ {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1}};
-    point *stake=new point[Samples*Lines];
+    Area stake;
+    stake.p=new point[Samples*Lines];
     unsigned short int *footFlag=new unsigned short int[Samples*Lines];
     for(int i=0;i<Samples*Lines;i++)
     {
@@ -233,8 +251,8 @@ point*zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lin
     int x=0,y=0;
     bool gotoFlag=false;
     //将入口点入栈
-    stake[pointCount].x=nx;
-    stake[pointCount].y=ny;
+    stake.p[pointCount].x=nx;
+    stake.p[pointCount].y=ny;
     pointCount++;
     currentNum++;
 
@@ -254,8 +272,8 @@ point*zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lin
             if(imageArray[ny*Samples+nx]==nodeinfo.colorTh
                     &&footFlag[ny*Samples+nx]==0)
             {
-                stake[pointCount].x=nx;
-                stake[pointCount].y=ny;
+                stake.p[pointCount].x=nx;
+                stake.p[pointCount].y=ny;
 
                 footFlag[ny*Samples+nx]=1;
                 imageArray[ny*Samples+nx]=2;
@@ -273,8 +291,8 @@ point*zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lin
             if(currentNum>-1)
             {
                 //nx,ny坐标回到上一步坐标
-                nx=stake[currentNum].x;
-                ny=stake[currentNum].y;
+                nx=stake.p[currentNum].x;
+                ny=stake.p[currentNum].y;
                 //允许循环，可以回到上一步
                 gotoFlag=true;
             }
@@ -282,12 +300,197 @@ point*zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Lin
 
     } while(gotoFlag);
 
+    stake.number=pointCount;
+    qDebug()<<QStringLiteral("该区域共有点")<<pointCount;
     delete[] footFlag;
     footFlag=NULL;
+    qDebug()<<QStringLiteral("已经遍历完1所有点");
     return stake;
     //    delete[] stake;
     //    stake=NULL;
 }
+int zonedeal::calAreaCycle(unsigned short int *imageArray,int Samples,int Lines,Area stake,everyLandNum nodeinfo)
+{
+    //计算当前区域的周长
+    int cycle=0;
+    for(int i=0;i<stake.number;i++)
+    {
+        if(stake.p[i].y-1>0)//保证数组不越界
+            if(imageArray[((stake.p[i].y-1)*Samples+stake.p[i].x)]!=nodeinfo.colorTh)//满足条件则是边界点
+                cycle++;
+
+        if(stake.p[i].x-1>0)//保证数组不越界
+            if(imageArray[(stake.p[i].y*Samples+stake.p[i].x-1)]!=nodeinfo.colorTh)//满足条件则是边界点
+                cycle++;
+
+        if(stake.p[i].y+1<Lines)//保证数组不越界
+            if(imageArray[((stake.p[i].y+1)*Samples+stake.p[i].x)]!=nodeinfo.colorTh)//满足条件则是边界点
+                cycle++;
+
+        if(stake.p[i].x+1<Samples)//保证数组不越界
+            if(imageArray[(stake.p[i].y*Samples+stake.p[i].x+1)]!=nodeinfo.colorTh)//满足条件则是边界点
+                cycle++;
+    }
+    qDebug()<<QStringLiteral("周长计算完成")<<cycle;
+    return cycle;
+}
+void zonedeal::getRALLink(unsigned short int *imageArray,int Samples,int Lines,everyLandNum nodeinfo)
+{
+    Area stake=pointIterator(imageArray,Samples,Lines,nodeinfo);
+    qDebug()<<QStringLiteral("开始进入计算  该区域共有点：")<<stake.number;
+    int cycle=calAreaCycle(imageArray,Samples,Lines,stake,nodeinfo);
+
+    int dLinkDistance=35;//下邻接距离阈值
+    int rLinkDistance=35;//右邻接距离阈值
+    int dLinkNumber=0;//满足阈值的下邻接数量
+    int rLinkNumber=0;//满足阈值的右邻接数量
+    point d;
+    point r;
+    //ToDo:这里有点问题没解决，不能实现功能
+    for(int i=0;i<stake.number;i++)
+    {
+        //点的坐标是stake.p[i].x   stake.p[i].y
+
+        //下邻接
+        if(stake.p[i].y+1<Lines)
+            if(imageArray[((stake.p[i].y+1)*Samples+stake.p[i].x)]!=nodeinfo.colorTh)//下边界
+            {
+                if(stake.p[i].y+dLinkDistance<Lines)//不越界
+                    if(imageArray[((stake.p[i].y+dLinkDistance)*Samples+stake.p[i].x)]==nodeinfo.colorTh)
+                    {
+                        d.x=stake.p[i].x;
+                        d.y=stake.p[i].y+dLinkDistance;
+                        dLinkNumber++;
+                    }
+            }
+        //右邻接
+        if(stake.p[i].x+1<Samples)//保证数组不越界
+            if(imageArray[(stake.p[i].y*Samples+stake.p[i].x+1)]!=nodeinfo.colorTh)
+            {
+                //若下邻接不是相同地物，则计算在一定阈值范围内35m(35个像素)若下邻居的邻居是colorTh地物
+                //则认为它和此地地物是在一排上的，将其放入数组
+                if(stake.p[i].x+rLinkDistance<Samples)
+                    if(imageArray[(stake.p[i].y*Samples+stake.p[i].x+rLinkDistance)]==nodeinfo.colorTh)
+                    {
+                        r.x=stake.p[i].x+rLinkDistance;
+                        r.y=stake.p[i].y;
+                        rLinkNumber++;
+                    }
+            }
+
+    }
+    qDebug()<<"dLinkNumber"<<dLinkNumber;
+    qDebug()<<"rLinkNumber"<<rLinkNumber;
+    bool flag=false;
+    double rate=0;
+    //下邻接存在
+    Area dStake;
+    if(dLinkNumber>0&&cycle>0)
+    {
+        rate=dLinkNumber*1.0/cycle;
+        qDebug()<<"rate"<<rate;
+        everyLandNum n;
+        n.startX=d.x;
+        n.startY=d.y;
+        n.colorTh=nodeinfo.colorTh;
+        qDebug()<<QStringLiteral("入口点坐标")<<n.startX<<"\t"<<n.startY;
+        dStake=pointIterator(imageArray,Samples,Lines,n);
+        qDebug()<<QStringLiteral("数量是：")<<dStake.number;
+        int dCycle=calAreaCycle(imageArray,Samples,Lines,stake,n);
+
+        int uLinkNumber=0;
+        for(int i=0;i<dStake.number;i++)
+        {
+            //上邻接
+            if(dStake.p[i].y-1>0)
+                if(imageArray[((dStake.p[i].y-1)*Samples+dStake.p[i].x)]!=nodeinfo.colorTh)
+                {
+                    if(dStake.p[i].y-dLinkDistance>0)
+                        if(imageArray[((dStake.p[i].y-dLinkDistance)*Samples+dStake.p[i].x)]==nodeinfo.colorTh)
+                        {
+                            uLinkNumber++;
+                        }
+                }
+        }
+        double uRate=0;
+        if(uLinkNumber>0&&dCycle>0)
+        {
+            uRate=uLinkNumber*1.0/dCycle;
+            qDebug()<<"uRate"<<rate;
+        }
+        //得出rate和uRate如果两个值都很小，则不认为在一排
+        if(rate>0&&uRate>0)
+        {
+            qDebug()<<QStringLiteral("两个地物块在上下一排");
+            flag=true;
+        }
+        else
+        {
+            qDebug()<<QStringLiteral("两个地物不在上下一排");
+        }
+
+        delete[] dStake.p;
+        dStake.p=NULL;
+    }
+
+    //右邻接存在
+    Area rStake;
+    if(rLinkNumber>0)
+    {
+        rate=dLinkNumber*1.0/cycle;
+        qDebug()<<"rate"<<rate;
+        everyLandNum n;
+        n.startX=r.x;
+        n.startY=r.y;
+        n.colorTh=nodeinfo.colorTh;
+        qDebug()<<QStringLiteral("入口点坐标")<<n.startX<<"\t"<<n.startY;
+        rStake=pointIterator(imageArray,Samples,Lines,n);
+        qDebug()<<QStringLiteral("数量是：")<<dStake.number;
+        int rCycle=calAreaCycle(imageArray,Samples,Lines,stake,n);
+
+        int lLinkNumber=0;
+        for(int i=0;i<rStake.number;i++)
+        {
+            //左邻接
+            if(stake.p[i].y-1>0)
+                if(imageArray[(rStake.p[i].y*Samples+rStake.p[i].x-1)]!=nodeinfo.colorTh)
+                {
+                    if(rStake.p[i].x-rLinkDistance>0)
+                        if(imageArray[(rStake.p[i].y*Samples+rStake.p[i].x-rLinkDistance)]==nodeinfo.colorTh)
+                        {
+                            lLinkNumber++;
+                        }
+                }
+        }
+        double lRate=0;
+        if(lLinkNumber>0&&rCycle>0)
+        {
+            lRate=lLinkNumber*1.0/rCycle;
+            qDebug()<<"lRate"<<lRate;
+        }
+        //得出rate和uRate如果两个值都很小，则不认为在一排
+        if(rate>0&&lRate>0)
+        {
+            qDebug()<<QStringLiteral("两个地物块在左右一排");
+            flag=true;
+        }
+        else
+        {
+            qDebug()<<QStringLiteral("两个地物不在左右一排");
+        }
+
+        delete[] rStake.p;
+        rStake.p=NULL;
+    }
+    if(!flag)
+    {
+        qDebug()<<QStringLiteral("此处应该将该地物变色");
+    }
+    delete[] stake.p;
+    stake.p=NULL;
+
+}
+
 void zonedeal::linjie(unsigned short int *imageArray,int Samples,int Lines)
 {
     //统计四种地物（0 1）（0 2）（0 3）（1 2）（1 3）（2 3）邻接关系（右邻接和下邻接）

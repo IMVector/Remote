@@ -15,7 +15,7 @@ QString ruleName;
 Points Point=(point*)malloc(100*sizeof(point));//找到数据的矩形区域
 Points p=(point*)malloc(2*sizeof(point));
 QList <MyLabel*> labelList;//label的列表
-fileDetails details={0};//传入地物区分功能的样本信息
+SamplesDetails details={0};//传入地物区分功能的样本信息
 
 operate::operate(QWidget *parent) :
     QWidget(parent),
@@ -40,7 +40,7 @@ operate::operate(QWidget *parent) :
     initCombox();//初始化combox控件
     choiceSample->setWindowFlags(Qt::WindowStaysOnTopHint);
 
-    imageFile *file=new imageFile;
+//    imageFile *file=new imageFile;
 
     seaLine=new sealine;
 
@@ -49,7 +49,7 @@ operate::operate(QWidget *parent) :
     ui->startSortBtn->setEnabled(false);
 
     qRegisterMetaType<Points>("Points");//注册自定义类型的槽信号
-    qRegisterMetaType<fileDetails>("fileDetails");//注册自定义类型的槽信号
+    qRegisterMetaType<SamplesDetails>("SamplesDetails");//注册自定义类型的槽信号
     qRegisterMetaType<simples>("simples");//注册自定义类型的槽信号
     connect(this,SIGNAL(getDataImage(Points)),fileDeal,SLOT(getData_image(Points)));//样本选择时图片变化
     connect(this,SIGNAL(sendFileName(QString)),fileDeal,SLOT(openPathFile(QString)));//向处理线程发送文件名及路径
@@ -58,11 +58,13 @@ operate::operate(QWidget *parent) :
     connect(this,SIGNAL(getData(Points,int)),fileDeal,SLOT(findEdge(Points,int)));//开始选择样本初始化
     connect(this,SIGNAL(deleteCurrent(int)),fileDeal,SLOT(deleteDataFun(int)));//删除样本时信号
     connect(this,SIGNAL(newCurrent(int)),fileDeal,SLOT(currentFunction(int)));//新建样本时信号
-    connect(this,SIGNAL(sendDetails(fileDetails)),mySort,SLOT(getDetails(fileDetails)));
+    connect(this,SIGNAL(sendDetails(SamplesDetails)),mySort,SLOT(getDetails(SamplesDetails)));//向决策树地物区分线程发送样本地物波段等信息
+    connect(this,SIGNAL(sendSvmDetails(SamplesDetails)),fileDeal,SLOT(dataInfoGet(SamplesDetails)));
     connect(this,SIGNAL(sortAlready(QString)),fileDeal,SLOT(newParser(QString)));
     connect(this,SIGNAL(lowPoiSignal()),fileDeal,SLOT(lowPointsStart()));
     connect(this,SIGNAL(mCombine(QString,QString)),fileDeal,SLOT(combineLine(QString,QString)));
     connect(this,SIGNAL(sendSimpleInfo(QString,int*)),fileDeal,SLOT(simpleInfo(QString,int*)));//读取样本并发送信息去文件处理
+    connect(this,SIGNAL(sendSvmModel(QString)),fileDeal,SLOT(loadsvmModel(QString)));
 
     connect(choiceSample,SIGNAL(select_enable()),this,SLOT(getselect_enable()));//样本选择开关
     connect(choiceSample,SIGNAL(stop_select()),this,SLOT(get_stop_select()));//暂停选择样本
@@ -77,6 +79,8 @@ operate::operate(QWidget *parent) :
     connect(fileDeal,SIGNAL(sendSize(int,int)),this,SLOT(getSize(int,int)));//有新图片要显示时获取新图片的size
     connect(fileDeal,SIGNAL(fileDataDetails(int,int)),this,SLOT(getDataFileDetails(int,int)));
     connect(fileDeal,SIGNAL(messageInfo(QString,int)),this,SLOT(showMessage(QString,int)));
+    connect(fileDeal,SIGNAL(initProgressbar()),this,SLOT(initProBar()));//初始化progressbar
+
 
     connect(mySort,SIGNAL(sortComplete(QString)),fileDeal,SLOT(newParser(QString)));
     connect(seaLine,SIGNAL(getSealine(int*,int*)),fileDeal,SLOT(slotSealine(int*,int*)));//海岸线提取
@@ -115,10 +119,11 @@ void operate::initProBar()
     connect(mySort,SIGNAL(setProgressRange(int,int)),proBar,SLOT(setTotalRange(int,int)));
     connect(mySort,SIGNAL(setProgressValue(int)),proBar,SLOT(changeValue(int)));
     connect(mySort,SIGNAL(complete()),proBar,SLOT(close()));
+    connect(fileDeal,SIGNAL(complete()),proBar,SLOT(close()));
     connect(fileDeal,SIGNAL(setProgressRange(int,int)),proBar,SLOT(setTotalRange(int,int)));
     connect(fileDeal,SIGNAL(setProgressValue(int)),proBar,SLOT(changeValue(int)));
     connect(fileDeal,SIGNAL(complete(QString)),this,SLOT(lowPointsComplete(QString)));
-    proBar->show();
+
 }
 /**
  * @brief operate::lowPointsComplete降噪完成弹出消息框
@@ -199,12 +204,23 @@ void operate::showSql()
     Sqlsever->show();
     //Sqlsever->move(QApplication::desktop()->width()-Sqlsever->width(),50);
 }
+/**
+ * @brief operate::Setting 数据库设置
+ */
 void operate::Setting()
 {
     setting=new dbsetting;
     setting->connect(setting,SIGNAL(sendDBSetting(QString,QString,QString,QString,QString)),this,SLOT(getSetString(QString,QString,QString,QString,QString)));
     setting->show();
 }
+/**
+ * @brief operate::getSetString 数据库设置从UI获取参数值
+ * @param database
+ * @param url
+ * @param databseName
+ * @param userName
+ * @param password
+ */
 void operate::getSetString(QString database,QString url,QString databseName,QString userName,QString password)
 {
     Sqlsever->Setting(database,url,databseName,userName,password);
@@ -457,8 +473,6 @@ bool operate::getDetails(bool flag)
     return FLAG;
 }
 
-
-
 ////从ui选择样本
 void operate::on_getSampleBtn_clicked()
 {
@@ -494,13 +508,30 @@ void operate::on_startSortBtn_clicked()
     emit sendDetails(details);
     count_for_select_area=-1;
     count_for_add_point=0;
-    fileDeal->startSort();
+    //    fileDeal->startSort();
+    QTimer::singleShot(0,fileDeal,SLOT(startSort()));
     initProBar();
     for(int i=0;i<6;i++)
     {
         details.eachnumberFlag[i]=0;
     }
 }
+
+/**
+ * @brief operate::on_svmStartBtn_clicked svm训练分类，任务交由fileDeal线程处理
+ */
+void operate::on_svmStartBtn_clicked()
+{
+    getDetails(true);//计算详细信息
+    emit sendSvmDetails(details);
+    count_for_select_area=-1;
+    count_for_add_point=0;
+    for(int i=0;i<6;i++)
+    {
+        details.eachnumberFlag[i]=0;
+    }
+}
+
 ////决定样本选择是否开启(新建样本信号)
 void operate::getselect_enable()
 {
@@ -767,12 +798,14 @@ void operate::getFeature(QStringList feature)//将决策树显示到ui界面
 ////保存降噪后tif文件
 void operate::on_saveTif_clicked()
 {
-    fileDeal->saveTif();
+//    fileDeal->saveTif();
+    QTimer::singleShot(0,fileDeal,SLOT(saveTif()));
 }
 ////保存降噪后二进制图片
 void operate::on_saveBinary_clicked()
 {
-    fileDeal->saveBinary();
+    //    fileDeal->saveBinary();
+    QTimer::singleShot(0,fileDeal,SLOT(saveBinary()));
 }
 
 void operate::on_openFromFileBtn_clicked()
@@ -823,3 +856,24 @@ void operate::on_openFromFileBtn_clicked()
 //}
 
 
+/**
+ * @brief operate::on_loadModelBtn_clicked 打开svm结果集
+ */
+void operate::on_loadModelBtn_clicked()
+{
+    QString file = QFileDialog::getOpenFileName(
+                this,
+                "Open Document",
+                QDir::currentPath(),
+                "All files(*.*)");
+    if (!file.isNull())
+    { //用户选择了文件
+       emit sendSvmModel(file);
+    }
+    else
+    {
+        // 用户取消选择
+        QMessageBox::information(this, "Warning", QStringLiteral("      你未选中任何文件      "), QMessageBox::Ok);
+    }
+
+}

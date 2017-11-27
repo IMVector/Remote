@@ -58,7 +58,27 @@ void filedeal::openPathFile(QString fileName)
     qInfo()<<QStringLiteral("波段数量：")<<Band;
     qInfo()<<QStringLiteral("图像宽度：")<<Samples;
     qInfo()<<QStringLiteral("图像高度：")<<Lines;
-
+    double *maxValue=new double[Band];
+    for(int i=1;i<=Band;i++)
+    {
+        double minmax[2];
+        double min,max;
+        gdalData->GetRasterBand(i)->ComputeRasterMinMax(1,minmax);
+        min = minmax[0];//最小值
+        max = minmax[1];//最大值
+        maxValue[i-1]=max;
+    }
+    double temp=maxValue[0];
+    for(int i=0;i<Band;i++)
+    {
+        if(maxValue[i]>temp)
+        {
+            temp=maxValue[i];
+        }
+    }
+    maxDataValue=temp;
+    delete[] maxValue;
+    maxValue=NULL;
     GDALClose(gdalData);
     emit bandToUi(Band);
     emit sendSize(Samples,Lines);
@@ -877,8 +897,8 @@ void filedeal::startSort()
             count++;
         }
     }
-    delete[] dataCopyArea;
-    dataCopyArea=NULL;
+    //    delete[] dataCopyArea;
+    //    dataCopyArea=NULL;
     selectEnable=false;
     emit sendData(data,count);
 }
@@ -1477,6 +1497,190 @@ void filedeal::slotSealine(int *seaColor,int *landColor)
     seaLineGet(partImage,seaColor,landColor);
 }
 /**
+ * @brief filedeal::dataInfoGet 信号响应，从其他线程获取样本的信息
+ * @param details
+ */
+void filedeal::dataInfoGet(SamplesDetails details)
+{
+    emit initProgressbar();
+    emit setProgressRange(0,100);
+    emit setProgressValue(0);
+    empty_thread=new emptychild;//空线程
+    classify=new svmclassify;//类
+    classify->moveToThread(empty_thread);//处理数据线程移入空线程
+    empty_thread->start();//线程启动
+
+    //获取样本
+    int count=0;
+    simples data=new Node[300000];
+    for(int i=0;i<6;i++)
+    {
+        for(int j=0;j<pointCount[i];j++)
+        {
+            for(int b=0;b<Band;b++)
+            data[count].bands[b]=dataCopyArea[i][j].bands[b]/maxDataValue;
+            count++;
+        }
+    }
+    //    delete[] dataCopyArea;
+    //    dataCopyArea=NULL;
+    selectEnable=false;
+
+    int band=details.bandNumber;
+    int geoNumber=details.geoNumber;
+    int *eachNumber=details.eachnumber;
+    int sum=details.sumNumber;
+
+    qRegisterMetaType<svm_model>("svm_model");//注册自定义类型的槽信号
+    connect(classify,SIGNAL(sendModel(svm_model*)),this,SLOT(getSvmModel(svm_model*)));
+    connect(this,SIGNAL(invokeTrain(int,simples,int,int*,int)),classify,SLOT(train(int,simples,int,int*,int)));
+    emit invokeTrain(band,data,geoNumber,eachNumber,sum);
+    qDebug()<<QStringLiteral("样本获取正常");
+}
+/**
+ * @brief filedeal::getSvmModel svmclassif 信号响应，接收svm_model
+ * @param model
+ */
+void filedeal::getSvmModel(svm_model *model)
+{
+    QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+    QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+    QString fileStr="D:\\model"+str;
+    int flag=svm_save_model(fileStr.toStdString().c_str(),model);//保存结果集
+    if(flag==-1)
+    {
+        qDebug()<<QStringLiteral("结果集保存失败");
+    }
+    else if(flag==0)
+    {
+        qDebug()<<QStringLiteral("结果集保存成功");
+    }
+    qDebug()<<QStringLiteral("结果集获取正常");
+    svm_node *predictNode=new svm_node[Band+1];
+    double result;//接收结果
+    //    for(b=0;b<Band;b++)
+    //    {
+    //        predictNode[b].index=b+1;
+    //        predictNode[b].value=;
+    //    }
+    //    predictNode[Band].index=-1;
+    //    result=svm_predict(model,predictNode);
+
+
+    sorted=true;
+    QImage image(Samples, Lines, QImage::Format_RGB32);
+    image.fill(Qt::white);//将图片背景填充为白色
+    QRgb value;
+
+    //int readHeight=100;//每次读取文件的数量100行
+    int startHeight=0;//游标的初始位置
+    int endHeight=startHeight+readHeight;//当前游标的结束位置
+
+    point *rectangle=new point[2];
+    //开始坐标
+    rectangle[0].x=0;
+    rectangle[0].y=startHeight;
+    //结束坐标
+    rectangle[1].x=Samples;
+    rectangle[1].y=endHeight;
+    //二维坐标一维化
+    int startNumber=rectangle[0].y*Samples+rectangle[0].x;
+    //真实的坐标（一维）
+    int realLocationNum=0;
+    //整除100剩余的余数处理
+    int restHeight=Lines%readHeight;
+
+    /////////////////////////////////////////////////////////////////////
+    for(int m=0;m<Lines/readHeight;m++)
+    {
+        float **rawData=NULL;
+        rawData=openFile(rectangle);
+        //k=0;k<readHeight;k++;//当前虚拟坐标（一维的）
+        //当前真实坐标（一维的）realLocationNum
+        //startNumber=rectangle[0].y*Samples+rectangle[0].x;
+        startNumber=rectangle[0].y*Samples+rectangle[0].x;
+//        QTime time;
+//        time.start();
+        for(int k=0;k<Samples*readHeight;k++)
+        {
+            realLocationNum=startNumber+k;
+            emit setProgressValue((realLocationNum/Samples*Lines*1.0)*100);
+            //样本判断逻辑
+            //rawData是二维数组[i][j]i表示第i个波段,j表示第j个点
+            for(int b=0;b<Band;b++)
+            {
+                predictNode[b].index=b+1;
+                predictNode[b].value=rawData[b][k]/maxDataValue;
+            }
+            predictNode[Band].index=-1;
+
+            result=svm_predict(model,predictNode);
+
+//            if(k%100==0)
+//            {
+//                qDebug()<<time.elapsed()<<"ms";
+//                qDebug()<<result;
+//            }
+            int color=result+1;
+            //变色
+            value = qRgb(R[color], G[color], B[color]);
+            image.setPixel(realLocationNum%Samples,realLocationNum/Samples,value);
+        }
+        startHeight+=readHeight;
+        endHeight+=readHeight;
+        rectangle[0].x=0;
+        rectangle[0].y=startHeight;
+        rectangle[1].x=Samples;
+        rectangle[1].y=endHeight;
+        for(int i=0;i<Band;i++)
+        {
+            delete []rawData[i];
+            rawData[i]=NULL;
+        }
+        delete[] rawData;
+        rawData=NULL;
+
+    }//样本循环
+    //余数   剩余部分处理
+    rectangle[1].y=Lines;
+    float **rawData=NULL;
+    rawData=openFile(rectangle);
+    startNumber=rectangle[0].y*Samples+rectangle[0].x;
+    for(int k=0;k<Samples*restHeight;k++)
+    {
+        realLocationNum=startNumber+k;
+        //样本判断逻辑
+        emit setProgressValue((realLocationNum/Samples*Lines*1.0)*100);
+        //rawData是二维数组[i][j]i表示第i个波段,j表示第j个点
+        for(int b=0;b<Band;b++)
+        {
+            predictNode[b].index=b+1;
+            predictNode[b].value=rawData[b][k]/maxDataValue;
+        }
+        predictNode[Band].index=-1;
+        result=svm_predict(model,predictNode);
+
+        int color=result+1;
+        //变色
+        value = qRgb(R[color], G[color], B[color]);
+        image.setPixel(realLocationNum%Samples,realLocationNum/Samples,value);
+    }
+
+    delete[] rawData;
+    rawData=NULL;
+    delete[] rectangle;
+    rectangle=NULL;
+
+    svm_free_and_destroy_model(&model);
+    //显示区分后的图像
+    emit complete();
+    rawImage=image;
+    partImage=image;
+    saveTif();
+
+    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+}
+/**
  * @brief filedeal::seaLineGet 海岸线提取
  * @param tempImage
  * @param seaColor
@@ -1484,6 +1688,7 @@ void filedeal::slotSealine(int *seaColor,int *landColor)
  */
 void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
 {
+    emit initProgressbar();
     emit setProgressRange(0,100);
     emit setProgressValue(0);
 
@@ -1678,9 +1883,9 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
             //找一条最长的海岸线
         }
     }
-    partImage=image;
-    rawImage=image;
-    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+//    partImage=image;
+//    rawImage=image;
+//    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     //    qInfo()<<"normal3";
     //将原来的海岸线数组变成标记数组
     for(int h=0;h<Lines;h++)
@@ -1705,7 +1910,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
         {
             for(int w=0;w<Samples;w++)
             {
-                emit setProgressValue((h*Samples+w)/(Samples*Lines*2));
+                emit setProgressValue((h*Samples+w)/(Samples*Lines*2)*100);
                 pointCount=0;
                 currentMaxNum=0;
 
@@ -1779,9 +1984,9 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     {
         qInfo()<<exception;
     }
-    partImage=image;
-    rawImage=image;
-    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+    //    partImage=image;
+    //    rawImage=image;
+    //    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     qInfo()<<QStringLiteral("最长海岸线的点的数量")<<lineCount;
     qInfo()<<QStringLiteral("最长海岸线的下标")<<maxLineIndex;
     //重置标记
@@ -1798,7 +2003,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     {
         for(int w=0;w<Samples;w++)
         {
-            emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2));
+            emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100);
             nx=w;ny=h;
             pointCount=0;
             currentMaxNum=0;
@@ -2255,6 +2460,12 @@ void filedeal::saveTif()
         emit messageInfo(message,0);
     }
 }
+
+void filedeal::loadsvmModel(QString modelName)
+{
+    svm_model *model=svm_load_model(modelName.toStdString().c_str());
+    getSvmModel(model);
+}
 ////保存二进制文件
 void filedeal::saveBinary()
 {
@@ -2428,7 +2639,7 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     imageS.load(imageStrS);
     Samples=imageF.width();
     Lines=imageF.height();
-     QRgb valueC=qRgb(0,0,0);
+    QRgb valueC=qRgb(0,0,0);
     //    qInfo()<<Samples;
     //    qInfo()<<Lines;
     if(Samples<500)

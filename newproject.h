@@ -13,7 +13,6 @@
 #include <database.h>
 #include <QCloseEvent>
 #include <zonedeal.h>
-#include <svmclassify.h>
 namespace Ui {
 class newProject;
 }
@@ -39,7 +38,6 @@ private:
     operate * operateUI;
     database * Sqlsever;
     zonedeal *zone;
-    svmclassify *classify;
     QThread *empty_thread;
     void closeEvent(QCloseEvent *event);
 private slots:
@@ -59,7 +57,10 @@ private slots:
 
     void on_actiontest_triggered();
 
+
+
 signals:
+
 
 
 };

@@ -20,6 +20,8 @@ progressBar::~progressBar()
 void progressBar::setTotalRange(int startRange,int endRange)
 {
     ui->proBar->setRange(startRange,endRange);
+    ui->proBar->setValue(0);
+    ui->proBar->show();
 }
 void progressBar::changeValue(int value)
 {

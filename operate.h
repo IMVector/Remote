@@ -61,12 +61,12 @@ private:
     int visiualY=0;
 
 
-    void initProBar();
+
     void initShowBandWidget();//初始化显示波段面板
     bool getDetails(bool flag);
     void initChoice();
     void initCombox();
-//    void showInfo(QString info, QString type);
+    //    void showInfo(QString info, QString type);
 private slots:
     void uiGetBand(int band);
     void on_fileBandWidget_clicked(const QModelIndex &index);
@@ -93,10 +93,13 @@ private slots:
     void on_openFromFileBtn_clicked();
     void getSize(int width,int height);
     void getDataFileDetails(int number,int geoNumber);
-
     void lowPointsComplete(QString message);
     void showMessage(QString message, int type);
     void on_ruleOpenBtn_clicked();
+    void on_svmStartBtn_clicked();
+    void initProBar();
+
+    void on_loadModelBtn_clicked();
 
 signals:
     void sendFileName(QString fileName);
@@ -106,11 +109,13 @@ signals:
     void getData(Points selectPoint,int number);
     void deleteCurrent(int currentIndex);
     void newCurrent(int current);
-    void sendDetails(fileDetails details);
+    void sendDetails(SamplesDetails details);
     void sortAlready(QString ruleName);
     void lowPoiSignal();
     void mCombine(QString imageF,QString imageS);
     void sendSimpleInfo(QString name,int *number);
+    void sendSvmDetails(SamplesDetails details);
+    void sendSvmModel(QString file);
 
 };
 
