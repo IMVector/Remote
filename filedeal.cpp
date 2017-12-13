@@ -1,5 +1,4 @@
-﻿
-#include "filedeal.h"
+﻿#include "filedeal.h"
 int thisCount=0;
 int ERRORCount=0;
 QString filePathName=NULL;
@@ -2639,7 +2638,9 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     imageS.load(imageStrS);
     Samples=imageF.width();
     Lines=imageF.height();
-    QRgb valueC=qRgb(0,0,0);
+    //    QRgb valueA=qRgb(255,0,0);
+    //    QRgb valueB=qRgb(0,0,255);
+    //    QRgb valueC=qRgb(0,0,0);
     //    qInfo()<<Samples;
     //    qInfo()<<Lines;
     if(Samples<500)
@@ -2680,7 +2681,7 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
                     QColor(imageF.pixel(w,h)).green()==0&&
                     QColor(imageF.pixel(w,h)).blue()==0)
             {
-                imageF.setPixel(w,h,valueC);
+                //                imageF.setPixel(w,h,valueA);
                 fLine[x].x=w;
                 fLine[x].y=h;
                 x++;
@@ -2691,7 +2692,7 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
                     QColor(imageS.pixel(w,h)).green()==0&&
                     QColor(imageS.pixel(w,h)).blue()==0)
             {
-                imageF.setPixel(w,h,valueC);
+                //                imageF.setPixel(w,h,valueB);
                 sLine[y].x=w;
                 sLine[y].y=h;
                 y++;
@@ -2699,8 +2700,8 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
 
         }
     }
-    imageF.save(imageStrF);
-    imageS.save(imageStrS);
+    //    imageF.save(imageStrF);
+    //    imageS.save(imageStrS);
     --x;
     --y;
     if(1)
@@ -2755,15 +2756,14 @@ void filedeal::combineLine(QString imageStrF,QString imageStrS)
     //        qInfo()<<"sLine:"<<i<<" x:"<<sLine[i].x<<" y:"<<sLine[i].y<<"\n";
     //    }
     QImage image(Samples, Lines, QImage::Format_RGB32);
-    QRgb valueF=qRgb(0,0,255);
+    QRgb valueF=qRgb(0,0,255);//从蓝色线网红色线推
     QRgb valueS=qRgb(255,0,0);
-    QRgb valueT=qRgb(0,255,0);
+    //    QRgb valueT=qRgb(0,255,0);
     image.fill(Qt::white);//将图片背景填充为白色
     for(int i=0;i<max;i++)
     {
         image.setPixel(fLine[i].x,fLine[i].y,valueF);
         image.setPixel(sLine[i].x,sLine[i].y,valueS);
-
     }
 
     rawImage=image;
@@ -2837,11 +2837,12 @@ void filedeal::move(point**lineSet,point standPoint,int number)
     image.fill(Qt::white);//将图片背景填充为白色
     for(int i=0;i<number;i++)
     {
-        //        image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
-        //        image.setPixel(sLineP[i].x,sLineP[i].y,valueS);
+        image.setPixel(fLineP[i].x,fLineP[i].y,valueF);
+        image.setPixel(sLineP[i].x,sLineP[i].y,valueS);
         image.setPixel(tLine[i].x,tLine[i].y,valueT);
         //qInfo()<<"tLine"<<i<<"    "<<tLine[i].x<<"   "<<tLine[i].y;
     }
+    image.save("C://abc.tif");
     rawImage=image;
     partImage=image;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,image);
@@ -2872,8 +2873,6 @@ int filedeal::pToLminIndex(point alonePoint,point *Line,int number)
     }
     return minIndex;
 }
-
-
 
 /**
  * @brief filedeal::pExistLine 判断点是否在海岸线上（子函数，父函数是unLinkPoint）
@@ -3413,7 +3412,6 @@ void filedeal::averageLine(QImage image, int width, int height)
             }
         }
     }
-
     rawImage=newImage;
     partImage=newImage;
     visiualdraw(visiualDrawP,currentHeight,currentWidth,newImage);
@@ -3665,7 +3663,7 @@ void filedeal::linkPoint(QImage image,int width,int height)
     for(int i=0;i<count;i++)
     {
         //如果距离太大自动跳出循环，不再往下连线
-        if(distance(tempPoint[index[i].x],tempPoint[index[i].y])>100)
+        if(distance(tempPoint[index[i].x],tempPoint[index[i].y])>500)
         {
             break;
         }
@@ -3677,6 +3675,7 @@ void filedeal::linkPoint(QImage image,int width,int height)
     {
         image.setPixel(tempPoint[index[i].x].x,tempPoint[index[i].x].y,noVisiusl);
     }
+
 
     //        point *p=new point[count];
     //        for(int i=0;i<count;i++)
