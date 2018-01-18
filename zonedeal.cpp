@@ -1,80 +1,144 @@
 ﻿#include "zonedeal.h"
 zonedeal::zonedeal()
 {
-    //    //    输入一个图片地址
-    //    //    C:\\Users\\25235\\Desktop\\file1.tif
-    //    QImage image;
-    //    image.load("C:\\Users\\25235\\Desktop\\file.tif");
-    //    if(!image.isNull())
-    //    {
-    //        main(image);
-    //    }
-    //    else
-    //    {
-    //        qDebug()<<QStringLiteral("文件为空");
-    //    }
+    //    click();
+}
+void zonedeal::click()
+{
+    //    输入一个图片地址
+    //    C:\\Users\\25235\\Desktop\\file6(2).tif
+    QImage image;
+    image.load("C:\\Users\\25235\\Desktop\\file");
+    if(!image.isNull())
+    {
+        main(image);
+    }
+    else
+    {
+        qDebug()<<QStringLiteral("文件为空");
+    }
     //    unsigned short int testImage[32]={
     //        1,1,2,1,2,1,2,1,
     //        1,1,2,1,2,1,2,1,
     //        1,1,2,1,2,1,2,1,
     //        1,1,2,1,2,1,2,1,
     //    };
-    unsigned short int testImage[32]={
-        1,1,2,1,2,1,2,1,
-        1,1,2,1,4,4,4,1,
-        3,3,3,1,2,1,2,1,
-        1,1,2,1,2,1,2,1,
-    };
+    //    unsigned short int testImage[32]={
+    //        1,1,2,1,2,1,2,1,
+    //        1,1,2,1,4,4,4,1,
+    //        3,3,3,1,2,1,2,1,
+    //        1,1,2,1,2,1,2,1,
+    //    };
+    //    ImageArray imageArray;
+    //    imageArray.colorTh=testImage;
+    //    //imageArray.id=new unsigned short int [32];
+    //    test(imageArray,8,4);
+}
+void zonedeal::main(QImage image)
+{
+    int R[7]={ 255,  255,    0,   0,   139,0};
+    int G[7]={   0,  255,    0,   255, 0 ,0};
+    int B[7]={   0  ,  0,  255,   0,   139   ,0};
+    //红 黄 蓝 绿 紫 黑
+    //s_color *landColor=new s_color[6];
+    int Samples=image.width();
+    int Lines=image.height();
+    qDebug()<<QStringLiteral("图像宽度：")<<Samples;
+    qDebug()<<QStringLiteral("图像高度：")<<Lines;
+    bool flag=false;
+
+    unsigned short *testImage=new unsigned short[Samples*Lines];
+
+    //将图片转化为数组
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+            flag=false;
+            for(int i=0;i<6;i++)
+            {
+                if(QColor(image.pixel(w,h)).red()==R[i]&&
+                        QColor(image.pixel(w,h)).green()==G[i]&&
+                        QColor(image.pixel(w,h)).blue()==B[i]
+                        )
+                {
+                    testImage[h*Samples+w]=i;
+                    flag=true;
+                }
+                if(!flag)
+                {
+                    testImage[h*Samples+w]=0;
+                }
+            }
+
+        }
+    }
     ImageArray imageArray;
     imageArray.colorTh=testImage;
-    //imageArray.id=new unsigned short int [32];
-    test(imageArray,8,4);
+    test(imageArray,Samples,Lines);
+    //获得图像地物数组
 
+    delete []testImage;
+    testImage=NULL;
 }
-
 void zonedeal::test(ImageArray testImage,int Samples,int Lines)
 {
     int R[7]={ 255,  255,    0,   0,   139,0};
     int G[7]={   0,  255,    0,   255, 0 ,0};
     int B[7]={   0  ,  0,  255,   0,   139   ,0};
-    testImage.id=new unsigned short int[Samples*Lines];
-    int NodeNumber=0;
+    testImage.id=new unsigned short[Samples*Lines];
+    int NodeNumber=0;//节点数量
+    int deleteThresould=5000;//最小区域点数量阈值
+    int distanceThresould=70;//距离阈值
+    float adjIntensity=0.3;//邻接强度阈值
+    int geoTh=2;//要找成排的地物
+    bool colorChangeFlag=false;//颜色更改flag
+
+
     AreaNodeInfo *everyNum=countEveryNumber(testImage.colorTh,Samples,Lines);
 
-    //    for(int i=0;everyNum[i].number>0;i++)
-    //    {
-    //        qDebug()<<everyNum[i].number;
-    //    }
-    //    点数量太少变色
-    //    for(int i=0;everyNum[i].number>0;i++)
-    //    {
-    //        if(everyNum[i].number<200)
-    //        {
-    //            //            qDebug()<<everyNum[i].number;
-    //            //            qDebug()<<QStringLiteral("未更改的颜色是：")<<everyNum[i].colorTh<<QStringLiteral("更改后的颜色是：")<<adjancentColor(testImage,Samples,Lines,everyNum[i]);
-    //            //            unsigned short color=adjancentColor(testImage,Samples,Lines,everyNum[i]);
-    //            //            testImage.colorTh=changeColor(testImage.colorTh,Samples,Lines,everyNum[i],4);
-    //        }
-    //    }
-    QImage image(Samples, Lines, QImage::Format_RGB32);;
+    qDebug()<<QStringLiteral("第一次统计完成");
 
-    for(int h=0;h<Lines;h++)
+    QImage image(Samples, Lines, QImage::Format_RGB32);
+    //    点数量小于区域大小阈值的认为是噪点，将其变成相邻区域颜色
+    for(int i=0;everyNum[i].number>0;i++)
     {
-        for(int w=0;w<Samples;w++)
+        if(everyNum[i].number<deleteThresould)
         {
-            QRgb value=qRgb(R[testImage.colorTh[h*Samples+w]],G[testImage.colorTh[h*Samples+w]],B[testImage.colorTh[h*Samples+w]]);
-            image.setPixel(w,h,value);
+            unsigned short color=adjancentColor(testImage,Samples,Lines,everyNum[i]);
+            testImage.colorTh=newChangeColor(testImage.colorTh,Samples,Lines,everyNum[i],color,deleteThresould);
+            colorChangeFlag=true;
         }
     }
-    image.save("C:\\Users\\25235\\Desktop\\bbbbbb.tif");
 
-    everyNum=countEveryNumber(testImage.colorTh,Samples,Lines);
+
+    delete everyNum;
+    everyNum=NULL;
+
+    if(colorChangeFlag)
+    {
+        for(int h=0;h<Lines;h++)
+        {
+            for(int w=0;w<Samples;w++)
+            {
+                QRgb value=qRgb(R[testImage.colorTh[h*Samples+w]],G[testImage.colorTh[h*Samples+w]],B[testImage.colorTh[h*Samples+w]]);
+                image.setPixel(w,h,value);
+            }
+        }
+        //sendImageToUi(image,2);
+        image.save("C:\\Users\\25235\\Desktop\\new.tif");
+        //image.smoothScaled(2,2);
+
+        //对变色后的区域重新统计每个区域的信息
+        everyNum=countEveryNumber(testImage.colorTh,Samples,Lines);
+    }
+
+
     //给所有区域分配不同id
     for(int i=0;everyNum[i].number!=0;i++)
     {
         NodeNumber++;
-        //qDebug()<<QStringLiteral("入口坐标")<<everyNum[i].startX<<everyNum[i].startY;
-        //qDebug()<<everyNum[i].number;
+        //qDebug()<<QStringLiteral("入口坐标")<<everyNum[i].startX<<everyNum[i].startY<<<<everyNum[i].number;
         everyNum[i].ID=i;//给当前节点分配ID
         Area a=pointIterator(testImage.colorTh,Samples,Lines,everyNum[i]);
         everyNum[i].cycle=calAreaCycle(testImage.colorTh,Samples,Lines,a,everyNum[i]);
@@ -83,38 +147,92 @@ void zonedeal::test(ImageArray testImage,int Samples,int Lines)
         {
             testImage.id[a.p[j].y*Samples+a.p[j].x]=i;//给所有地物标一个唯一id，给图像中的当前区域赋值相同ID
         }
-        delete a.p;
+        delete[] a.p;
         a.p=NULL;
     }
     for(int i=0;everyNum[i].number!=0;i++)//计算所有区域的邻接地物以及邻接数量
     {
         Area a=pointIterator(testImage.colorTh,Samples,Lines,everyNum[i]);
         everyNum[i]=rightOrDownLink(testImage,Samples,Lines,everyNum[i],a);//经过这一步，右邻接区域，以及邻接数量全部求出
-        everyNum[i].rAdjIntensity=new float[everyNum[i].rLinkNum];
-        everyNum[i].dAdjIntensity=new float[everyNum[i].dLinkNum];
-        for(int j=0;j<everyNum[i].rLinkNum;j++)//计算右邻接强度
-        {
-            everyNum[i].rAdjIntensity[j]=everyNum[i].rAdjacentNum[j]*1.0/everyNum[i].cycle;
-            qDebug()<<QStringLiteral("右邻接强度是")<<everyNum[i].rAdjIntensity[j];
-        }
-        for(int j=0;j<everyNum[i].dLinkNum;j++)//计算下邻接强度
-        {
-            everyNum[i].dAdjIntensity[j]=everyNum[i].dAdjacentNum[j]*1.0/everyNum[i].cycle;
-            qDebug()<<QStringLiteral("下邻接强度是")<<everyNum[i].dAdjIntensity[j];
-        }
-        delete a.p;
+        //        everyNum[i].rAdjIntensity=new float[everyNum[i].rLinkNum];
+        //        everyNum[i].dAdjIntensity=new float[everyNum[i].dLinkNum];
+        //        for(int j=0;j<everyNum[i].rLinkNum;j++)//计算右邻接强度
+        //        {
+        //            everyNum[i].rAdjIntensity[j]=everyNum[i].rAdjacentNum[j]*1.0/everyNum[i].cycle;
+        //            qDebug()<<QStringLiteral("右邻接强度是")<<everyNum[i].rAdjIntensity[j];
+        //        }
+        //        for(int j=0;j<everyNum[i].dLinkNum;j++)//计算下邻接强度
+        //        {
+        //            everyNum[i].dAdjIntensity[j]=everyNum[i].dAdjacentNum[j]*1.0/everyNum[i].cycle;
+        //            qDebug()<<QStringLiteral("下邻接强度是")<<everyNum[i].dAdjIntensity[j];
+        //        }
+        delete[] a.p;
         a.p=NULL;
     }
+    ////////////////////////////////////////////////////////////////////////
+    //    //求最短距离
+    //    //距离表
+    //    Graph distanceGraph;
+    //    distanceGraph.headChain=new HeadNode[NodeNumber];
+    //    distanceGraph.vexNum=NodeNumber;
+    //    //距离邻接表初始化
+    //    for(int i=0;i<NodeNumber;i++)
+    //    {
+    //        distanceGraph.headChain[i].ID=i;//节点id
+    //        distanceGraph.headChain[i].colorTh=everyNum[i].colorTh;//节点颜色
+    //        distanceGraph.headChain[i].isVisited=false;
+    //        distanceGraph.headChain[i].firstNode=NULL;
+    //    }
+
+    //    LinkNetNode *dNode,*dTail=NULL;
+    //    for(int i=0;i<NodeNumber;i++)
+    //    {
+    //        for(int j=0;j<NodeNumber;j++)
+    //        {
+    //            if(i!=j)
+    //                if(distanceGraph.headChain[i].colorTh==distanceGraph.headChain[j].colorTh)//两节点是同一地物
+    //                {
+    //                    point p1,p2;
+    //                    p1.x=everyNum[i].startX;
+    //                    p1.y=everyNum[i].startY;
+    //                    p2.x=everyNum[j].startX;
+    //                    p2.y=everyNum[j].startY;
+    //                    if(distance(p1,p2)<=maxDistance)
+    //                    {
+    //                        qDebug()<<distance(p1,p2);
+    //                        dNode=new LinkNetNode;
+    //                        dNode->ID=distanceGraph.headChain[j].ID;
+    //                        dNode->next=NULL;
+    //                        if(distanceGraph.headChain[i].firstNode==NULL)
+    //                        {
+    //                            distanceGraph.headChain[i].firstNode=dNode;
+    //                            dTail=dNode;
+    //                        }
+    //                        else
+    //                        {
+    //                            dTail->next=dNode;
+    //                            dTail=dNode;
+    //                        }
+    //                    }
+
+    //                }
+    //        }
+    //    }
+
+
+
     /////////////////////////////////////////////////////////////////////////////////////////
+
     //邻接表存储
-    Graph myGraph;
-    myGraph.headChain=new HeadNode[Samples*Lines];
-    myGraph.vexNum=NodeNumber;
+    Graph adjancentGraph;
+    adjancentGraph.headChain=new HeadNode[NodeNumber];
+    adjancentGraph.vexNum=NodeNumber;
+    //邻接表初始化
     for(int i=0;i<NodeNumber;i++)
     {
-        myGraph.headChain[i].ID=i;
-        myGraph.headChain[i].isVisited=false;
-        myGraph.headChain[i].firstNode=NULL;
+        adjancentGraph.headChain[i].ID=i;//节点id
+        adjancentGraph.headChain[i].isVisited=false;
+        adjancentGraph.headChain[i].firstNode=NULL;
     }
     LinkNetNode *node,*tail=NULL;
     for(int i=0;i<NodeNumber;i++)
@@ -123,13 +241,14 @@ void zonedeal::test(ImageArray testImage,int Samples,int Lines)
         {
             node=new LinkNetNode;
             node->ID=everyNum[i].rID[j];
+            node->nextDirection=1;
             node->next=NULL;
 
-            qDebug()<<QStringLiteral("当前节点")<<myGraph.headChain[i].ID<<QStringLiteral("的右邻接是")<<node->ID;
+            qDebug()<<QStringLiteral("当前节点")<<adjancentGraph.headChain[i].ID<<QStringLiteral("的右邻接是")<<node->ID;
 
-            if(myGraph.headChain[i].firstNode==NULL)
+            if(adjancentGraph.headChain[i].firstNode==NULL)
             {
-                myGraph.headChain[i].firstNode=node;
+                adjancentGraph.headChain[i].firstNode=node;
                 tail=node;
             }
             else
@@ -137,17 +256,19 @@ void zonedeal::test(ImageArray testImage,int Samples,int Lines)
                 tail->next=node;
                 tail=node;
             }
+
         }
         for(int j=0;j<everyNum[i].dLinkNum;j++)
         {
             node=new LinkNetNode;
             node->ID=everyNum[i].dID[j];
+            node->nextDirection=2;
             node->next=NULL;
 
-            qDebug()<<QStringLiteral("当前节点")<<myGraph.headChain[i].ID<<QStringLiteral("的下邻接是")<<node->ID;
-            if(myGraph.headChain[i].firstNode==NULL)
+            qDebug()<<QStringLiteral("当前节点")<<adjancentGraph.headChain[i].ID<<QStringLiteral("的下邻接是")<<node->ID;
+            if(adjancentGraph.headChain[i].firstNode==NULL)
             {
-                myGraph.headChain[i].firstNode=node;
+                adjancentGraph.headChain[i].firstNode=node;
                 tail=node;
             }
             else
@@ -155,10 +276,11 @@ void zonedeal::test(ImageArray testImage,int Samples,int Lines)
                 tail->next=node;
                 tail=node;
             }
+
         }
 
     }
-//////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////
 
     //    //将右邻接和下邻接两个网关系变成一个网关系
     //    LinkNetNode* net=new LinkNetNode[NodeNumber];
@@ -192,133 +314,663 @@ void zonedeal::test(ImageArray testImage,int Samples,int Lines)
     //            qDebug()<<QStringLiteral("当前ID")<<net[i].id<<QStringLiteral("的邻接ID是")<<net[i].adjancentID[j];
     //        }
     //    }
-    //找出所有两步可达的地物相同的区域ToDo:将同一区域去除
-    int *rNet=new  int[Samples*Lines];
-    int rNetCount=0;
-    int *dNet=new  int[Samples*Lines];
-    int dNetCount=0;
+    //    //找出所有两步可达的地物相同的区域ToDo:将同一区域去除
+    //    int *rNet=new  int[Samples*Lines];
+    //    int rNetCount=0;
+    //    int *dNet=new  int[Samples*Lines];
+    //    int dNetCount=0;
 
-    for(int i=0;everyNum[i].number!=0;i++)
-    {
-        for(int j=0;j<everyNum[i].rLinkNum;j++)//求出右邻接地物的id为everyNum[i].rID[j]
-        {
-
-            for(int k=0;k<everyNum[everyNum[i].rID[j]].rLinkNum;k++)//在第everyNum[i].rID[j]个区域的右邻接区域中
-            {
-                if(everyNum[everyNum[i].rID[j]].rightColorTh[k]==everyNum[i].colorTh)//如果二邻接区域的地物与当前区域i的地物相同，则认为在一排
-                {
-                    if(distancesConfine(everyNum[i].startX,everyNum[i].startY,
-                                        everyNum[everyNum[i].rID[j]].startX,
-                                        everyNum[everyNum[i].rID[j]].startY)&&
-                            everyNum[i].ID!=everyNum[everyNum[i].rID[j]].rID[k])
-                    {
-                        qDebug()<<QStringLiteral("区域")<<everyNum[i].ID<<QStringLiteral("与区域")
-                               <<everyNum[everyNum[i].rID[j]].rID[k]<<QStringLiteral("是二阶左右邻居");
-
-                        rNet[rNetCount]=everyNum[i].ID;
-                        rNetCount++;
-                        rNet[rNetCount]=everyNum[everyNum[i].rID[j]].rID[k];
-                        rNetCount++;
-                    }
-                }
-            }
-        }
-        for(int j=0;j<everyNum[i].dLinkNum;j++)//求出右邻接地物的id为everyNum[i].rID[j]
-        {
-            for(int k=0;k<everyNum[everyNum[i].dID[j]].dLinkNum;k++)//在第everyNum[i].rID[j]个区域的右邻接区域中
-            {
-                if(everyNum[everyNum[i].dID[j]].downColorTh[k]==everyNum[i].colorTh)//如果二邻接区域的地物与当前区域i的地物相同，则认为在一排
-                {
-                    if(distancesConfine(everyNum[i].startX,everyNum[i].startY,
-                                        everyNum[everyNum[i].rID[j]].startX,
-                                        everyNum[everyNum[i].rID[j]].startY)&&
-                            everyNum[i].ID!=everyNum[everyNum[i].dID[j]].dID[k])
-                    {
-                        qDebug()<<QStringLiteral("区域")<<everyNum[i].ID<<QStringLiteral("与区域")
-                               <<everyNum[everyNum[i].dID[j]].dID[k]<<QStringLiteral("是二阶上下邻居");
-                        dNet[dNetCount]=everyNum[i].ID;
-                        dNetCount++;
-                        dNet[dNetCount]=everyNum[everyNum[i].dID[j]].dID[k];
-                        dNetCount++;
-                    }
-                }
-            }
-        }
-    }
-
-    //    ToDo:下一步找四步可达
-    for(int i=0;i<rNetCount;i++)
-    {
-        if(i%2==0)
-        {
-            //qDebug()<<rNet[i]<<rNet[i+1]<<"\n";
-            for(int j=0;j<rNetCount;j++)
-            {
-                if(j%2==0&&i!=j)
-                    if(rNet[i+1]==rNet[j])
-                    {
-                        qDebug()<<QStringLiteral("区域")<<rNet[i]<<QStringLiteral("与区域")<<rNet[j+1]
-                               <<QStringLiteral("是四阶上下邻居");
-                    }
-            }
-        }
-    }
-    for(int i=0;i<dNetCount;i++)
-    {
-        if(i%2==0)
-        {
-            //qDebug()<<dNet[i]<<dNet[i+1]<<"\n";
-            for(int j=0;j<dNetCount;j++)
-            {
-                if(j%2==0&&i!=j)
-                    if(dNet[i+1]==dNet[j])
-                    {
-                        qDebug()<<QStringLiteral("区域")<<dNet[i]<<QStringLiteral("与区域")<<dNet[j+1]
-                               <<QStringLiteral("是四阶上下邻居");
-                    }
-
-            }
-
-        }
-    }
-    cycleSearch(&myGraph,Samples,Lines);
-    delete[] rNet;
-    rNet=NULL;
-    delete[] dNet;
-    dNet=NULL;
-    //    delete[] net;
-    //    net=NULL;
-    //    for(int i=0;everyNum[i].number>0;i++)
+    //    for(int i=0;everyNum[i].number!=0;i++)
     //    {
-    //        delete[] everyNum[i].dAdjacentNum;
-    //        everyNum[i].dAdjacentNum=NULL;
-    //        delete[] everyNum[i].dAdjIntensity;
-    //        everyNum[i].dAdjIntensity=NULL;
-    //        delete[] everyNum[i].dID;
-    //        everyNum[i].dID=NULL;
-    //        delete[] everyNum[i].downColorTh;
-    //        everyNum[i].downColorTh=NULL;
-    //        delete[] everyNum[i].downX;
-    //        everyNum[i].downX=NULL;
-    //        delete[] everyNum[i].downY;
-    //        everyNum[i].downY=NULL;
-    //        delete[] everyNum[i].rightX;
-    //        everyNum[i].rightX=NULL;
-    //        delete[] everyNum[i].rightY;
-    //        everyNum[i].rightY=NULL;
-    //        delete[] everyNum[i].rightColorTh;
-    //        everyNum[i].rightColorTh=NULL;
-    //        delete[] everyNum[i].rAdjacentNum;
-    //        everyNum[i].rAdjacentNum=NULL;
+    //        for(int j=0;j<everyNum[i].rLinkNum;j++)//求出右邻接地物的id为everyNum[i].rID[j]
+    //        {
+
+    //            for(int k=0;k<everyNum[everyNum[i].rID[j]].rLinkNum;k++)//在第everyNum[i].rID[j]个区域的右邻接区域中
+    //            {
+    //                if(everyNum[everyNum[i].rID[j]].rightColorTh[k]==everyNum[i].colorTh)//如果二邻接区域的地物与当前区域i的地物相同，则认为在一排
+    //                {
+    //                    if(distancesConfine(everyNum[i].startX,everyNum[i].startY,
+    //                                        everyNum[everyNum[i].rID[j]].startX,
+    //                                        everyNum[everyNum[i].rID[j]].startY)&&
+    //                            everyNum[i].ID!=everyNum[everyNum[i].rID[j]].rID[k])
+    //                    {
+    //                        qDebug()<<QStringLiteral("区域")<<everyNum[i].ID<<QStringLiteral("与区域")
+    //                               <<everyNum[everyNum[i].rID[j]].rID[k]<<QStringLiteral("是二阶左右邻居");
+
+    //                        rNet[rNetCount]=everyNum[i].ID;
+    //                        rNetCount++;
+    //                        rNet[rNetCount]=everyNum[everyNum[i].rID[j]].rID[k];
+    //                        rNetCount++;
+    //                    }
+    //                }
+    //            }
+    //        }
+    //        for(int j=0;j<everyNum[i].dLinkNum;j++)//求出右邻接地物的id为everyNum[i].rID[j]
+    //        {
+    //            for(int k=0;k<everyNum[everyNum[i].dID[j]].dLinkNum;k++)//在第everyNum[i].rID[j]个区域的右邻接区域中
+    //            {
+    //                if(everyNum[everyNum[i].dID[j]].downColorTh[k]==everyNum[i].colorTh)//如果二邻接区域的地物与当前区域i的地物相同，则认为在一排
+    //                {
+    //                    if(distancesConfine(everyNum[i].startX,everyNum[i].startY,
+    //                                        everyNum[everyNum[i].rID[j]].startX,
+    //                                        everyNum[everyNum[i].rID[j]].startY)&&
+    //                            everyNum[i].ID!=everyNum[everyNum[i].dID[j]].dID[k])
+    //                    {
+    //                        qDebug()<<QStringLiteral("区域")<<everyNum[i].ID<<QStringLiteral("与区域")
+    //                               <<everyNum[everyNum[i].dID[j]].dID[k]<<QStringLiteral("是二阶上下邻居");
+    //                        dNet[dNetCount]=everyNum[i].ID;
+    //                        dNetCount++;
+    //                        dNet[dNetCount]=everyNum[everyNum[i].dID[j]].dID[k];
+    //                        dNetCount++;
+    //                    }
+    //                }
+    //            }
+    //        }
     //    }
+
+    //    //    ToDo:下一步找四步可达
+    //    for(int i=0;i<rNetCount;i++)
+    //    {
+    //        if(i%2==0)
+    //        {
+    //            //qDebug()<<rNet[i]<<rNet[i+1]<<"\n";
+    //            for(int j=0;j<rNetCount;j++)
+    //            {
+    //                if(j%2==0&&i!=j)
+    //                    if(rNet[i+1]==rNet[j])
+    //                    {
+    //                        qDebug()<<QStringLiteral("区域")<<rNet[i]<<QStringLiteral("与区域")<<rNet[j+1]
+    //                               <<QStringLiteral("是四阶上下邻居");
+    //                    }
+    //            }
+    //        }
+    //    }
+    //    for(int i=0;i<dNetCount;i++)
+    //    {
+    //        if(i%2==0)
+    //        {
+    //            //qDebug()<<dNet[i]<<dNet[i+1]<<"\n";
+    //            for(int j=0;j<dNetCount;j++)
+    //            {
+    //                if(j%2==0&&i!=j)
+    //                    if(dNet[i+1]==dNet[j])
+    //                    {
+    //                        qDebug()<<QStringLiteral("区域")<<dNet[i]<<QStringLiteral("与区域")<<dNet[j+1]
+    //                               <<QStringLiteral("是四阶上下邻居");
+    //                    }
+
+    //            }
+
+    //        }
+    //    }
+    //    deepIterater(&myGraph,Samples,Lines);
+    //    findPatch(&myGraph,Samples,Lines,5,4);
+    //    deep(&myGraph);
+    //    findEveryPatch(&myGraph,5,4);
+    //    deepIterater(&distanceGraph);
+
+    //    unsigned short *direction=new unsigned short[NodeNumber];
+    //    direction[0]=1;
+    //    direction[1]=1;
+    //    direction[2]=1;
+    //    direction[3]=1;
+    //    getRoad(&adjancentGraph,0,9,direction);
+
+
+    AdjancentChanin result1=sameColorProcess(&adjancentGraph,testImage,Samples
+                                             ,Lines,geoTh,everyNum,distanceThresould,adjIntensity);
+    qDebug()<<"1complete";
+
+    AdjancentChanin result2=processResult(everyNum,NodeNumber,geoTh);
+    qDebug()<<"2complete";
+    for(int i=0;i<result1.number;i++)
+    {
+        for(int j=0;j<result2.number;j++)
+        {
+            if(result1.data[i].ID==result2.data[j].ID&&
+                    result1.data[i].linkID==result2.data[j].linkID)
+            {
+                //                qDebug()<<QStringLiteral("成排区域")<<result1.data[i].ID<<result1.data[i].linkID;
+                testImage.colorTh=newChangeColor(testImage.colorTh,Samples,Lines,everyNum[result1.data[i].ID],3,10000000);
+                testImage.colorTh=newChangeColor(testImage.colorTh,Samples,Lines,everyNum[result1.data[i].linkID],3,10000000);
+            }
+        }
+    }
+
+    for(int h=0;h<Lines;h++)
+    {
+        for(int w=0;w<Samples;w++)
+        {
+            QRgb value=qRgb(R[testImage.colorTh[h*Samples+w]],G[testImage.colorTh[h*Samples+w]],B[testImage.colorTh[h*Samples+w]]);
+            image.setPixel(w,h,value);
+        }
+    }
+    image.save("C:\\Users\\25235\\Desktop\\new.tif");
+    //    delete[] rNet;
+    //    rNet=NULL;
+    //    delete[] dNet;
+    //    dNet=NULL;
+    qDebug()<<"3complete";
+
+    for(int i=0;i<NodeNumber;i++)
+    {
+        delete[] everyNum[i].rID;
+        delete[] everyNum[i].dID;
+        delete[] everyNum[i].rAdjacentNum;
+        delete[] everyNum[i].dAdjacentNum;
+        delete[] everyNum[i].downColorTh;
+        delete[] everyNum[i].rightColorTh;
+
+        everyNum[i].rID=NULL;
+        everyNum[i].dID=NULL;
+        everyNum[i].rAdjacentNum=NULL;
+        everyNum[i].dAdjacentNum=NULL;
+        everyNum[i].downColorTh=NULL;
+        everyNum[i].rightColorTh=NULL;
+//        delete[] everyNum[i].rAdjIntensity;
+//        delete[] everyNum[i].dAdjIntensity;
+//        everyNum[i].rAdjIntensity=NULL;
+//        everyNum[i].dAdjIntensity=NULL;
+    }
+    qDebug()<<"4complete";
+
+    delete[] everyNum;
+    everyNum=NULL;
+
+    for(int i=0;i<NodeNumber;i++)
+    {
+        delete[] adjancentGraph.headChain[i].firstNode;
+        adjancentGraph.headChain[i].firstNode=NULL;
+    }
+    delete[] adjancentGraph.headChain;
+    adjancentGraph.headChain=NULL;
+
+    delete[] result1.data;
+    result1.data=NULL;
+
+    delete[] result2.data;
+    result2.data=NULL;
+
+    delete[] testImage.id;
+    testImage.id=NULL;
+
+
+    qDebug()<<"5complete";
+}
+
+/**
+ * @brief zonedeal::processResult 处理地物信息结果
+ * @param areaInfo
+ */
+AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo,int nodeNum,unsigned int colorTh)
+{
+
+    qDebug()<<QStringLiteral("节点数量是：")<<nodeNum;
+    AdjancentNode *relation1=new AdjancentNode[nodeNum*10];
+    int count1=0;
+    for(int i=0;i<nodeNum;i++)
+    {
+
+        for(int j=0;j<areaInfo[i].rLinkNum;j++)
+        {
+            relation1[count1].ID=areaInfo[i].ID;
+            relation1[count1].linkID=areaInfo[i].rID[j];
+            count1++;
+        }
+        for(int j=0;j<areaInfo[i].dLinkNum;j++)
+        {
+            relation1[count1].ID=areaInfo[i].ID;
+            relation1[count1].linkID=areaInfo[i].dID[j];
+            count1++;
+        }
+
+    }
+    //    for(int i=0;i<count1;i++)
+    //    {
+    //        qDebug()<<relation1[i].ID<<relation1[i].linkID;
+    //    }
+    qDebug()<<"\n";
+
+    AdjancentChanin realation2;
+    realation2.data=new AdjancentNode[count1*count1/5];
+    //两步可达路径R^2
+    //    AdjancentNode *relation2=new AdjancentNode[count1*count1];
+    int count2=0;
+    for(int i=0;i<count1;i++)
+    {
+        for(int j=0;j<count1;j++)
+        {
+            if(relation1[j].ID==relation1[i].linkID)//关系复合 如果<0,1><1,2>则<0,2>
+            {
+                //选择满足条件的地物
+                if(areaInfo[relation1[i].ID].colorTh==areaInfo[relation1[j].linkID].colorTh&&
+                        areaInfo[relation1[j].linkID].colorTh==colorTh)
+                {
+                    realation2.data[count2].ID=relation1[i].ID;
+                    realation2.data[count2].linkID=relation1[j].linkID;
+                    //realation2.data[count2].path.append(QString::number(relation1[i].ID));
+                    //realation2.data[count2].path.append("->");
+                    //realation2.data[count2].path.append(QString::number(relation1[i].linkID));
+                    //realation2.data[count2].path.append("->");
+                    //realation2.data[count2].path.append(QString::number(relation1[j].linkID));
+                    //qDebug()<< realation2.data[count2].path;
+                    count2++;
+                }
+            }
+        }
+    }
+    realation2.number=count2;
+    return realation2;
+
+    //    //n 步可达路径
+    //    AdjancentNode *relation3=new AdjancentNode[count1*count1*count1];
+    //    int fCount=count1,sCount=count2;
+    //    bool flag;
+    //    do
+    //    {
+
+    //        flag=false;
+    //        int tCount=0;
+    //        for(int i=0;i<sCount;i++)
+    //        {
+    //            for(int j=0;j<fCount;j++)
+    //            {
+    //                if(relation1[j].ID==relation2[i].linkID)
+    //                {
+    //                    relation3[tCount].ID=relation2[i].ID;
+    //                    relation3[tCount].linkID=relation1[j].linkID;
+    //                    relation3[tCount].path=relation2[i].path;
+    //                    relation3[tCount].path.append("->");
+    //                    relation3[tCount].path.append(QString::number(relation1[j].linkID));
+    //                    qDebug()<<relation3[tCount].path;
+    //                    tCount++;
+    //                    flag=true;
+    //                }
+    //            }
+    //        }
+    //        qDebug()<<"\n";
+    //        relation2=relation3;
+    //        sCount=tCount;
+    //    }while(flag);
+
+
+    //    qDebug()<<"\n";
+    //    //三步可达路径R^3=R^2*R
+    //    AdjancentNode *relation3=new AdjancentNode[count1*count2];
+    //    int count3=0;
+    //    for(int j=0;j<count2;j++)
+    //    {   for(int i=0;i<count1;i++)
+    //        {
+    //            if(relation1[i].ID==relation2[j].linkID)
+    //            {
+    //                relation3[count3].ID=relation2[j].ID;
+    //                relation3[count3].linkID=relation1[i].linkID;
+    //                relation3[count3].path.append(relation2[j].path);
+    //                relation3[count3].path.append("->");
+    //                relation3[count3].path.append(QString::number(relation1[i].linkID));
+    //                qDebug()<<relation3[count3].path;
+    //                count3++;
+
+    //            }
+    //        }
+    //    }
+    //    qDebug()<<"\n";
+
+
+    //    AdjancentNode *relation4=new AdjancentNode[count3*count1];
+
+    //    //N步可达路径R^n=R^(n-1)*R=R^3
+    //    int count4=0;
+    //    for(int j=0;j<count3;j++)
+    //    {   for(int i=0;i<count1;i++)
+    //        {
+    //            if(relation1[i].ID==relation3[j].linkID)
+    //            {
+    //                relation4[count4].ID=relation3[j].ID;
+    //                relation4[count4].linkID=relation1[i].linkID;
+    //                relation4[count4].path.append(relation3[j].path);
+    //                relation4[count4].path.append("->");
+    //                relation4[count4].path.append(QString::number(relation1[i].linkID));
+    //                qDebug()<<relation4[count4].path;
+    //                count4++;
+
+    //            }
+    //        }
+    //    }
+
+
+    //    delete[] relation1;
+    //    relation1=NULL;
+    //    delete[] relation2;
+    //    relation2=NULL;
+    //    delete[] relation3;
+    //    relation3=NULL;
+    //    delete[] relation4;
+    //    relation4=NULL;
+
 }
 
 
-void zonedeal::cycleSearch(Graph *graph,int Samples,int Lines)
+
+
+
+/**
+ * @brief zonedeal::sameColorProcess 处理相同颜色地物的距离问题
+ * @param graph
+ * @param image
+ * @param Samples
+ * @param Lines
+ * @param colorTh
+ * @param areaInfo
+ * @param threshold
+ */
+AdjancentChanin zonedeal::sameColorProcess(Graph *graph,ImageArray image,int Samples,int Lines,unsigned short colorTh,
+                                           AreaNodeInfo *areaInfo,unsigned int threshold,float adjIntensity)
 {
-    for(int i=0;i<Samples*Lines;i++)
+    //定义矩阵，保存每个区域的边界的点到其他区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值
+    float ** distanceGraph=NULL;
+    distanceGraph=new float*[graph->vexNum];
+    for(int i=0;i<graph->vexNum;i++)
     {
-        qDebug()<<graph->headChain[i].ID;
+        distanceGraph[i]=new float[graph->vexNum];
+    }
+
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        Area area1;
+        area1=pointIterator(image.colorTh,Samples,Lines,areaInfo[i]);
+        Area edgePoint1=areaEdge(image.colorTh,Samples,Lines,area1,areaInfo[i]);
+        for(int j=0;j<graph->vexNum;j++)
+        {
+            if(i!=j)
+            {
+                Area area2=pointIterator(image.colorTh,Samples,Lines,areaInfo[j]);
+                Area edgePoint2=areaEdge(image.colorTh,Samples,Lines,area2,areaInfo[j]);
+                distanceGraph[i][j]=calAreaEdgedistance(edgePoint1,edgePoint2,threshold);
+
+                if(area1.p)
+                {
+                    delete[] area1.p;
+                    area1.p=NULL;
+                }
+                if(area2.p)
+                {
+                    delete[] area2.p;
+                    area2.p=NULL;
+
+                }
+
+                delete[] edgePoint2.p;
+                edgePoint2.p=NULL;
+            }
+            else
+            {
+                distanceGraph[i][j]=0;
+            }
+
+        }
+        delete[] edgePoint1.p;
+        edgePoint1.p=NULL;
+    }
+
+    //为同一地物距离邻接图分配内存
+    DGraph dGraph;
+    dGraph.headChain=new DHeadNode[graph->vexNum];
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        dGraph.headChain[i].ID=i;
+        dGraph.headChain[i].isVisited=false;
+        dGraph.headChain[i].firstNode=NULL;
+    }
+    DLinkNode *node,*tail=NULL;
+    //输出所有满足距离关系的相同颜色区域的距离邻接关系
+    AdjancentChanin result;
+    result.data=new AdjancentNode[graph->vexNum*graph->vexNum];
+    int count1=0;
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        for(int j=0;j<graph->vexNum;j++)
+        {
+            //两区域满足输入的颜色
+            if(areaInfo[i].colorTh==colorTh&&areaInfo[i].colorTh==areaInfo[j].colorTh)
+            {
+                //两区域距离满足阈值要求
+                if(distanceGraph[i][j]>=adjIntensity&&distanceGraph[j][i]>=adjIntensity)
+                {
+                    node=new DLinkNode;
+                    node->AdjIntensity=distanceGraph[i][j];
+                    node->ID=j;
+                    node->next=NULL;
+                    if(dGraph.headChain[i].firstNode==NULL)
+                    {
+                        dGraph.headChain[i].firstNode=node;
+                        tail=node;
+                        //qDebug()<<QStringLiteral("节点")<<i<<QStringLiteral("插入节点")<<j;
+                    }
+                    else
+                    {
+                        tail->next=node;
+                        tail=node;
+                        //qDebug()<<QStringLiteral("节点")<<i<<QStringLiteral("插入节点")<<j;
+                    }
+
+                    deleteLater();
+                    //i区域与j区域满足距离要求
+                    qDebug()<<i<<j<<QStringLiteral("临界指标")<<distanceGraph[i][j];
+                    result.data[count1].ID=i;
+                    result.data[count1].linkID=j;
+                    count1++;
+                }
+                ////////////////////////////此函数从此往上测试正常//////////////////////////////////////////
+                //求出i区域与j区域的可达路径，找出其几步可达
+            }
+        }
+    }
+
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        delete[] distanceGraph[i];
+        distanceGraph[i]=NULL;
+    }
+    delete[]  distanceGraph;
+    distanceGraph=NULL;
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        delete[] dGraph.headChain[i].firstNode;
+        dGraph.headChain[i].firstNode=NULL;
+    }
+    delete[] dGraph.headChain;
+    dGraph.headChain=NULL;
+
+    result.number=count1;
+
+    return result;
+}
+/**
+ * @brief zonedeal::calAreaEdgedistance计算一个区域之间的边界的点到另一区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值 已测试
+ * @param pointSet1
+ * @param pointSet2
+ * @param threshold
+ */
+float zonedeal::calAreaEdgedistance(Area pointSet1,Area pointSet2,unsigned int threshold)
+{
+    unsigned int pointCount=0;//满足条件的点的数量
+    for(int i=0;i<pointSet1.number;i++)
+    {
+        for(int j=0;j<pointSet2.number;j++)
+        {
+            //如果一个区域之间的边界的点到另一区域边界的点的距离小于距离阈值，则将其计数
+            if(distance(pointSet1.p[i],pointSet2.p[j])<=threshold)
+            {
+                pointCount++;
+                break;          //只要找到距离满足阈值的距离就跳出测试
+            }
+        }
+    }
+    return pointCount*1.0/pointSet1.number;
+}
+
+
+/**
+ * @brief zonedeal::areaEdge 返回一个区域的边界点 已测试
+ * @param imageArray         总图像
+ * @param Samples            图像宽度
+ * @param Lines              图像高度
+ * @param stake              区域点坐标集合
+ * @param nodeinfo           区域信息
+ * @return
+ */
+Area zonedeal::areaEdge(unsigned short int *imageArray,int Samples,int Lines,Area stake,AreaNodeInfo nodeinfo)
+{
+    Area area;
+    area.p=new point[stake.number];
+    unsigned int count=0;
+    for(int i=0;i<stake.number;i++)
+    {
+        if(stake.p[i].y-1>0)//判断是否是边界点，保证数组不越界
+        {
+            if(imageArray[((stake.p[i].y-1)*Samples+stake.p[i].x)]!=nodeinfo.colorTh)//满足条件则是边界点
+            {
+                area.p[count]=stake.p[i];
+                count++;
+                continue;
+            }
+        }
+        else//是边界点
+        {
+            area.p[count]=stake.p[i];
+            count++;
+            continue;
+        }
+        if(stake.p[i].x-1>0)//判断是否是边界点，保证数组不越界
+        {
+            if(imageArray[(stake.p[i].y*Samples+stake.p[i].x-1)]!=nodeinfo.colorTh)//满足条件则是边界点
+            {
+                area.p[count]=stake.p[i];
+                count++;
+                continue;
+            }
+        }
+        else//是边界点
+        {
+            area.p[count]=stake.p[i];
+            count++;
+            continue;
+        }
+        if(stake.p[i].y+1<Lines)//判断是否是边界点，保证数组不越界
+        {   if(imageArray[((stake.p[i].y+1)*Samples+stake.p[i].x)]!=nodeinfo.colorTh)//满足条件则是边界点
+            {
+                area.p[count]=stake.p[i];
+                count++;
+                continue;
+            }
+        }
+        else//是边界点
+        {
+            area.p[count]=stake.p[i];
+            count++;
+            continue;
+        }
+        if(stake.p[i].x+1<Samples)//判断是否是边界点，保证数组不越界
+        {   if(imageArray[(stake.p[i].y*Samples+stake.p[i].x+1)]!=nodeinfo.colorTh)//满足条件则是边界点
+            {
+                area.p[count]=stake.p[i];
+                count++;
+                continue;
+            }
+        }
+        else//是边界点
+        {
+            area.p[count]=stake.p[i];
+            count++;
+            continue;
+        }
+    }
+    area.number=count;
+    //    for(int i=0;i<count;i++)
+    //    {
+    //        qDebug()<<area.p[i].x<<area.p[i].y;
+    //    }
+    //    qDebug()<<"\n";
+    return area;
+}
+/**
+ * @brief zonedeal::deep 深度优先遍历邻接表1 已测试
+ * @param graph
+ */
+void zonedeal::deep(Graph *graph)
+{
+    //将邻接表置为未访问状态
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        graph->headChain[i].isVisited=false;
+    }
+    QStack<HeadNode*>stack;
+    stack.push(&(graph->headChain[0]));//起始点入栈
+
+    int current=0;
+    bool isHead=true;
+    LinkNetNode *node=NULL;
+
+    do{
+        if(isHead==true)
+        {
+            node=stack.top()->firstNode;//如果是头节点则获取它的邻接节点
+            isHead=false;
+        }
+        else
+        {
+            node=node->next;//不是头节点，则获取下一邻接节点
+        }
+
+        if(node!=NULL)
+        {
+            if(!(graph->headChain[node->ID]).isVisited)//当前结点未访问过，开始访问
+            {
+                graph->headChain[node->ID].isVisited=true;//访问标志
+                stack.push(&(graph->headChain[node->ID]));//将该节点入栈
+                //qDebug()<<stack.top()->ID;
+                current=stack.top()->ID;
+                isHead=true;
+                //（原理：深度优先遍历所有节点）
+                //若此节点不是终止节点则以此节点为中心找此节点的邻接节点（回到上面isHead=true）
+            }
+        }
+        else //当此节点没有邻接节点或者所有邻接节点都已经访问
+        {
+            for(int i=0;i<stack.size();i++)
+            {
+                qDebug()<<stack.at(i)->ID;
+            }
+            qDebug()<<"\n";
+            //当节点没有邻接节点了，访问标识弹栈
+            stack.pop();
+            if(!stack.isEmpty())
+            {
+                //若栈不为空获取栈顶节点
+                node=graph->headChain[stack.top()->ID].firstNode;
+                while(node->ID!=current)
+                {
+                    node=node->next;
+                }
+                current=stack.top()->ID;
+                isHead=0;
+            }
+        }
+
+    }while(!stack.isEmpty());
+
+}
+/**
+ * @brief zonedeal::deepIterater 深度优先遍历邻接表2 已测试
+ * @param graph
+ * @param Samples
+ * @param Lines
+ */
+void zonedeal::deepIterater(Graph *graph)
+{
+    for(int i=0;i<graph->vexNum;i++)
+    {
         graph->headChain[i].isVisited=false;
     }
 
@@ -328,14 +980,18 @@ void zonedeal::cycleSearch(Graph *graph,int Samples,int Lines)
     while(!TraverseStack.empty())
     {
         vnode=(HeadNode*)TraverseStack.top();
-        vnode->isVisited=true;
-        qDebug()<<vnode->ID;
+        if(!vnode->isVisited)
+        {
+            vnode->isVisited=true;
+            qDebug()<<vnode->ID;
+        }
         TraverseStack.pop();
         LinkNetNode *node=vnode->firstNode;
         while(node!=NULL)
         {
             if(!(graph->headChain[node->ID]).isVisited)
             {
+                qDebug()<<QStringLiteral("入栈节点是：")<<graph->headChain[node->ID].ID;
                 TraverseStack.push(&(graph->headChain[node->ID]));
             }
             node=node->next;
@@ -343,30 +999,292 @@ void zonedeal::cycleSearch(Graph *graph,int Samples,int Lines)
     }
 
 }
+/**
+ * @brief zonedeal::getRoad 获取任意两点间的所有路径
+ * @param graph
+ * @param start
+ * @param end
+ * @param roadDirection
+ */
+void zonedeal::getRoad(Graph *graph,int start,int end,unsigned short *roadDirection)
+{
+    deleteFile("D:\\stack.txt");
+    deleteFile("D:\\stackReverse.txt");
+    findEveryPatch(graph,start,end,"D:\\stack.txt");
+    findEveryPatch(graph,end,start,"D:\\stackReverse.txt");
+    //fileStackRead("D:\\stack.txt",roadDirection,graph);
+    //fileStackRead("D:\\stackReverse.txt",roadDirection,graph);
+    fileStackMinRead("D:\\stack.txt");
+}
+/**
+ * @brief zonedeal::deleteFile 删除给定路径的文件
+ * @param path
+ */
+void zonedeal::deleteFile(QString path)
+{
+    QFile file(path.toStdString().c_str());
+    if(file.exists())
+    {
+        file.remove();
+    }
+}
+/**
+ * @brief zonedeal::roadProcess 对路径进行加工
+ * @param road
+ * @param direction
+ * @param graph
+ */
+void zonedeal::roadProcess(QVector<unsigned short>road, QVector<unsigned short>direction,Graph *graph)
+{
+    for(int i=0;i<road.size();i++)
+    {
+        qDebug()<<QStringLiteral("地物编号：")<<road.at(i);
+        if(i<road.size()-1)
+        {
+            if(direction.at(i)==1)
+            {
+                qDebug()<<QStringLiteral("的右邻接");
+            }
+            else
+            {
+                qDebug()<<QStringLiteral("的下邻接");
+            }
+        }
+    }
+}
+/**
+ * @brief zonedeal::fileStackMinRead 查找两点间的最近的路径
+ * @param path                       文件的路径
+ * @param graph                      邻接表
+ */
+void zonedeal::fileStackMinRead(QString path)
+{
+    QFile file(path.toStdString().c_str());
+    QVector<int> RoadLong;
+    if(file.open(QFile::ReadOnly|QIODevice::Text))
+    {
+        QTextStream in(&file);
+        QString string;
+        for(int i=0;(string=in.readLine())!=NULL;i++)
+        {
+            //读取路径长度
+            if(i%2==1)
+            {
+                QVector<QString> road;
+                qDebug()<<string;
+                road=string.split(" ").toVector();
+                RoadLong.push_back(road.size());
+            }
+
+        }
+        int temp=RoadLong.at(0);
+        int minIndex=0;
+        for(int i=0;i<RoadLong.size();i++)
+        {
+            if(RoadLong.at(i)<temp)
+            {
+                temp=RoadLong.at(i);
+                minIndex=i;
+            }
+        }
+
+        qDebug()<<QStringLiteral("最小的下标")<<minIndex;
+        in.seek(0);//回到文件开头重新读取
+        for(int i=0;(string=in.readLine())!=NULL;i++)
+        {
+            if(i==minIndex*2+1)
+            {
+                //读取路径长度
+                QVector<QString> road;
+                qDebug()<<string;
+                road=string.split(" ").toVector();
+                road.pop_back();
+                for(int j=0;j<road.size();j++)
+                {
+                    qDebug()<<QStringLiteral("最短路径是：")<<road.at(j);
+                }
+                break;
+            }
+        }
+    }
+}
+/**
+ * @brief zonedeal::fileStackRead 读出文件栈中路径，并判读是否存在所要找的路径
+ * @param path                    文件路径
+ * @param roadDirection           方向数组
+ */
+void zonedeal::fileStackRead(QString path,unsigned short *roadDirection,Graph *graph)
+{
+    QFile file(path.toStdString().c_str());
+    if(file.open(QFile::ReadOnly|QIODevice::Text))
+    {
+        QTextStream in(&file);
+        QString string;
+        bool flag=true;//决定是否输出路径
 
 
-//void zonedeal::deepSearch(LinkNetNode *linkChain,int current,unsigned int *chain,int count)
-//{
+        for(int i=0;(string=in.readLine())!=NULL;i++)
+        {
 
-//    if(linkChain[current].adjancentNum>0)
-//    {
-//        for(int i=0;i<linkChain[i].adjancentNum;i++)
-//        {
-//            chain[count]=linkChain[current].adjancentID[i];
-//            count++;
-//            deepSearch(linkChain,linkChain[current].adjancentID[i],chain,count);
-//        }
-//    }
-//    else
-//    {
-//        //        for(int i=0;i<count;i++)
-//        //        {
-//        //            qDebug()<<QStringLiteral("链中所有的id为")<<chain[i];
-//        //        }
-//        qDebug()<<QStringLiteral("当前链结束");
-//    }
-//    qDebug()<<QStringLiteral("返回上一层");
-//}
+            if(i%2==0)//方向array
+            {
+                QVector<QString> direction;
+                QVector<unsigned short>realDirection;
+                qDebug()<<string;
+                direction=string.split(" ").toVector();
+                direction.pop_back();//删除结尾处空格
+                //将字符串转换为unsign short
+                for(int j=0;j<direction.size();j++)
+                {
+                    realDirection.append(direction.at(j).toUShort());
+                }
+                flag=true;//true时输出路径，false时不输出路径
+                for(int j=0;j<realDirection.size();j++)
+                {
+                    if(realDirection.at(j)!=roadDirection[j])
+                    {
+                        flag=false;
+                    }
+                }
+                if(flag)//如果是要找的路径
+                {
+                    i++;//读取一行  为了保证读取行数与i一致即++
+                    string=in.readLine();
+                    QVector<QString> road;
+                    QVector<unsigned short> realRoad;
+
+                    qDebug()<<string;
+                    road=string.split(" ").toVector();
+                    road.pop_back();//删除结尾处空格
+                    //将字符串转换为unsign short
+                    for(int j=0;j<road.size();j++)
+                    {
+                        realRoad.append(road.at(j).toUShort());
+                    }
+                    roadProcess(realRoad,realDirection,graph);
+                    //找到路径
+                    qDebug()<<QStringLiteral("找到路径");
+                }
+            }
+
+        }
+    }
+}
+/**
+ * @brief zonedeal::fileStackWrite 将栈写入文件暂时保存
+ * @param path                     文件路径
+ * @param stack                    栈
+ */
+void zonedeal::fileStackWrite(QString path,QStack<HeadNode*> *stack)
+{
+    QFile file(path.toStdString().c_str());
+    if(file.open(QFile::Append | QIODevice::Text)){
+
+        QTextStream out(&file);
+        for(int i=1;i<stack->size();i++)
+        {
+            out<<stack->at(i)->nextDirection<<" ";
+        }
+        out<<endl;
+        for(int i=0;i<stack->size();i++)
+        {
+            out<<stack->at(i)->ID<<" ";
+        }
+        out<<endl;
+
+        file.close();
+    }
+}
+/**
+ * @brief zonedeal::findEveryPatch 获取邻接表中任意两点间的所有路径
+ * @param graph 邻接表
+ * @param start 起始节点
+ * @param end 结束节点
+ * @param path 保存栈文件的路径
+ */
+void zonedeal::findEveryPatch(Graph *graph,int start,int end,QString path)
+{
+
+    //将邻接表置为未访问状态
+    for(int i=0;i<graph->vexNum;i++)
+    {
+        graph->headChain[i].isVisited=false;
+    }
+    QStack<HeadNode*>stack;
+    stack.push(&(graph->headChain[start]));//起始点入栈
+
+    int current=start;
+    bool isHead=true;
+    LinkNetNode *node=NULL;
+
+    do{
+        if(isHead==true)
+        {
+            node=stack.top()->firstNode;//如果是头节点则获取它的邻接节点
+            isHead=false;
+        }
+        else
+        {
+            node=node->next;//不是头节点，则获取下一邻接节点
+        }
+
+        if(node!=NULL)
+        {
+            if(!(graph->headChain[node->ID]).isVisited)//当前结点未访问过，开始访问
+            {
+                graph->headChain[node->ID].isVisited=true;//访问标志
+                graph->headChain[node->ID].nextDirection=node->nextDirection;//邻接的方向
+                stack.push(&(graph->headChain[node->ID]));//将该节点入栈
+
+                if(node->ID==end)//判断当前结点是否是终止节点
+                {
+                    //若是终止节点则输出栈中的所有节点组成的路径
+                    fileStackWrite(path,&stack);
+                    //for(int i=0;i<stack.size();i++)
+                    //{
+                    //    qDebug()<<stack.at(i)->ID;
+                    //    qDebug()<<"("<<stack.at(i)->nextDirection<<")";
+                    //}
+                    //qDebug()<<"\n";
+                    graph->headChain[end].isVisited=false;//将终止节点重新置为未访问状态，以便找其他路径时再次访问
+
+                    stack.pop();//回到终止节点的上一节点
+                    current=stack.top()->ID;
+
+                    isHead=false;//继续寻找终止节点的上一节点的邻接节点，看终止节点的上一节点的邻接节点中是否还有能到达终止节点的节点（回到上面isHead=false）
+                }
+                else
+                {
+                    current=stack.top()->ID;
+                    isHead=true;
+                    //（原理：深度优先遍历所有节点）
+                    //若此节点不是终止节点则以此节点为中心找此节点的邻接节点（回到上面isHead=true）
+                }
+            }
+        }
+        else //当此节点没有邻接节点或者所有邻接节点都已经访问
+        {
+            //当节点没有邻接节点了，访问标识弹栈
+            graph->headChain[stack.top()->ID].isVisited=false;
+            stack.pop();
+
+            if(!stack.isEmpty())
+            {
+                //若栈不为空获取栈顶节点
+                node=graph->headChain[stack.top()->ID].firstNode;
+                while(node->ID!=current)
+                {
+                    node=node->next;
+                }
+                current=stack.top()->ID;
+                isHead=0;
+            }
+        }
+
+    }while(!stack.isEmpty());
+
+}
+
 /**
  * @brief zonedeal::deepRightIterater 右邻接
  * @param nodeInfo
@@ -501,112 +1419,7 @@ bool zonedeal::distancesConfine(unsigned short x1,unsigned short y1,unsigned sho
     }
 
 }
-void zonedeal::main(QImage image)
-{
-    int R[7]={ 255,  255,    0,   0,   139,0};
-    int G[7]={   0,  255,    0,   255, 0 ,0};
-    int B[7]={   0  ,  0,  255,   0,   139   ,0};
-    //红 黄 蓝 绿 紫 黑
-    //s_color *landColor=new s_color[6];
-    int Samples=image.width();
-    int Lines=image.height();
-    qDebug()<<Samples;
-    qDebug()<<Lines;
-    bool flag=false;
 
-    unsigned short int *testImage=new unsigned short int[Samples*Lines];
-
-    //将图片转化为数组
-    for(int h=0;h<Lines;h++)
-    {
-        for(int w=0;w<Samples;w++)
-        {
-            flag=false;
-            for(int i=0;i<6;i++)
-            {
-                if(QColor(image.pixel(w,h)).red()==R[i]&&
-                        QColor(image.pixel(w,h)).green()==G[i]&&
-                        QColor(image.pixel(w,h)).blue()==B[i]
-                        )
-                {
-                    testImage[h*Samples+w]=i;
-                    flag=true;
-                }
-                if(!flag)
-                {
-                    testImage[h*Samples+w]=0;
-                }
-            }
-
-        }
-    }
-    ImageArray imageArray;
-    imageArray.colorTh=testImage;
-    test(imageArray,Samples,Lines);
-    //获得图像地物数组
-    //将每一块地物找出来，把每一块合成一个节点，节点此节点到与它相同的节点的距离小于一定距离的（当中隔着一个其他地物）
-    //则认为他们是一排，一排的保留，不是一排的将其剔除（换成相近的地物）
-
-    //    everyLandNum *everyNum=countEveryNumber(imageArray,Samples,Lines);
-    //    qDebug()<<"normal";
-
-    //    for(int i=0;everyNum[i].number!=0;i++)
-    //    {
-    //        if(everyNum[i].colorTh==2)
-    //        {
-    //            if(everyNum[i].number>1000)
-    //            {
-    //                everyNum[i].isIsolate=getRALLink(imageArray,Samples,Lines,everyNum[i]);
-    //            }
-    //        }
-    ////一个地物块的点的数量很小，可以认为它是误分区域
-    //if(everyNum[i].number<(Samples*Lines)/40)
-    //{
-    //    //利用回溯算法将此地物转换成将其包围的地物
-    //    //回溯的入口(everyNum[i].x,everyNum[i].y)
-    //}
-    //if(everyNum[i].colorTh==0&&everyNum[i].number>20000&&everyNum[i].number<200000)
-    //{
-    //    qDebug()<<QStringLiteral("入口所在下标")<<i<<QStringLiteral("数量是")<<everyNum[i].number;
-    //    point *pointSet=pointIterator(imageArray,Samples,Lines,everyNum[i]);
-    //    delete[] pointSet;
-    //    pointSet=NULL;
-    //}
-    //    }
-    //    for(int i=0;everyNum[i].number!=0;i++)
-    //    {
-    //        if(everyNum[i].colorTh==2)
-    //        {
-    //            if(everyNum[i].number>1000)
-    //            {
-    //                if(!everyNum[i].isIsolate)
-    //                {
-    //                    changeColor(imageArray,Samples,Lines,everyNum[i],5);
-    //                }
-    //            }
-    //            else
-    //            {
-    //                changeColor(imageArray,Samples,Lines,everyNum[i],5);
-    //            }
-    //        }
-    //    }
-
-    //    for(int h=0;h<Lines;h++)
-    //    {
-    //        for(int w=0;w<Samples;w++)
-    //        {
-    //            QRgb value=qRgb(R[imageArray.colorTh[h*Samples+w]],G[imageArray.colorTh[h*Samples+w]],B[imageArray.colorTh[h*Samples+w]]);
-    //            image.setPixel(w,h,value);
-    //        }
-    //    }
-    //    image.save("C:\\Users\\25235\\Desktop\\b.tif");
-
-    //    linjie(imageArray,Samples,Lines);
-    delete[] imageArray.colorTh;
-    //    delete[] imageArray.id;
-    imageArray.colorTh=NULL;
-    //    imageArray.id=NULL;
-}
 
 /**
  * @brief zonedeal::countEveryNumber 统计每一个独立地物块的点的数量以及回溯的入口地址 已经经过测试
@@ -622,9 +1435,9 @@ AreaNodeInfo* zonedeal::countEveryNumber(unsigned short int *imageArray,int Samp
     int next[8][2]={ {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1}};
 
     point *stake=new point[Samples*Lines];//回溯栈
-    AreaNodeInfo * everyNum=new AreaNodeInfo[Samples*(Lines/2)];//区域信息表
+    AreaNodeInfo * everyNum=new AreaNodeInfo[Samples*Lines/100];//区域信息表
     //初始化，很重要
-    for(int i=0;i<Samples*(Lines/2);i++)
+    for(int i=0;i<Samples*Lines/100;i++)
     {
         everyNum[i].number=0;
     }
@@ -731,7 +1544,7 @@ AreaNodeInfo* zonedeal::countEveryNumber(unsigned short int *imageArray,int Samp
     delete[] footFlag;
     footFlag=NULL;
     return everyNum;//返回地物信息表
-    //    delete[] everyNum;
+    //        delete[] everyNum;
     //    everyNum=NULL;
 }
 
@@ -835,6 +1648,23 @@ Area zonedeal::pointIterator(unsigned short int *imageArray,int Samples,int Line
     //    delete[] pointSet;
     //    pointSet=NULL;
 }
+unsigned short *zonedeal::newChangeColor(unsigned short int *imageArray,
+                                         int Samples,int Lines,AreaNodeInfo nodeinfo
+                                         ,int color,int numThreshold)
+{
+    Area area=pointIterator(imageArray,Samples,Lines,nodeinfo);
+    if(area.number<numThreshold)
+    {
+        for(int i=0;i<area.number;i++)
+        {
+            imageArray[area.p[i].y*Samples+area.p[i].x]=color;
+        }
+    }
+    delete[] area.p;
+    area.p=NULL;
+    return imageArray;
+}
+
 /**
  * @brief zonedeal::changeColor 改变颜色 已测试
  * @param imageArray
@@ -1158,13 +1988,13 @@ AreaNodeInfo zonedeal::rightOrDownLink(ImageArray imageArray,int Samples,int Lin
                                        AreaNodeInfo areaInfo,Area area)
 {
     //右邻接地物是
-    areaInfo.rightColorTh=new unsigned short int [20];
-    areaInfo.rID=new unsigned short int [20];
-    areaInfo.rAdjacentNum=new unsigned int [20];
+    areaInfo.rightColorTh=new unsigned short [1000];
+    areaInfo.rID=new unsigned short [1000];
+    areaInfo.rAdjacentNum=new unsigned [1000];
     //下邻接地物是
-    areaInfo.downColorTh=new unsigned short int [20];
-    areaInfo.dID=new unsigned short int [20];
-    areaInfo.dAdjacentNum=new unsigned int [20];
+    areaInfo.downColorTh=new unsigned short [1000];
+    areaInfo.dID=new unsigned short [1000];
+    areaInfo.dAdjacentNum=new unsigned [1000];
     int rLinkNum=0,dLinkNum=0;
     unsigned int rAdjacentNum=0,dAdjacentNum=0;
     bool flag=false;
@@ -1338,10 +2168,37 @@ void zonedeal::linjie(unsigned short int *imageArray,int Samples,int Lines)
     {
         qDebug()<<QStringLiteral("地物")<<downRevers[i][0]<<QStringLiteral("地物")<<downRevers[i][1]<<QStringLiteral("下邻接，邻接数量")<<downRevers[i][2];
     }
-
-
 }
 
 
 
+//深度优先遍历表
+//    AdjancentNode *temp=&relation[0];
+//    QStack<AdjancentNode*> stake;
+//    stake.push(&relation[0]);
+//    do
+//    {
+//        bool flag=false;
+//        if(!stake.isEmpty())
+//        {
+//            temp=stake.top();
+//        }
+//        for(int i=0;i<count;i++)
+//        {
+//            if(relation[i].ID==temp->linkID&&relation[i].isVisited==false)
+//            {
+//                flag=true;
+//                relation[i].isVisited=true;
+//                qDebug()<<temp->ID<<relation[i].linkID;
+//                stake.push(&relation[i]);
+//                break;
+//            }
+//        }
+//        if(!flag)
+//        {
+//            stake.pop();
+//        }
+
+
+//    }while(!stake.isEmpty());
 

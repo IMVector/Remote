@@ -40,13 +40,34 @@ operate::operate(QWidget *parent) :
     initCombox();//初始化combox控件
     choiceSample->setWindowFlags(Qt::WindowStaysOnTopHint);
 
-//    imageFile *file=new imageFile;
+    //    imageFile *file=new imageFile;
 
     seaLine=new sealine;
 
     Sqlsever=new database;//数据库文件浏览
 
     ui->startSortBtn->setEnabled(false);
+
+
+    ///////////////////////////////////////////////测试
+
+    //    empty_thread1=new emptychild;//空线程
+    //    zone=new zonedeal;//类
+    //    zone->moveToThread(empty_thread);//处理数据线程移入空线程F
+    //    empty_thread1->start();//线程启动
+
+
+
+
+    ////////////////////////////////////////////
+
+
+
+
+
+
+
+
 
     qRegisterMetaType<Points>("Points");//注册自定义类型的槽信号
     qRegisterMetaType<SamplesDetails>("SamplesDetails");//注册自定义类型的槽信号
@@ -89,8 +110,17 @@ operate::operate(QWidget *parent) :
     connect(Sqlsever,SIGNAL(sendRule(QString)),this,SLOT(getRuleOrLineName(QString)));//数据库发来的规则
     connect(Sqlsever,SIGNAL(sendSeaLine(QString)),this,SLOT(openSeaLine(QString)));//数据库发来的规则
 
+    //    connect(this,SIGNAL(click()),zone,SLOT(click()));
+    //    connect(zone,SIGNAL(sendImageToUi(QImage,int)),this,SLOT(getImage(QImage,int)));//子线程与UI线程通信
 
 }
+
+
+
+
+
+
+
 
 operate::~operate()
 {
@@ -190,6 +220,8 @@ void operate::on_showRule_clicked()
  */
 void operate::on_ruleOpenBtn_clicked()
 {
+//    emit click();
+
 
 }
 ////数据库查询打开海岸线
@@ -370,7 +402,7 @@ void operate::getImage(QImage image, int status)
             create_label=true;
         }
         //显示略缩图
-//        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
+        //        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
         QPixmap mp;
         mp=mp.fromImage(image);
         labelList.at(labelIndex+1)->setPixmap(mp);
@@ -798,7 +830,7 @@ void operate::getFeature(QStringList feature)//将决策树显示到ui界面
 ////保存降噪后tif文件
 void operate::on_saveTif_clicked()
 {
-//    fileDeal->saveTif();
+    //    fileDeal->saveTif();
     QTimer::singleShot(0,fileDeal,SLOT(saveTif()));
 }
 ////保存降噪后二进制图片
@@ -868,7 +900,7 @@ void operate::on_loadModelBtn_clicked()
                 "All files(*.*)");
     if (!file.isNull())
     { //用户选择了文件
-       emit sendSvmModel(file);
+        emit sendSvmModel(file);
     }
     else
     {

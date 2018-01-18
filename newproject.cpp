@@ -15,6 +15,12 @@ newProject::newProject(QWidget *parent) :
     this->setWindowIcon(QIcon(":/Remote/img/main.png"));
     operateUI=new operate;
 
+    empty_thread = new emptychild;//空线程
+    zone = new zonedeal;//类
+    zone->moveToThread(empty_thread);//处理数据线程移入空线程
+    empty_thread->start();//线程启动
+    QTimer::singleShot(0, zone, SLOT(click()));
+
 }
 
 newProject::~newProject()
@@ -122,10 +128,10 @@ void newProject::closeEvent(QCloseEvent *event)
  */
 void newProject::on_actiontest_triggered()
 {
-    empty_thread=new emptychild;//空线程
-    zone=new zonedeal;//类
-    zone->moveToThread(empty_thread);//处理数据线程移入空线程
-    empty_thread->start();//线程启动
+//    empty_thread=new emptychild;//空线程
+//    zone=new zonedeal;//类
+//    zone->moveToThread(empty_thread);//处理数据线程移入空线程
+//    empty_thread->start();//线程启动
 
 }
 

@@ -1,5 +1,6 @@
 ﻿#include "newproject.h"
 #include <QApplication>
+#include <vld.h>
 void outputMessage(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     static QMutex mutex;

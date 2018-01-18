@@ -23,6 +23,7 @@
 #include <progressbar.h>
 #include <showinfo.h>
 #include <imagefile.h>
+#include <zonedeal.h>
 namespace Ui {
 class operate;
 }
@@ -59,6 +60,10 @@ private:
     showInfo *message;
     int visiualX=0;
     int visiualY=0;
+
+
+    QThread *empty_thread1;
+    zonedeal *zone;
 
 
 
@@ -116,7 +121,7 @@ signals:
     void sendSimpleInfo(QString name,int *number);
     void sendSvmDetails(SamplesDetails details);
     void sendSvmModel(QString file);
-
+    void click();
 };
 
 #endif // OPERATE_H
