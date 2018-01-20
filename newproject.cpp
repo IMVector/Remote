@@ -15,18 +15,11 @@ newProject::newProject(QWidget *parent) :
     this->setWindowIcon(QIcon(":/Remote/img/main.png"));
     operateUI=new operate;
 
-    empty_thread = new emptychild;//空线程
-    zone = new zonedeal;//类
-    zone->moveToThread(empty_thread);//处理数据线程移入空线程
-    empty_thread->start();//线程启动
-    QTimer::singleShot(0, zone, SLOT(click()));
-
 }
 
 newProject::~newProject()
 {
     delete ui;
-
 }
 
 void newProject::on_openFileImage_triggered()//文件路径打开文件
@@ -128,6 +121,12 @@ void newProject::closeEvent(QCloseEvent *event)
  */
 void newProject::on_actiontest_triggered()
 {
+	empty_thread = new emptychild;//空线程
+	zone = new zonedeal;//类
+	zone->moveToThread(empty_thread);//处理数据线程移入空线程
+	empty_thread->start();//线程启动
+    connect(zone,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
+	QTimer::singleShot(0, zone, SLOT(startZone()));
 //    empty_thread=new emptychild;//空线程
 //    zone=new zonedeal;//类
 //    zone->moveToThread(empty_thread);//处理数据线程移入空线程

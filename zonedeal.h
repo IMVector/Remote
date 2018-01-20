@@ -9,155 +9,161 @@
 
 typedef struct
 {
-    unsigned short R;
-    unsigned short G;
-    unsigned short B;
+	unsigned short R;
+	unsigned short G;
+	unsigned short B;
 }s_color;
 typedef struct
 {
-    unsigned short startX;//入口x
-    unsigned short startY;//入口y
-    unsigned int ID;//本区域的唯一标识
-    unsigned int number;//点的数量
-    unsigned int cycle;//一个区域的周长
-    bool isIsolate;//是否是孤立区域
-    unsigned short rLinkNum;//右邻接区域的数量
-    unsigned short dLinkNum;//下邻接区域的数量
-    unsigned int* rAdjacentNum;//右邻接数量
-    unsigned int* dAdjacentNum;//右邻接数量
-    float *rAdjIntensity;
-    float *dAdjIntensity;
-    unsigned short* rID;//右邻接区域ID数组
-    unsigned short* dID;//下邻接区域ID数组
-    unsigned short* downColorTh;//第n种地物
-    unsigned short* rightColorTh;//第n种地物
-    unsigned short colorTh;//第n种地物
-    //    unsigned short int* rightX;//右邻接地物入口
-    //    unsigned short int* rightY;
-    //    unsigned short int* downX;//下邻接地物入口
-    //    unsigned short int* downY;
+	unsigned short startX;//入口x
+	unsigned short startY;//入口y
+	unsigned int ID;//本区域的唯一标识
+	unsigned int number;//点的数量
+	unsigned int cycle;//一个区域的周长
+	bool isIsolate;//是否是孤立区域
+	unsigned short rLinkNum;//右邻接区域的数量
+	unsigned short dLinkNum;//下邻接区域的数量
+	unsigned int* rAdjacentNum;//右邻接数量
+	unsigned int* dAdjacentNum;//右邻接数量
+	float *rAdjIntensity;
+	float *dAdjIntensity;
+	unsigned short* rID;//右邻接区域ID数组
+	unsigned short* dID;//下邻接区域ID数组
+	unsigned short* downColorTh;//第n种地物
+	unsigned short* rightColorTh;//第n种地物
+	unsigned short colorTh;//第n种地物
+	//    unsigned short int* rightX;//右邻接地物入口
+	//    unsigned short int* rightY;
+	//    unsigned short int* downX;//下邻接地物入口
+	//    unsigned short int* downY;
 }AreaNodeInfo;
 
 
 typedef struct
 {
-    unsigned int ID;
-    unsigned int linkID;
+	unsigned int ID;
+	unsigned int linkID;
 
 }AdjancentNode;
-    //    QString path;
+//    QString path;
 typedef struct
 {
-    AdjancentNode *data;
-    int number;
+	AdjancentNode *data;
+	int number;
 
 }AdjancentChanin;
 
 //距离邻接节点
 typedef struct DLinkNode
 {
-    unsigned int ID;
-    float AdjIntensity;//邻接指标
-    struct DLinkNode *next;
+	unsigned int ID;
+	float AdjIntensity;//邻接指标
+	struct DLinkNode *next;
 }DLinkNode;
 //距离邻接头节点
 typedef struct
 {
-    unsigned int ID;//区域ID
-    bool isVisited;//访问标识
-    DLinkNode *firstNode;//第一个节点
+	unsigned int ID;//区域ID
+	bool isVisited;//访问标识
+	DLinkNode *firstNode;//第一个节点
 }DHeadNode;
 
 /*图的结构*/
-typedef struct{
-    DHeadNode *headChain;   //顶点数组
-    int vexNum;         //顶点数
-    int arcNum;        //弧数
+typedef struct {
+	DHeadNode *headChain;   //顶点数组
+	int vexNum;         //顶点数
+	int arcNum;        //弧数
 }DGraph;
 
 
 //链接节点
 typedef struct LinkNetNode
 {
-    unsigned int ID;//该节点指向的的区域的ID
-    unsigned short nextDirection;//头节点到下一节点的方向
-    struct LinkNetNode *next;//下一条弧
+	unsigned int ID;//该节点指向的的区域的ID
+	unsigned short nextDirection;//头节点到下一节点的方向
+	struct LinkNetNode *next;//下一条弧
 }LinkNetNode;
 //头节点
 typedef struct
 {
-    unsigned int ID;//当前头的id
-    bool isVisited;//是否已经遍历过
-    unsigned short nextDirection;//邻接的反方向
-    LinkNetNode *firstNode; //指向该顶点所接的单链表的第一个弧节点
-    //    unsigned short colorTh;//当前结点的颜色
-    //    unsigned short startX;//区域入口X
-    //    unsigned short startY;//区域入口Y
+	unsigned int ID;//当前头的id
+	bool isVisited;//是否已经遍历过
+	unsigned short nextDirection;//邻接的反方向
+	LinkNetNode *firstNode; //指向该顶点所接的单链表的第一个弧节点
+	//    unsigned short colorTh;//当前结点的颜色
+	//    unsigned short startX;//区域入口X
+	//    unsigned short startY;//区域入口Y
 }HeadNode;
 
 /*图的结构*/
-typedef struct{
-    HeadNode *headChain;   //顶点数组
-    int vexNum;         //顶点数
-    int arcNum;        //弧数
+typedef struct {
+	HeadNode *headChain;   //顶点数组
+	int vexNum;         //顶点数
+	int arcNum;        //弧数
 }Graph;
 
 typedef struct
 {
-    unsigned int id;
-    unsigned int rNum;
-    unsigned int dNum;
-    unsigned int *rID;
-    unsigned int *dID;
+	unsigned int id;
+	unsigned int rNum;
+	unsigned int dNum;
+	unsigned int *rID;
+	unsigned int *dID;
 }twoAdjacent;
 
-typedef struct{
-    point *p;//一个区域的点的集合
-    int number;//一个区域点的数量
+typedef struct {
+	point *p;//一个区域的点的集合
+	int number;//一个区域点的数量
 }Area;
-typedef struct{
-    unsigned short int *id;
-    unsigned short int *colorTh;
+typedef struct {
+    unsigned short Samples;
+    unsigned short Lines;
+	unsigned short int *id;
+	unsigned short int *colorTh;
 }ImageArray;
-class zonedeal:public QObject
+class zonedeal :public QObject
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    zonedeal();
-private:
-    void main(QImage image);
-    AreaNodeInfo *countEveryNumber(unsigned short *imageArray, int Samples, int Lines);
-    Area pointIterator(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
-    void linjie(unsigned short *imageArray, int Samples, int Lines);
-    bool getRALLink(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
-    int calAreaCycle(unsigned short *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo);
-    unsigned short *changeColor(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color);
-    void test(ImageArray testImage, int Samples, int Lines);
-    AreaNodeInfo rightOrDownLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo areaInfo, Area area);
-    double distance(point p1, point p2);
-    bool distancesConfine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2);
-    unsigned short adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo);
-    void deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colorTh);
-    void deepRightIterater(AreaNodeInfo *nodeInfo, int currentNode);
-    void deepIterater(Graph *graph);
-    void findEveryPatch(Graph *graph, int start, int end, QString path);
-    void deep(Graph *graph);
-    void fileStackWrite(QString path, QStack<HeadNode *> *stack);
-    void fileStackRead(QString path, unsigned short *roadDirection, Graph *graph);
-    void deleteFile(QString path);
-    void getRoad(Graph *graph, int start, int end, unsigned short *roadDirection);
-    void roadProcess(QVector<unsigned short> road, QVector<unsigned short> direction, Graph *graph);
 
-    Area areaEdge(unsigned short *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo);
-    float calAreaEdgedistance(Area pointSet1, Area pointSet2, unsigned int threshold);
-    void fileStackMinRead(QString path);
-    AdjancentChanin processResult(AreaNodeInfo *areaInfo, int nodeNum, unsigned int colorTh);
-    AdjancentChanin sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh, AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity);
+	zonedeal();
+private:
+
+	void main(QImage image);
+	AreaNodeInfo *countEveryNumber(unsigned short *imageArray, int Samples, int Lines);
+	Area pointIterator(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
+	void linjie(unsigned short *imageArray, int Samples, int Lines);
+	bool getRALLink(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
+	int calAreaCycle(unsigned short *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo);
+	unsigned short *changeColor(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color);
+	void test(ImageArray testImage, int Samples, int Lines);
+	AreaNodeInfo rightOrDownLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo areaInfo, Area area);
+	double distance(point p1, point p2);
+	bool distancesConfine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2);
+	unsigned short adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo);
+	void deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colorTh);
+	void deepRightIterater(AreaNodeInfo *nodeInfo, int currentNode);
+	void deepIterater(Graph *graph);
+	void findEveryPatch(Graph *graph, int start, int end, QString path);
+	void deep(Graph *graph);
+	void fileStackWrite(QString path, QStack<HeadNode *> *stack);
+	void fileStackRead(QString path, unsigned short *roadDirection, Graph *graph);
+	void deleteFile(QString path);
+	void getRoad(Graph *graph, int start, int end, unsigned short *roadDirection);
+	void roadProcess(QVector<unsigned short> road, QVector<unsigned short> direction, Graph *graph);
+
+	Area areaEdge(unsigned short *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo);
+    float calAreaEdgedistance(ImageArray image, Area pointSet1, Area pointSet2, unsigned int threshold);
+	void fileStackMinRead(QString path);
+	AdjancentChanin processResult(AreaNodeInfo *areaInfo, int nodeNum, unsigned int colorTh);
+	AdjancentChanin sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh, AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity);
     unsigned short *newChangeColor(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color, int numThreshold);
-signals:
-    void sendImageToUi(QImage image,int status);
+
 private slots:
-    void click();
+	void startZone();
+signals:
+	void sendImageToUi(QImage image, int status);
+
 };
 
 #endif // ZONEDEAL_H
