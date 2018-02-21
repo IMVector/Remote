@@ -397,8 +397,11 @@ void operate::getImage(QImage image, int status)
             label=new MyLabel;
             labelList.append(label);
             //            qDebug()<<"labelIndex"<<labelIndex;
+            //BUG:labelIndex+1不知道为什么，并且引起了bug
             labelList.at(labelIndex+1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
             labelList.at(labelIndex+1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
+            //            labelList.at(labelList.size()-1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
+            //            labelList.at(labelList.size()-1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
             create_label=true;
         }
         //显示略缩图
@@ -409,6 +412,10 @@ void operate::getImage(QImage image, int status)
         labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
         labelList.at(labelIndex+1)->setScaledContents(true);
         labelList.at(labelIndex+1)->show();
+        //labelList.at(labelList.size()-1)->setPixmap(mp);
+        //labelList.at(labelList.size()-1)->resize(QSize(image.width(),image.height()));
+        //labelList.at(labelList.size()-1)->setScaledContents(true);
+        //labelList.at(labelList.size()-1)->show();
 
     }
     else if(status==2)

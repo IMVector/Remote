@@ -40,7 +40,9 @@ SOURCES += main.cpp\
     imagefile.cpp \
     zonedeal.cpp \
     svm.cpp \
-    svmclassify.cpp
+    svmclassify.cpp \
+    LogBrowser.cpp
+
 
 HEADERS  += newproject.h \
     emptychild.h \
@@ -58,7 +60,9 @@ HEADERS  += newproject.h \
     imagefile.h \
     zonedeal.h \
     svm.h \
-    svmclassify.h
+    svmclassify.h \
+    LogBrowser.h
+
 
 FORMS    += newproject.ui \
     operate.ui \
@@ -79,7 +83,4 @@ RESOURCES += \
     styleresource.qrc
 
 DISTFILES +=
-
-
-
 

@@ -20,22 +20,18 @@ typedef struct
 	unsigned int ID;//本区域的唯一标识
 	unsigned int number;//点的数量
 	unsigned int cycle;//一个区域的周长
-	bool isIsolate;//是否是孤立区域
 	unsigned short rLinkNum;//右邻接区域的数量
 	unsigned short dLinkNum;//下邻接区域的数量
 	unsigned int* rAdjacentNum;//右邻接数量
 	unsigned int* dAdjacentNum;//右邻接数量
-	float *rAdjIntensity;
-	float *dAdjIntensity;
+    float *rAdjIntensity;//右邻接强度
+    float *dAdjIntensity;//下邻接强度
 	unsigned short* rID;//右邻接区域ID数组
 	unsigned short* dID;//下邻接区域ID数组
 	unsigned short* downColorTh;//第n种地物
 	unsigned short* rightColorTh;//第n种地物
 	unsigned short colorTh;//第n种地物
-	//    unsigned short int* rightX;//右邻接地物入口
-	//    unsigned short int* rightY;
-	//    unsigned short int* downX;//下邻接地物入口
-	//    unsigned short int* downY;
+    //	bool isIsolate;//是否是孤立区域
 }AreaNodeInfo;
 
 
@@ -112,7 +108,7 @@ typedef struct
 }twoAdjacent;
 
 typedef struct {
-	point *p;//一个区域的点的集合
+    point *p;//一个区域的点的集合
 	int number;//一个区域点的数量
 }Area;
 typedef struct {
@@ -130,17 +126,17 @@ public:
 private:
 
 	void main(QImage image);
-	AreaNodeInfo *countEveryNumber(unsigned short *imageArray, int Samples, int Lines);
-	Area pointIterator(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
+    AreaNodeInfo *countEveryNumber(ImageArray imageArray, int Samples, int Lines);
+    Area pointIterator(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
 	void linjie(unsigned short *imageArray, int Samples, int Lines);
-	bool getRALLink(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
+    bool getRALLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo);
 	int calAreaCycle(unsigned short *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo);
 	unsigned short *changeColor(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color);
 	void test(ImageArray testImage, int Samples, int Lines);
 	AreaNodeInfo rightOrDownLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo areaInfo, Area area);
 	double distance(point p1, point p2);
 	bool distancesConfine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2);
-	unsigned short adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo);
+    int adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo, int deleteThresould, AreaNodeInfo *allInfo);
 	void deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colorTh);
 	void deepRightIterater(AreaNodeInfo *nodeInfo, int currentNode);
 	void deepIterater(Graph *graph);
@@ -157,7 +153,8 @@ private:
 	void fileStackMinRead(QString path);
 	AdjancentChanin processResult(AreaNodeInfo *areaInfo, int nodeNum, unsigned int colorTh);
 	AdjancentChanin sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh, AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity);
-    unsigned short *newChangeColor(unsigned short *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color, int numThreshold);
+    unsigned short *newChangeColor(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color, int numThreshold);
+
 
 private slots:
 	void startZone();

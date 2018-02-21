@@ -240,18 +240,19 @@ void filedeal::openFile(int r,int g,int b)
     //    int readHeight=100;
     //根据图片大小调整每次读的行数
     //如果图片很大，每次读50行
-    if(Samples>7000)
-    {
-        readHeight=50;
-    }
-    else if(4000<=Samples&&Samples<=7000)
-    {
-        readHeight=100;
-    }
-    else if(Samples<4000)
-    {
-        readHeight=200;
-    }
+    //    if(Samples>7000)
+    //    {
+    //        readHeight=50;
+    //    }
+    //    else if(4000<=Samples&&Samples<=7000)
+    //    {
+    //        readHeight=100;
+    //    }
+    //    else if(Samples<4000)
+    //    {
+    //        readHeight=200;
+    //    }
+    readHeight=Lines;
     float *tempRaw_band1=new float [readHeight*picWidth];
     float *tempRaw_band2=new float [readHeight*picWidth];
     float *tempRaw_band3=new float [readHeight*picWidth];
@@ -1517,7 +1518,7 @@ void filedeal::dataInfoGet(SamplesDetails details)
         for(int j=0;j<pointCount[i];j++)
         {
             for(int b=0;b<Band;b++)
-            data[count].bands[b]=dataCopyArea[i][j].bands[b]/maxDataValue;
+                data[count].bands[b]=dataCopyArea[i][j].bands[b]/maxDataValue;
             count++;
         }
     }
@@ -1588,7 +1589,7 @@ void filedeal::getSvmModel(svm_model *model)
     int realLocationNum=0;
     //整除100剩余的余数处理
     int restHeight=Lines%readHeight;
-
+    int mod=Samples*Lines/100;
     /////////////////////////////////////////////////////////////////////
     for(int m=0;m<Lines/readHeight;m++)
     {
@@ -1598,12 +1599,17 @@ void filedeal::getSvmModel(svm_model *model)
         //当前真实坐标（一维的）realLocationNum
         //startNumber=rectangle[0].y*Samples+rectangle[0].x;
         startNumber=rectangle[0].y*Samples+rectangle[0].x;
-//        QTime time;
-//        time.start();
+        //        QTime time;
+        //        time.start();
         for(int k=0;k<Samples*readHeight;k++)
         {
             realLocationNum=startNumber+k;
-            emit setProgressValue((realLocationNum/Samples*Lines*1.0)*100);
+            if(realLocationNum%mod==0)
+            {
+                emit setProgressValue((realLocationNum*1.0/(Samples*Lines))*100);
+                qDebug()<<(realLocationNum*1.0/(Samples*Lines))*100;
+            }
+
             //样本判断逻辑
             //rawData是二维数组[i][j]i表示第i个波段,j表示第j个点
             for(int b=0;b<Band;b++)
@@ -1615,11 +1621,11 @@ void filedeal::getSvmModel(svm_model *model)
 
             result=svm_predict(model,predictNode);
 
-//            if(k%100==0)
-//            {
-//                qDebug()<<time.elapsed()<<"ms";
-//                qDebug()<<result;
-//            }
+            //            if(k%100==0)
+            //            {
+            //                qDebug()<<time.elapsed()<<"ms";
+            //                qDebug()<<result;
+            //            }
             int color=result+1;
             //变色
             value = qRgb(R[color], G[color], B[color]);
@@ -1649,7 +1655,7 @@ void filedeal::getSvmModel(svm_model *model)
     {
         realLocationNum=startNumber+k;
         //样本判断逻辑
-        emit setProgressValue((realLocationNum/Samples*Lines*1.0)*100);
+        //emit setProgressValue((realLocationNum/Samples*Lines*1.0)*100);
         //rawData是二维数组[i][j]i表示第i个波段,j表示第j个点
         for(int b=0;b<Band;b++)
         {
@@ -1882,9 +1888,9 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
             //找一条最长的海岸线
         }
     }
-//    partImage=image;
-//    rawImage=image;
-//    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
+    //    partImage=image;
+    //    rawImage=image;
+    //    visiualdraw(visiualDrawP,currentHeight,currentWidth,partImage);
     //    qInfo()<<"normal3";
     //将原来的海岸线数组变成标记数组
     for(int h=0;h<Lines;h++)
@@ -1905,11 +1911,17 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     int nx=0,ny=0;//移动点
     int x=0,y=0;//基点
     try{
+        int mod=Samples*Lines/100;
+        int sum=Samples*Lines*2;
         for(int h=0;h<Lines;h++)
         {
             for(int w=0;w<Samples;w++)
             {
-                emit setProgressValue((h*Samples+w)/(Samples*Lines*2)*100);
+                if((h*Samples+w)%mod==0)
+                {
+                    emit setProgressValue((h*Samples+w)/sum*100);
+                }
+
                 pointCount=0;
                 currentMaxNum=0;
 
@@ -1998,11 +2010,17 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     }
     //线计数置空
     lineCount=0;
+    int mod=Samples*Lines;
+    int sum=Samples*Lines*2;
     for(int h=0;h<Lines;h++)
     {
         for(int w=0;w<Samples;w++)
         {
-            emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100);
+            if((h*Samples+w)%mod==0)
+            {
+                emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100);
+                qDebug()<<((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100;
+            }
             nx=w;ny=h;
             pointCount=0;
             currentMaxNum=0;
