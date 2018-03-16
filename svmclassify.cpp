@@ -14,7 +14,7 @@ void init_param(int bandNumebr) {
     param.gamma = 0;
     param.coef0 = 0;
 
-    param.cache_size = 500; //缓存块大小(MB)
+    param.cache_size = 1024; //缓存块大小(MB)
     param.eps = 1e-3;// stopping criteria
     param.C = 100;//for C_SVC, EPSILON_SVR and NU_SVR ，惩罚因子越大训练的模型越那个…,当然耗的时间越多
     param.nr_weight = 0;//for C_SVC 权重的数目权重的数目,目前在实例代码中只有两个值，一个是默认0，另外一个是svm_binary_svc_probability函数中使用数值2。
@@ -68,8 +68,11 @@ void svmclassify::train(int band,simples data,int geoTypeNumber,int *eachNumber,
     data=NULL;
     delete[] geoLabel;
     geoLabel=NULL;
-    emit sendModel(model);
+    emit sendModel(model);//将model发送到处理线程，在处理线程中释放内存防止内存泄漏
 }
+/**
+ * @brief svmclassify::main 测试用的函数
+ */
 void svmclassify::main()
 {
     int band=3;

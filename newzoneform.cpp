@@ -1,19 +1,78 @@
-﻿#include "zonedeal.h"
-zonedeal::zonedeal()
-{
-}
+﻿#include "newzoneform.h"
 
-void zonedeal::startZone()
+NewZoneForm::NewZoneForm(QObject *parent) : QObject(parent)
 {
 
 }
 
-void zonedeal::loadImage_slot(QString name)
+
+
+void NewZoneForm::loadImage_slot(QString name)
 {
     fileName=name;
 }
+/**
+ * @brief NewZoneForm::corrosion图像腐蚀算法  依次遍历图像中每个像素，检查它四周的八个像素，假设有背景色的像素，则设置改点为背景色
+ * @param image 图像数组（包含图像信息）
+ * @param background背景图像地物颜色的编号
+ * @param area要腐蚀的图像地物的颜色编号
+ */
+void NewZoneForm::corrosion(ImageArray image,int background,int area)
+{
+    int R[7] = { 255,  255,    0,   0,   139,0 };
+    int G[7] = { 0,  255,    0,   255, 0 ,0 };
+    int B[7] = { 0  ,  0,  255,   0,   139   ,0 };
+    int next[8][2] = { {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1} };
+    int footPath=8;
+    int Samples=image.Samples;
+    int Lines=image.Lines;
+    for(int y=0;y<Lines;y++)
+    {
+        for(int x=0;x<Samples;x++)
+        {
+            if(image.colorTh[y*Samples+x]==area)
+            {
+                int w=x,h=y;
+                int color=0;
+                for (int r = 0; r < footPath; r++)
+                {
+                    w = x + next[r][0];
+                    h = y + next[r][1];
+                    if (w < 0 || w >= Samples || h < 0 || h >= Lines)//越界，进入下一步循环
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        if (image.colorTh[h*Samples + w] == background)//满足条件则是边界点
+                        {
+                            color++;
+                        }
 
-void zonedeal::loadInfo_slot(loadInfo info)
+                    }
+                    if(color>=4)
+                    {
+                        image.colorTh[y*Samples+w]=background;
+                    }
+                }
+
+            }
+        }
+    }
+    QImage mimage(Samples, Lines, QImage::Format_RGB32);
+
+    for (int h = 0; h < Lines; h++)
+    {
+        for (int w = 0; w < Samples; w++)
+        {
+            QRgb value = qRgb(R[image.colorTh[h*Samples + w]], G[image.colorTh[h*Samples + w]], B[image.colorTh[h*Samples + w]]);
+            mimage.setPixel(w, h, value);
+        }
+    }
+    mimage.save("D:\\LowPointFile.tif");
+
+}
+void NewZoneForm::loadInfo_slot(loadInfo info)
 {
 
     deleteThresould=info.deleteThresould;
@@ -66,52 +125,8 @@ void zonedeal::loadInfo_slot(loadInfo info)
     //    //    test(imageArray, 8, 4);
     //    test(imageArray, 15, 15);
 }
-///**
-// * @brief zonedeal::lowPoint利用腐蚀算法处理图像
-// */
-//void zonedeal::lowPoint(ImageArray testImage)
-//{
 
-//    int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
-//                     1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
-//    int xRoad[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
-//                     2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
-//    //所有界限找出
-//    //进行降噪
-//    unsigned short *footFlag=new unsigned short[testImage.Samples*testImage.Lines];
-//    for(int i=0;i<Samples*Lines;i++)
-//    {
-//        footFlag[i]=0;
-//    }
-
-//    int flag=42;
-//    for(int time=0;time<=1;time++)
-//    {
-//        for(int h=5;h<Lines-5;h++)
-//        {
-//            for(int w=5;w<Samples-5;w++)
-//            {
-//                int diw[4]={0,0,0,0},x_,y_;
-//                for(int f=0 ; f<80 ; f++)
-//                {
-//                    x_ = w+xRoad[f];
-//                    y_ = h+yRoad[f];
-//                    diw[footFlag[y_*Samples+x_]]++;
-//                    if(diw[footFlag[y_*Samples+x_]]==flag)
-//                    {
-//                        footFlag[h*Samples+w] = footFlag[y_*Samples+x_];
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    for(int i=0;i<Samples*Lines;i++)
-//    {
-
-//    }
-
-//}
-void zonedeal::main(QImage image,int deleteThresould,int distanceThresould,float adjIntensity,int geoTh,int changedColorTh)
+void NewZoneForm::main(QImage image,int deleteThresould,int distanceThresould,float adjIntensity,int geoTh,int changedColorTh)
 {
     int R[7] = { 255,  255,    0,   0,   139,0 };
     int G[7] = { 0,  255,    0,   255, 0 ,0 };
@@ -157,12 +172,16 @@ void zonedeal::main(QImage image,int deleteThresould,int distanceThresould,float
     delete[] testImage;
     testImage = NULL;
 }
-void zonedeal::test(ImageArray testImage, int Samples, int Lines,
-                    int deleteThresould,int distanceThresould,float adjIntensity,int geoTh,int changedColorTh)
+void NewZoneForm::test(ImageArray testImage, int Samples, int Lines,
+                       int deleteThresould,int distanceThresould,float adjIntensity,int geoTh,int changedColorTh)
 {
     int R[7] = { 255,  255,    0,   0,   139,0 };
     int G[7] = { 0,  255,    0,   255, 0 ,0 };
     int B[7] = { 0  ,  0,  255,   0,   139   ,0 };
+    testImage.Samples=Samples;
+    testImage.Lines=Lines;
+
+    //    corrosion(testImage,0,5);
 
     int NodeNumber = 0;//节点数量
     bool colorChangeFlag = false;//颜色更改flag判断是否进行了降噪如果进行了降噪处理就要重新统计每个地物块的信息
@@ -246,7 +265,8 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         //everyNum[i].ID = i;//给当前节点分配ID
         Area a = pointIterator(testImage, Samples, Lines, everyNum[i]);
         everyNum[i].cycle = calAreaCycle(testImage.colorTh, Samples, Lines, a, everyNum[i]);
-        qDebug() << QStringLiteral("区域") << i<< QStringLiteral("的周长是") << everyNum[i].cycle;
+        //        qDebug() << QStringLiteral("区域") << i<< QStringLiteral("的周长是") << everyNum[i].cycle;
+
         //qDebug() << QStringLiteral("区域") << i << QStringLiteral("原来的数量是：") << everyNum[i].number << QStringLiteral("新求的数量是：") << a.number << QStringLiteral("的周长是") << everyNum[i].cycle << everyNum[i].startX << everyNum[i].startY;
         //if (everyNum[i].number != a.number)
         //{
@@ -368,7 +388,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             node->nextDirection = 1;
             node->next = NULL;
 
-            qDebug() << QStringLiteral("当前节点") << adjancentGraph.headChain[i].ID << QStringLiteral("的右邻接是") << node->ID;
+            //            qDebug() << QStringLiteral("区域") << adjancentGraph.headChain[i].ID << QStringLiteral("的右邻接是") << node->ID;
 
             if (adjancentGraph.headChain[i].firstNode == NULL)
             {
@@ -392,7 +412,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             node->nextDirection = 2;
             node->next = NULL;
 
-            qDebug() << QStringLiteral("当前节点") << adjancentGraph.headChain[i].ID << QStringLiteral("的下邻接是") << node->ID;
+            qDebug() << QStringLiteral("区域") << adjancentGraph.headChain[i].ID << QStringLiteral("的下邻接是") << node->ID;
             if (adjancentGraph.headChain[i].firstNode == NULL)
             {
                 adjancentGraph.headChain[i].firstNode = node;
@@ -557,10 +577,14 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             if (result1.data[i].ID == result2.data[j].ID&&
                     result1.data[i].linkID == result2.data[j].linkID)
             {
-                //qDebug() << QStringLiteral("成排区域") << result1.data[i].ID << result1.data[i].linkID;
-                qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
-                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
-                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
+                //                qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
+                //                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
+                //                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
+
+                qDebug() << result1.data[i].ID <<"\t"<<result1.data[i].linkID
+                         <<"\t\t"<<result1.data[i].ID <<"\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].adjIntensity_a_b
+                        <<"\t\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].ID<<"\t"<<result1.data[i].adjIntensity_b_a;
+
 
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].ID], changedColorTh, 10000000);
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].linkID], changedColorTh, 10000000);
@@ -574,11 +598,11 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
                 }
                 //QImage myImage;
                 //myImage=image.scaled(image.width()/10,image.width()/10, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
-                //sendImageToUi(image, 2);
-                //sendImageToUi(image, 1);
+                sendImageToUi(image, 2);
+                sendImageToUi(image, 1);
                 ////本线程sleep 1s
                 //QEventLoop eventloop;
-                //QTimer::singleShot(10000, &eventloop, SLOT(quit()));
+                //QTimer::singleShot(1000, &eventloop, SLOT(quit()));
                 //eventloop.exec();
             }
         }
@@ -648,10 +672,10 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
 }
 
 /**
- * @brief zonedeal::processResult 处理地物信息结果,以数组方式存储，生成关系的二阶复合
+ * @brief NewZoneForm::processResult 处理地物信息结果,以数组方式存储，生成关系的二阶复合
  * @param areaInfo
  */
-AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo, int nodeNum, unsigned int colorTh)
+AdjancentChanin NewZoneForm::processResult(AreaNodeInfo *areaInfo, int nodeNum, unsigned int colorTh)
 {
 
     AdjancentNode *relation1 = new AdjancentNode[nodeNum * nodeNum];
@@ -713,6 +737,12 @@ AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo, int nodeNum, uns
             //如果关系复合出现相同的结果，将相同的结果置为无效目的是减小时间复杂度
             if (i != j&&relation2.data[i].ID == relation2.data[j].ID&&
                     relation2.data[i].linkID == relation2.data[j].linkID)
+            {
+                relation2.data[j].ID = nodeNum + 6;//置为无效的id
+            }
+            //TODO:新加的代码为了去除重复的
+            if(i!=j&&relation2.data[i].ID==relation2.data[j].linkID&&
+                    relation2.data[i].linkID==relation2.data[j].ID)
             {
                 relation2.data[j].ID = nodeNum + 6;//置为无效的id
             }
@@ -818,7 +848,7 @@ AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo, int nodeNum, uns
 
 
 /**
- * @brief zonedeal::sameColorProcess 处理相同颜色地物的距离问题
+ * @brief NewZoneForm::sameColorProcess 处理相同颜色地物的距离问题
  * @param graph
  * @param image
  * @param Samples
@@ -827,13 +857,13 @@ AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo, int nodeNum, uns
  * @param areaInfo
  * @param threshold
  */
-AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh,
-                                           AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity)
+AdjancentChanin NewZoneForm::sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh,
+                                              AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity)
 {
     image.Samples = Samples;
     image.Lines = Lines;
     //WARNING:换不同地区时修改最大阈值
-    int maxThreshold = 3000;//在图中求邻接强度的两个区域的起始点之间的距离阈值（为了降低程序的时间复杂度）
+    int maxThreshold = 500;//两两求邻接强度，
     //定义矩阵，保存每个区域的边界的点到其他区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值
     float ** distanceGraph = NULL;
     distanceGraph = new float*[graph->vexNum];
@@ -864,7 +894,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
                     Area edgePoint2 = areaEdge(image.colorTh, Samples, Lines, area2, areaInfo[j]);
                     //BUG:邻接强度计算有问题
                     distanceGraph[i][j] = calAreaEdgedistance(image, edgePoint1, edgePoint2, threshold);
-                    //qDebug()<<i<<j<<QStringLiteral("邻接强度:")<<distanceGraph[i][j];
+                    //qDebug()<<i<<QStringLiteral("与")<<j<<QStringLiteral("的邻接强度是:")<<distanceGraph[i][j];
                     if (area1.p)
                     {
                         delete[] area1.p;
@@ -905,10 +935,20 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     AdjancentChanin result;
     result.data = new AdjancentNode[graph->vexNum*graph->vexNum];
     int count1 = 0;
+    bool * flag=new bool[graph->vexNum*graph->vexNum];
     for (int i = 0; i < graph->vexNum; i++)
     {
         for (int j = 0; j < graph->vexNum; j++)
         {
+            flag[i*j]=false;
+        }
+    }
+
+    for (int i = 0; i < graph->vexNum; i++)
+    {
+        for (int j = 0; j < graph->vexNum; j++)
+        {
+
             //两区域满足输入的颜色
             if (areaInfo[i].colorTh == colorTh&&areaInfo[i].colorTh == areaInfo[j].colorTh)
             {
@@ -937,22 +977,24 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
 
                     //deleteLater();
                     //i区域与j区域满足距离要求
-                    //qDebug() << i << j << QStringLiteral("临界指标") << distanceGraph[i][j];
+                    //qDebug()<<QStringLiteral("区域") << i <<QStringLiteral("与区域")<< j << QStringLiteral("的邻接强度") << distanceGraph[i][j];
+                    //qDebug()<<QStringLiteral("区域") << j <<QStringLiteral("与区域")<< i << QStringLiteral("的邻接强度") << distanceGraph[j][i];
                     result.data[count1].ID = i;
                     result.data[count1].linkID = j;
                     result.data[count1].adjIntensity_a_b=distanceGraph[i][j];
                     result.data[count1].adjIntensity_b_a=distanceGraph[j][i];
                     count1++;
                 }
-                if(i!=j)
+                if(i!=j&&distanceGraph[i][j]>0&&!flag[i*j])
                 {
-                    qDebug()<<i <<QStringLiteral("与")<<j<<QStringLiteral("邻接强度是")<<distanceGraph[i][j]
-                              <<"\t\t"<<j<<QStringLiteral("与")<<i<<QStringLiteral("邻接强度是")<<distanceGraph[j][i];
+                    qDebug()<<i <<"\t"<<j<<"\t"<<distanceGraph[i][j]
+                              <<"\t\t"<<j<<"\t"<<i<<"\t"<<distanceGraph[j][i];
                 }
+
                 ////////////////////////////此函数从此往上测试正常//////////////////////////////////////////
                 //求出i区域与j区域的可达路径，找出其几步可达
-
             }
+            flag[i*j]=true;
         }
     }
 
@@ -976,12 +1018,12 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     return result;
 }
 /**
- * @brief zonedeal::calAreaEdgedistance计算一个区域之间的边界的点到另一区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值 已测试
+ * @brief NewZoneForm::calAreaEdgedistance计算一个区域之间的边界的点到另一区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值 已测试
  * @param pointSet1
  * @param pointSet2
  * @param threshold
  */
-float zonedeal::calAreaEdgedistance(ImageArray image, Area pointSet1, Area pointSet2, unsigned int threshold)
+float NewZoneForm::calAreaEdgedistance(ImageArray image, Area pointSet1, Area pointSet2, unsigned int threshold)
 {
     //BUG:有问题
     //获取与区域一相邻接的区域的id
@@ -1076,7 +1118,7 @@ float zonedeal::calAreaEdgedistance(ImageArray image, Area pointSet1, Area point
 
 
 /**
- * @brief zonedeal::areaEdge 返回一个区域的边界点 已测试
+ * @brief NewZoneForm::areaEdge 返回一个区域的边界点 已测试
  * @param imageArray         总图像
  * @param Samples            图像宽度
  * @param Lines              图像高度
@@ -1084,7 +1126,7 @@ float zonedeal::calAreaEdgedistance(ImageArray image, Area pointSet1, Area point
  * @param nodeinfo           区域信息
  * @return
  */
-Area zonedeal::areaEdge(unsigned short int *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo)
+Area NewZoneForm::areaEdge(unsigned short int *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo)
 {
     Area area;
     area.p = new point[stake.number];
@@ -1161,10 +1203,10 @@ Area zonedeal::areaEdge(unsigned short int *imageArray, int Samples, int Lines, 
     return area;
 }
 /**
- * @brief zonedeal::deep 深度优先遍历邻接表1 已测试
+ * @brief NewZoneForm::deep 深度优先遍历邻接表1 已测试
  * @param graph
  */
-void zonedeal::deep(Graph *graph)
+void NewZoneForm::deep(Graph *graph)
 {
     //将邻接表置为未访问状态
     for (int i = 0; i < graph->vexNum; i++)
@@ -1228,12 +1270,12 @@ void zonedeal::deep(Graph *graph)
 
 }
 /**
- * @brief zonedeal::deepIterater 深度优先遍历邻接表2 已测试
+ * @brief NewZoneForm::deepIterater 深度优先遍历邻接表2 已测试
  * @param graph
  * @param Samples
  * @param Lines
  */
-void zonedeal::deepIterater(Graph *graph)
+void NewZoneForm::deepIterater(Graph *graph)
 {
     for (int i = 0; i < graph->vexNum; i++)
     {
@@ -1266,13 +1308,13 @@ void zonedeal::deepIterater(Graph *graph)
 
 }
 /**
- * @brief zonedeal::getRoad 获取任意两点间的所有路径
+ * @brief NewZoneForm::getRoad 获取任意两点间的所有路径
  * @param graph
  * @param start
  * @param end
  * @param roadDirection
  */
-void zonedeal::getRoad(Graph *graph, int start, int end, unsigned short *roadDirection)
+void NewZoneForm::getRoad(Graph *graph, int start, int end, unsigned short *roadDirection)
 {
     deleteFile("D:\\stack.txt");
     deleteFile("D:\\stackReverse.txt");
@@ -1283,10 +1325,10 @@ void zonedeal::getRoad(Graph *graph, int start, int end, unsigned short *roadDir
     fileStackMinRead("D:\\stack.txt");
 }
 /**
- * @brief zonedeal::deleteFile 删除给定路径的文件
+ * @brief NewZoneForm::deleteFile 删除给定路径的文件
  * @param path
  */
-void zonedeal::deleteFile(QString path)
+void NewZoneForm::deleteFile(QString path)
 {
     QFile file(path.toStdString().c_str());
     if (file.exists())
@@ -1295,12 +1337,12 @@ void zonedeal::deleteFile(QString path)
     }
 }
 /**
- * @brief zonedeal::roadProcess 对路径进行加工
+ * @brief NewZoneForm::roadProcess 对路径进行加工
  * @param road
  * @param direction
  * @param graph
  */
-void zonedeal::roadProcess(QVector<unsigned short>road, QVector<unsigned short>direction, Graph *graph)
+void NewZoneForm::roadProcess(QVector<unsigned short>road, QVector<unsigned short>direction, Graph *graph)
 {
     for (int i = 0; i < road.size(); i++)
     {
@@ -1319,11 +1361,11 @@ void zonedeal::roadProcess(QVector<unsigned short>road, QVector<unsigned short>d
     }
 }
 /**
- * @brief zonedeal::fileStackMinRead 查找两点间的最近的路径
+ * @brief NewZoneForm::fileStackMinRead 查找两点间的最近的路径
  * @param path                       文件的路径
  * @param graph                      邻接表
  */
-void zonedeal::fileStackMinRead(QString path)
+void NewZoneForm::fileStackMinRead(QString path)
 {
     QFile file(path.toStdString().c_str());
     QVector<int> RoadLong;
@@ -1375,11 +1417,11 @@ void zonedeal::fileStackMinRead(QString path)
     }
 }
 /**
- * @brief zonedeal::fileStackRead 读出文件栈中路径，并判读是否存在所要找的路径
+ * @brief NewZoneForm::fileStackRead 读出文件栈中路径，并判读是否存在所要找的路径
  * @param path                    文件路径
  * @param roadDirection           方向数组
  */
-void zonedeal::fileStackRead(QString path, unsigned short *roadDirection, Graph *graph)
+void NewZoneForm::fileStackRead(QString path, unsigned short *roadDirection, Graph *graph)
 {
     QFile file(path.toStdString().c_str());
     if (file.open(QFile::ReadOnly | QIODevice::Text))
@@ -1437,11 +1479,11 @@ void zonedeal::fileStackRead(QString path, unsigned short *roadDirection, Graph 
     }
 }
 /**
- * @brief zonedeal::fileStackWrite 将栈写入文件暂时保存
+ * @brief NewZoneForm::fileStackWrite 将栈写入文件暂时保存
  * @param path                     文件路径
  * @param stack                    栈
  */
-void zonedeal::fileStackWrite(QString path, QStack<HeadNode*> *stack)
+void NewZoneForm::fileStackWrite(QString path, QStack<HeadNode*> *stack)
 {
     QFile file(path.toStdString().c_str());
     if (file.open(QFile::Append | QIODevice::Text)) {
@@ -1462,13 +1504,13 @@ void zonedeal::fileStackWrite(QString path, QStack<HeadNode*> *stack)
     }
 }
 /**
- * @brief zonedeal::findEveryPatch 获取邻接表中任意两点间的所有路径
+ * @brief NewZoneForm::findEveryPatch 获取邻接表中任意两点间的所有路径
  * @param graph 邻接表
  * @param start 起始节点
  * @param end 结束节点
  * @param path 保存栈文件的路径
  */
-void zonedeal::findEveryPatch(Graph *graph, int start, int end, QString path)
+void NewZoneForm::findEveryPatch(Graph *graph, int start, int end, QString path)
 {
 
     //将邻接表置为未访问状态
@@ -1552,26 +1594,26 @@ void zonedeal::findEveryPatch(Graph *graph, int start, int end, QString path)
 }
 
 /**
- * @brief zonedeal::deepRightIterater 右邻接
+ * @brief NewZoneForm::deepRightIterater 右邻接
  * @param nodeInfo
  * @param currentNode
  */
-void zonedeal::deepRightIterater(AreaNodeInfo *nodeInfo, int currentNode)
+void NewZoneForm::deepRightIterater(AreaNodeInfo *nodeInfo, int currentNode)
 {
     for (int i = 0; i < nodeInfo[currentNode].rLinkNum; i++)//右邻接
     {
-        qDebug() << QStringLiteral("当前节点的ID是:") << nodeInfo[currentNode].ID <<
-                    QStringLiteral("当前节点的右邻接节点是：") << nodeInfo[currentNode].rID[i];
+        qDebug() << QStringLiteral("节点的ID是:") << nodeInfo[currentNode].ID <<
+                    QStringLiteral("节点的右邻接节点是：") << nodeInfo[currentNode].rID[i];
         deepRightIterater(nodeInfo, nodeInfo[currentNode].rID[i]);
     }
 }
 /**
- * @brief zonedeal::deepSearchRight 二邻接
+ * @brief NewZoneForm::deepSearchRight 二邻接
  * @param nodeInfo
  * @param currentNode
  * @param colorTh
  */
-void zonedeal::deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colorTh)
+void NewZoneForm::deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colorTh)
 {
     if (nodeInfo[currentNode].rLinkNum > 0)
     {
@@ -1594,15 +1636,15 @@ void zonedeal::deepSearchRight(AreaNodeInfo *nodeInfo, int currentNode, int colo
     }
 }
 /**
- * @brief zonedeal::adjancentColor 找邻接区域的颜色 还差一个好的解决方案
+ * @brief NewZoneForm::adjancentColor 找邻接区域的颜色 还差一个好的解决方案
  * @param nodeInfo
  * @return
  */
-int zonedeal::adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo, int deleteThresould, AreaNodeInfo* allInfo)
+int NewZoneForm::adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeInfo nodeInfo, int deleteThresould, AreaNodeInfo* allInfo)
 {
     //定义一个方向数组
-    int next[8][2] = { {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1} };
-
+    int next[8][2] = { {0,1},{1,0},{0,-1},{-1,0} };
+    int footPath=4;
     unsigned int color[6] = { 0,0,0,0,0,0 };
 
     //	QSet<int> idSet;
@@ -1612,7 +1654,7 @@ int zonedeal::adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeI
     for (int i = 0; i < stake.number; i++)
     {
         int x=0,y=0;
-        for (int r = 0; r < 8; r++)
+        for (int r = 0; r < footPath; r++)
         {
             x = stake.p[i].x + next[r][0];
             y = stake.p[i].y + next[r][1];
@@ -1727,24 +1769,24 @@ int zonedeal::adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeI
     return index;
 }
 /**
- * @brief zonedeal::distance 计算两点之间距离
+ * @brief NewZoneForm::distance 计算两点之间距离
  * @param p1
  * @param p2
  * @return
  */
-double zonedeal::distance(point p1, point p2)
+double NewZoneForm::distance(point p1, point p2)
 {
     return sqrt(((p1.x - p2.x)*(p1.x - p2.x)) + ((p1.y - p2.y)*(p1.y - p2.y)));
 }
 /**
- * @brief zonedeal::distancesConfine 判断两个区域之间的距离是否满足条件
+ * @brief NewZoneForm::distancesConfine 判断两个区域之间的距离是否满足条件
  * @param x1
  * @param y1
  * @param x2
  * @param y2
  * @return 满足返回true 否则false
  */
-bool zonedeal::distancesConfine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
+bool NewZoneForm::distancesConfine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2)
 {
     point p1, p2;
     p1.x = x1, p1.y = y1;
@@ -1762,16 +1804,16 @@ bool zonedeal::distancesConfine(unsigned short x1, unsigned short y1, unsigned s
 
 
 /**
- * @brief zonedeal::countEveryNumber 统计每一个独立地物块的点的数量以及回溯的入口地址 已经经过测试
+ * @brief NewZoneForm::countEveryNumber 统计每一个独立地物块的点的数量以及回溯的入口地址 已经经过测试
  * @param imageArray 图像地物数组
  * @param Samples 图像宽度
  * @param Lines 图像高度
  * @return 每个独立地物块的点的数量以及回溯入口地址
  */
-AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int Lines)
+AreaNodeInfo* NewZoneForm::countEveryNumber(ImageArray imageArray, int Samples, int Lines)
 {
     //定义一个方向数组
-    int next[8][2] = { {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1} };
+    int next[8][2] = { {0,1},{1,0},{0,-1},{-1,0} };
 
     point *stake = new point[Samples*Lines];//回溯栈
 
@@ -1780,7 +1822,7 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
     {
         footFlag[i] = 0;
     }
-    int footPath = 8;//要遍历的点的数量
+    int footPath = 4;//要遍历的点的数量
     int nx = 0, ny = 0;//移动点
     int x = 0, y = 0;//基点
     int pointCount = 0;//点数量
@@ -1820,9 +1862,8 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
                     //qDebug()<<QStringLiteral("当前入栈入口坐标是：")<<w<<h;
 
                     footFlag[h*Samples + w] = 1;
-
-                    //currentNum++;
                     pointCount++;
+
                     nx = w; ny = h;
                     do
                     {
@@ -1832,6 +1873,7 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
                         {
                             nx = x + next[i][0];
                             ny = y + next[i][1];
+
                             if (nx < 0 || nx >= Samples || ny < 0 || ny >= Lines)
                             {
                                 continue;
@@ -1840,7 +1882,7 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
                             if (imageArray.colorTh[ny*Samples + nx] == c
                                     &&footFlag[ny*Samples + nx] == 0)
                             {
-                                currentNum++;//当前指针位置
+                                currentNum++;
                                 //坐标入栈
                                 stake[currentNum].x = nx;
                                 stake[currentNum].y = ny;
@@ -1850,7 +1892,6 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
                                 imageArray.id[ny*Samples + nx] = landCount;//给区域所属地物编号
 
                                 pointCount++;
-                                //currentNum++;//当前指针位置
                                 gotoFlag = true;
                                 break;
                             }
@@ -1870,7 +1911,6 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
                                 //允许循环，可以回到上一步
                                 gotoFlag = true;
                             }
-
                         }
 
                     } while (gotoFlag);
@@ -1903,40 +1943,33 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
 }
 
 /**
- * @brief zonedeal::pointIterator 根据入口点信息，获得某一地物的所有的点的坐标 已测试
+ * @brief NewZoneForm::pointIterator 根据入口点信息，获得某一地物的所有的点的坐标 （已经过初步测试）
  * @param imageArray
  * @param Samples
  * @param Lines
  * @param nodeinfo
  * @return
  */
-Area zonedeal::pointIterator(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo)
+Area NewZoneForm::pointIterator(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo)
 {
     //定义一个方向数组
-    int next[8][2] = { {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1} };
+    int next[8][2] = { {0,1},{1,0},{0,-1},{-1,0} };
     Area pointSet;
     pointSet.p = new point[Samples*Lines];//本区域点集合
-
-    //QVector<point> stake;
-    //QVector<unsigned short> footFlag;
-    //unsigned short temp=0;
-    //point p;
-    //p.x=0,p.y=0;
     point *stake = new point[Samples*Lines];//回溯栈
     unsigned short int *footFlag = new unsigned short int[Samples*Lines];
     for (int i = 0; i < Samples*Lines; i++)
     {
-        //stake.append(p);
-        //footFlag.append(temp);
         footFlag[i] = 0;
     }
 
-    int footPath = 8;//要遍历的点的数量
+    int footPath = 4;//要遍历的点的数量
     int currentNum = 0;//当前指针位置
     int pointCount = 0;
     int nx = nodeinfo.startX, ny = nodeinfo.startY;
     int x = 0, y = 0;
     bool gotoFlag = false;
+
     //将入口点入栈
     pointSet.p[pointCount].x = nx;
     pointSet.p[pointCount].y = ny;
@@ -1946,7 +1979,6 @@ Area zonedeal::pointIterator(ImageArray imageArray, int Samples, int Lines, Area
     //    qDebug()<<"\n\n";
     //    qDebug()<<QStringLiteral("当前入栈入口坐标是：")<<nx<<ny;
     pointCount++;
-    //currentNum++;
 
     do
     {
@@ -1971,11 +2003,10 @@ Area zonedeal::pointIterator(ImageArray imageArray, int Samples, int Lines, Area
                 currentNum++;
                 stake[currentNum].x = nx;
                 stake[currentNum].y = ny;
-                //                qDebug()<<QStringLiteral("当前入栈坐标是：")<<nx<<ny;
+                //qDebug()<<QStringLiteral("当前入栈坐标是：")<<nx<<ny;
                 footFlag[ny*Samples + nx] = 1;
                 //imageArray[ny*Samples+nx]=2;变色
                 pointCount++;
-                //currentNum++;
                 gotoFlag = true;
                 break;
             }
@@ -2004,15 +2035,23 @@ Area zonedeal::pointIterator(ImageArray imageArray, int Samples, int Lines, Area
     footFlag = NULL;
     delete[] stake;
     stake = NULL;
-    //stake.clear();
-    //footFlag.clear();
     return pointSet;//返回该区域点集
     //    delete[] pointSet;
     //    pointSet=NULL;
 }
-unsigned short *zonedeal::newChangeColor(ImageArray imageArray,
-                                         int Samples, int Lines, AreaNodeInfo nodeinfo
-                                         , int color, int numThreshold)
+/**
+ * @brief NewZoneForm::newChangeColor 改变区域的颜色将本区域的颜色变成指定颜色（经过初步测试）
+ * @param imageArray 图像数组
+ * @param Samples   图像宽度
+ * @param Lines 图像高度
+ * @param nodeinfo  图像的节点信息
+ * @param color 要更成的颜色
+ * @param numThreshold 地物数量阈值（小于本阈值的地物的颜色将被更改，否则不变）
+ * @return  返回更改后的图像数组
+ */
+unsigned short *NewZoneForm::newChangeColor(ImageArray imageArray,
+                                            int Samples, int Lines, AreaNodeInfo nodeinfo
+                                            , int color, int numThreshold)
 {
     //    qDebug()<<nodeinfo.startX<<nodeinfo.startY;
     //    qDebug()<<QStringLiteral("修改前的数量")<<area.number;
@@ -2047,91 +2086,7 @@ unsigned short *zonedeal::newChangeColor(ImageArray imageArray,
 }
 
 /**
- * @brief zonedeal::changeColor 改变颜色 已测试
- * @param imageArray
- * @param Samples
- * @param Lines
- * @param nodeinfo
- * @param color
- * @return
- */
-unsigned short int * zonedeal::changeColor(unsigned short int *imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color)
-{
-    //定义一个方向数组
-    int next[8][2] = { {0,1},{1,1},{1,0},{1,-1},{0,-1},{-1,-1},{-1,0},{-1,1} };
-    Area stake;
-    stake.p = new point[Samples*Lines];
-    unsigned short int *footFlag = new unsigned short int[Samples*Lines];
-    for (int i = 0; i < Samples*Lines; i++)
-    {
-        footFlag[i] = 0;
-    }
-    int footPath = 8;//要遍历的点的数量
-    int currentNum = 0;
-    int nx = nodeinfo.startX, ny = nodeinfo.startY;
-    int x = 0, y = 0;
-    bool gotoFlag = false;
-    //将入口点入栈
-    stake.p[currentNum].x = nx;
-    stake.p[currentNum].y = ny;
-    footFlag[ny*Samples + nx] = 1;
-    imageArray[ny*Samples + nx] = color;
-    //currentNum++;
-
-    do
-    {
-        x = nx; y = ny;
-        gotoFlag = false;
-        for (int i = 0; i < footPath; i++)
-        {
-            nx = x + next[i][0];
-            ny = y + next[i][1];
-            if (nx < 0 || nx >= Samples || ny < 0 || ny >= Lines)
-            {
-                continue;
-            }
-            //            qDebug()<<nx<<ny;
-            //满足条件跳往下一个移动点
-            if (imageArray[ny*Samples + nx] == nodeinfo.colorTh
-                    &&footFlag[ny*Samples + nx] == 0)
-            {
-                currentNum++;
-                stake.p[currentNum].x = nx;
-                stake.p[currentNum].y = ny;
-
-                footFlag[ny*Samples + nx] = 1;
-                imageArray[ny*Samples + nx] = color;
-                //qDebug()<<QStringLiteral("颜色发生变化");
-                //currentNum++;
-                gotoFlag = true;
-                break;
-            }
-        }
-        //7个点都不满足返回上一个点
-        if (gotoFlag == false)
-        {
-            //每返回一个点，都要把指针向下移动一格
-            currentNum--;
-            if (currentNum > -1)
-            {
-                //nx,ny坐标回到上一步坐标
-                nx = stake.p[currentNum].x;
-                ny = stake.p[currentNum].y;
-                //允许循环，可以回到上一步
-                gotoFlag = true;
-            }
-        }
-
-    } while (gotoFlag);
-
-    delete[] footFlag;
-    footFlag = NULL;
-    delete[] stake.p;
-    stake.p = NULL;
-    return imageArray;
-}
-/**
- * @brief zonedeal::calAreaCycle 计算一个区域的周长   已经过测试
+ * @brief NewZoneForm::calAreaCycle 计算一个区域的周长   已经过测试
  * @param imageArray 图像数组
  * @param Samples 图像width
  * @param Lines 图像height
@@ -2139,7 +2094,7 @@ unsigned short int * zonedeal::changeColor(unsigned short int *imageArray, int S
  * @param nodeinfo 区域信息
  * @return
  */
-int zonedeal::calAreaCycle(unsigned short int *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo)
+int NewZoneForm::calAreaCycle(unsigned short int *imageArray, int Samples, int Lines, Area stake, AreaNodeInfo nodeinfo)
 {
     //计算当前区域的周长
     int cycle = 0;
@@ -2202,165 +2157,9 @@ int zonedeal::calAreaCycle(unsigned short int *imageArray, int Samples, int Line
     //    qDebug()<<QStringLiteral("周长计算完成")<<cycle;
     return cycle;
 }
-bool zonedeal::getRALLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo)
-{
-    Area stake = pointIterator(imageArray, Samples, Lines, nodeinfo);
-    qDebug() << QStringLiteral("开始进入计算  该区域共有点：") << stake.number;
-    int cycle = calAreaCycle(imageArray.colorTh, Samples, Lines, stake, nodeinfo);
-
-    int dLinkDistance = 30;//下邻接距离阈值
-    int rLinkDistance = 30;//右邻接距离阈值
-    int dLinkNumber = 0;//满足阈值的下邻接数量
-    int rLinkNumber = 0;//满足阈值的右邻接数量
-    point d;
-    point r;
-    //ToDo:这里有点问题没解决，不能实现功能
-    for (int i = 0; i < stake.number; i++)
-    {
-        //点的坐标是stake.p[i].x   stake.p[i].y
-
-        //下邻接
-        if (stake.p[i].y + 1 < Lines)
-            if (imageArray.colorTh[((stake.p[i].y + 1)*Samples + stake.p[i].x)] != nodeinfo.colorTh)//下边界
-            {
-                if (stake.p[i].y + dLinkDistance < Lines)//不越界
-                    if (imageArray.colorTh[((stake.p[i].y + dLinkDistance)*Samples + stake.p[i].x)] == nodeinfo.colorTh)
-                    {
-                        d.x = stake.p[i].x;
-                        d.y = stake.p[i].y + dLinkDistance;
-                        dLinkNumber++;
-                    }
-            }
-        //右邻接
-        if (stake.p[i].x + 1 < Samples)//保证数组不越界
-            if (imageArray.colorTh[(stake.p[i].y*Samples + stake.p[i].x + 1)] != nodeinfo.colorTh)
-            {
-                //若下邻接不是相同地物，则计算在一定阈值范围内35m(35个像素)若下邻居的邻居是colorTh地物
-                //则认为它和此地地物是在一排上的，将其放入数组
-                if (stake.p[i].x + rLinkDistance < Samples)
-                    if (imageArray.colorTh[(stake.p[i].y*Samples + stake.p[i].x + rLinkDistance)] == nodeinfo.colorTh)
-                    {
-                        r.x = stake.p[i].x + rLinkDistance;
-                        r.y = stake.p[i].y;
-                        rLinkNumber++;
-                    }
-            }
-
-    }
-    qDebug() << "dLinkNumber" << dLinkNumber;
-    qDebug() << "rLinkNumber" << rLinkNumber;
-    bool flag = false;
-    double rate = 0;
-    //下邻接存在
-    Area dStake;
-    if (dLinkNumber > 0 && cycle > 0)
-    {
-        rate = dLinkNumber*1.0 / cycle;
-        qDebug() << "rate" << rate;
-        AreaNodeInfo n;
-        n.startX = d.x;
-        n.startY = d.y;
-        n.colorTh = nodeinfo.colorTh;
-        qDebug() << QStringLiteral("入口点坐标") << n.startX << "\t" << n.startY;
-        dStake = pointIterator(imageArray, Samples, Lines, n);
-        qDebug() << QStringLiteral("数量是：") << dStake.number;
-        int dCycle = calAreaCycle(imageArray.colorTh, Samples, Lines, stake, n);
-
-        int uLinkNumber = 0;
-        for (int i = 0; i < dStake.number; i++)
-        {
-            //上邻接
-            if (dStake.p[i].y - 1 > 0)
-                if (imageArray.colorTh[((dStake.p[i].y - 1)*Samples + dStake.p[i].x)] != nodeinfo.colorTh)
-                {
-                    if (dStake.p[i].y - dLinkDistance > 0)
-                        if (imageArray.colorTh[((dStake.p[i].y - dLinkDistance)*Samples + dStake.p[i].x)] == nodeinfo.colorTh)
-                        {
-                            uLinkNumber++;
-                        }
-                }
-        }
-        double uRate = 0;
-        if (uLinkNumber > 0 && dCycle > 0)
-        {
-            uRate = uLinkNumber*1.0 / dCycle;
-            qDebug() << "uRate" << rate;
-        }
-        //得出rate和uRate如果两个值都很小，则不认为在一排
-        if (rate > 0.1&&uRate > 0.1)
-        {
-            qDebug() << QStringLiteral("两个地物块在上下一排");
-            flag = true;
-        }
-        else
-        {
-            qDebug() << QStringLiteral("两个地物不在上下一排");
-        }
-
-        delete[] dStake.p;
-        dStake.p = NULL;
-    }
-
-    //右邻接存在
-    Area rStake;
-    if (rLinkNumber > 0)
-    {
-        rate = dLinkNumber*1.0 / cycle;
-        qDebug() << "rate" << rate;
-        AreaNodeInfo n;
-        n.startX = r.x;
-        n.startY = r.y;
-        n.colorTh = nodeinfo.colorTh;
-        qDebug() << QStringLiteral("入口点坐标") << n.startX << "\t" << n.startY;
-        rStake = pointIterator(imageArray, Samples, Lines, n);
-        qDebug() << QStringLiteral("数量是：") << dStake.number;
-        int rCycle = calAreaCycle(imageArray.colorTh, Samples, Lines, stake, n);
-
-        int lLinkNumber = 0;
-        for (int i = 0; i < rStake.number; i++)
-        {
-            //左邻接
-            if (stake.p[i].y - 1 > 0)
-                if (imageArray.colorTh[(rStake.p[i].y*Samples + rStake.p[i].x - 1)] != nodeinfo.colorTh)
-                {
-                    if (rStake.p[i].x - rLinkDistance > 0)
-                        if (imageArray.colorTh[(rStake.p[i].y*Samples + rStake.p[i].x - rLinkDistance)] == nodeinfo.colorTh)
-                        {
-                            lLinkNumber++;
-                        }
-                }
-        }
-        double lRate = 0;
-        if (lLinkNumber > 0 && rCycle > 0)
-        {
-            lRate = lLinkNumber*1.0 / rCycle;
-            qDebug() << "lRate" << lRate;
-        }
-        //得出rate和uRate如果两个值都很小，则不认为在一排
-        if (rate > 0.1&&lRate > 0.1)
-        {
-            qDebug() << QStringLiteral("两个地物块在左右一排");
-            flag = true;
-        }
-        else
-        {
-            qDebug() << QStringLiteral("两个地物不在左右一排");
-        }
-
-        delete[] rStake.p;
-        rStake.p = NULL;
-    }
-    if (!flag)
-    {
-        qDebug() << QStringLiteral("此处应该将该地物变色");
-    }
-    delete[] stake.p;
-    stake.p = NULL;
-    return flag;
-}
 
 /**
- * @brief zonedeal::rightOrDownLink 已经经过测试
+ * @brief NewZoneForm::rightOrDownLink 已经经过测试
  * @param imageArray
  * @param Samples
  * @param Lines
@@ -2369,8 +2168,8 @@ bool zonedeal::getRALLink(ImageArray imageArray, int Samples, int Lines, AreaNod
  * @param area 当前区域是第current个区域
  * @return
  */
-AreaNodeInfo zonedeal::rightOrDownLink(ImageArray imageArray, int Samples, int Lines,
-                                       AreaNodeInfo areaInfo, Area area)
+AreaNodeInfo NewZoneForm::rightOrDownLink(ImageArray imageArray, int Samples, int Lines,
+                                          AreaNodeInfo areaInfo, Area area)
 {
     //右邻接地物是
     areaInfo.rightColorTh = new unsigned short[areaInfo.rLinkNum];
@@ -2463,100 +2262,6 @@ AreaNodeInfo zonedeal::rightOrDownLink(ImageArray imageArray, int Samples, int L
     //    qDebug()<<QStringLiteral("下邻接区域的数量")<<areaInfo.dLinkNum;
     return areaInfo;
 }
-void zonedeal::linjie(unsigned short int *imageArray, int Samples, int Lines)
-{
-    //统计四种地物（0 1）（0 2）（0 3）（1 2）（1 3）（2 3）邻接关系（右邻接和下邻接）
-    unsigned short int path[15][2] = { {0,1},{0,2},{1,2},{0,3},{1,3},{2,3} };
-    int right[15][3];
-    int down[15][3];
-    int rightRevers[15][3];
-    int downRevers[15][3];
-    for (int i = 0; i < 15; i++)
-    {
-        for (int j = 0; j < 3; j++)
-        {
-            right[i][j] = 0;
-            down[i][j] = 0;
-            rightRevers[i][j] = 0;
-            downRevers[i][j] = 0;
-        }
-    }
-    int rightCount = 0, downCount = 0, rightReversCount = 0, downReversCount = 0;
-    for (int i = 0; i < 6; i++)
-    {
-        //清空上一轮计数
-        rightCount = 0;
-        downCount = 0;
-        rightReversCount = 0;
-        downReversCount = 0;
-
-        for (int h = 0; h < Lines - 1; h++)
-        {
-            for (int w = 0; w < Samples - 1; w++)
-            {
-                //对于第path[i][0]种地物，若他的右边的地物是path[i][1]地物则记录下第i种地物的右邻接地物，并记录右邻接地物的数量
-                //声明right[15][3]={{path[i][0],path[i][1],number},.....}
-                //声明down[15][3]={{path[i][0],path[i][1],number},......}
-
-                //右邻接path[i][0]到path[i][1]
-                if (imageArray[h*Samples + w] == path[i][0] && imageArray[(h*Samples + w + 1)] == path[i][1])
-                {
-                    right[i][0] = path[i][0];
-                    right[i][1] = path[i][1];
-                    right[i][2] = rightCount;
-                    rightCount++;
-                }
-                //右邻接path[i][1]到path[i][0]
-                if (imageArray[h*Samples + w] == path[i][1] && imageArray[(h*Samples + w + 1)] == path[i][0])
-                {
-                    rightRevers[i][0] = path[i][1];
-                    rightRevers[i][1] = path[i][0];
-                    rightRevers[i][2] = rightReversCount;
-                    rightReversCount++;
-                }
-                //下邻接path[i][0]到path[i][1]
-                if (imageArray[h*Samples + w] == path[i][0] && imageArray[(h + 1)*Samples + w] == path[i][1])
-                {
-                    down[i][0] = path[i][0];
-                    down[i][1] = path[i][1];
-                    down[i][2] = downCount;
-                    downCount++;
-                }
-                //下邻接path[i][1]到path[i][0]
-                if (imageArray[h*Samples + w] == path[i][1] && imageArray[(h + 1)*Samples + w] == path[i][0])
-                {
-                    downRevers[i][0] = path[i][1];
-                    downRevers[i][1] = path[i][0];
-                    downRevers[i][2] = downReversCount;
-                    downReversCount++;
-                }
-            }
-        }
-    }
-
-    //返回右邻接和下邻接表
-    for (int i = 0; i < 6; i++)
-    {
-        qDebug() << QStringLiteral("地物") << right[i][0] << QStringLiteral("地物") << right[i][1] << QStringLiteral("右邻接，邻接数量") << right[i][2];
-    }
-    qDebug() << "\n";
-    for (int i = 0; i < 6; i++)
-    {
-        qDebug() << QStringLiteral("地物") << down[i][0] << QStringLiteral("地物") << down[i][1] << QStringLiteral("下邻接，邻接数量") << down[i][2];
-    }
-    qDebug() << "\n";
-    for (int i = 0; i < 6; i++)
-    {
-        qDebug() << QStringLiteral("地物") << rightRevers[i][0] << QStringLiteral("地物") << rightRevers[i][1] << QStringLiteral("右邻接，邻接数量") << rightRevers[i][2];
-    }
-    qDebug() << "\n";
-    for (int i = 0; i < 6; i++)
-    {
-        qDebug() << QStringLiteral("地物") << downRevers[i][0] << QStringLiteral("地物") << downRevers[i][1] << QStringLiteral("下邻接，邻接数量") << downRevers[i][2];
-    }
-}
-
-
 
 //深度优先遍历表
 //    AdjancentNode *temp=&relation[0];

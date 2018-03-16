@@ -41,7 +41,9 @@ SOURCES += main.cpp\
     zonedeal.cpp \
     svm.cpp \
     svmclassify.cpp \
-    LogBrowser.cpp
+    loginfo.cpp \
+    zoneform.cpp \
+    newzoneform.cpp
 
 
 HEADERS  += newproject.h \
@@ -61,7 +63,9 @@ HEADERS  += newproject.h \
     zonedeal.h \
     svm.h \
     svmclassify.h \
-    LogBrowser.h
+    loginfo.h \
+    zoneform.h \
+    newzoneform.h
 
 
 FORMS    += newproject.ui \
@@ -72,7 +76,9 @@ FORMS    += newproject.ui \
     MyLabel.ui \
     dbsetting.ui \
     showinfo.ui \
-    progressbar.ui
+    progressbar.ui \
+    loginfo.ui \
+    zoneform.ui
 
 unix|win32: LIBS += -L$$PWD/../../../../../warmerda/bld/lib/ -lgdal_i
 

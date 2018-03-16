@@ -62,13 +62,6 @@ operate::operate(QWidget *parent) :
     ////////////////////////////////////////////
 
 
-
-
-
-
-
-
-
     qRegisterMetaType<Points>("Points");//注册自定义类型的槽信号
     qRegisterMetaType<SamplesDetails>("SamplesDetails");//注册自定义类型的槽信号
     qRegisterMetaType<simples>("simples");//注册自定义类型的槽信号
@@ -220,7 +213,7 @@ void operate::on_showRule_clicked()
  */
 void operate::on_ruleOpenBtn_clicked()
 {
-//    emit click();
+    //    emit click();
 
 
 }
@@ -396,12 +389,12 @@ void operate::getImage(QImage image, int status)
         {
             label=new MyLabel;
             labelList.append(label);
-            //            qDebug()<<"labelIndex"<<labelIndex;
+            //qDebug()<<"labelIndex"<<labelIndex;
             //BUG:labelIndex+1不知道为什么，并且引起了bug
             labelList.at(labelIndex+1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
             labelList.at(labelIndex+1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
-            //            labelList.at(labelList.size()-1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
-            //            labelList.at(labelList.size()-1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
+            //labelList.at(labelList.size()-1)->connect(label,SIGNAL(sendlocation(int,int)),fileDeal,SLOT(getMouse(int,int)));
+            //labelList.at(labelList.size()-1)->move(2,QApplication::desktop()->height()-scaleHeight-100);
             create_label=true;
         }
         //显示略缩图

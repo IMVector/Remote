@@ -13,6 +13,9 @@
 #include <database.h>
 #include <QCloseEvent>
 #include <zonedeal.h>
+#include <zoneform.h>
+#include <newzoneform.h>
+
 namespace Ui {
 class newProject;
 }
@@ -39,25 +42,19 @@ private:
     database * Sqlsever;
     zonedeal *zone;
     QThread *empty_thread;
+    Zoneform *zoneform;
+    NewZoneForm *newZoneform;
     void closeEvent(QCloseEvent *event);
 private slots:
 
     void on_openFileImage_triggered();
     void on_openDatabaseImage_triggered();
-
     void on_findSeaLine_triggered();
-
     void on_firstLine_triggered();
-
     void on_secondLine_triggered();
-
     void on_combine_triggered();
-
     void on_action_triggered();
-
     void on_actiontest_triggered();
-
-
 
 signals:
 

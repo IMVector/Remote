@@ -1846,6 +1846,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     }
     //所有界限找出
     //进行降噪
+    qDebug()<<QStringLiteral("海岸线提取开始.........");
     int flag=42;
     for(int time=0;time<=10;time++)
     {
@@ -1911,7 +1912,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     int nx=0,ny=0;//移动点
     int x=0,y=0;//基点
     try{
-        int mod=Samples*Lines/100;
+        int mod=Samples*Lines/50;
         int sum=Samples*Lines*2;
         for(int h=0;h<Lines;h++)
         {
@@ -1919,7 +1920,8 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
             {
                 if((h*Samples+w)%mod==0)
                 {
-                    emit setProgressValue((h*Samples+w)/sum*100);
+                    //emit setProgressValue((h*Samples+w)/sum*100);
+                    qDebug()<<(double)(h*Samples+w)/sum*100<<"%";
                 }
 
                 pointCount=0;
@@ -1932,7 +1934,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                     line[currentMaxNum].y=h;
                     footFlag[h*Samples+w]=1;
                     currentMaxNum++;
-                    pointCount++;
+                    //pointCount++;
                     nx=w;ny=h;
                     do
                     {
@@ -1950,10 +1952,11 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                             if(orignImage[ny*Samples+nx]==1
                                     &&footFlag[ny*Samples+nx]==0)
                             {
+                                pointCount++;
                                 line[currentMaxNum].x=nx;
                                 line[currentMaxNum].y=ny;
                                 footFlag[ny*Samples+nx]=1;
-                                pointCount++;
+                                //pointCount++;
                                 currentMaxNum++;
                                 gotoFlag=true;
                                 break;
@@ -2010,7 +2013,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
     }
     //线计数置空
     lineCount=0;
-    int mod=Samples*Lines;
+    int mod=Samples*Lines/50;
     int sum=Samples*Lines*2;
     for(int h=0;h<Lines;h++)
     {
@@ -2018,8 +2021,8 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
         {
             if((h*Samples+w)%mod==0)
             {
-                emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100);
-                qDebug()<<((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100;
+                //emit setProgressValue(((h*Samples+w)+Samples*Lines)/(Samples*Lines*2)*100);
+                qDebug()<<(double)(h*Samples+w)/sum*100<<"%";
             }
             nx=w;ny=h;
             pointCount=0;
@@ -2031,7 +2034,7 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                 line[currentMaxNum].y=h;
                 footFlag[h*Samples+w]=1;
                 currentMaxNum++;
-                pointCount++;
+                //pointCount++;
 
                 do
                 {
@@ -2049,10 +2052,11 @@ void filedeal::seaLineGet(QImage tempImage,int *seaColor,int *landColor)
                         if(orignImage[ny*Samples+nx]==1
                                 &&footFlag[ny*Samples+nx]==0)
                         {
+                            pointCount++;
                             line[currentMaxNum].x=nx;
                             line[currentMaxNum].y=ny;
                             footFlag[ny*Samples+nx]=1;
-                            pointCount++;
+                            //pointCount++;
                             currentMaxNum++;
                             gotoFlag=true;
                             break;

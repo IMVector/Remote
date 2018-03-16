@@ -1,4 +1,4 @@
-﻿#include "newproject.h"
+﻿ #include "newproject.h"
 #include "ui_newproject.h"
 QString file;
 newProject::newProject(QWidget *parent) :
@@ -13,8 +13,31 @@ newProject::newProject(QWidget *parent) :
 
     this->setWindowTitle(QStringLiteral("遥感系统"));
     this->setWindowIcon(QIcon(":/Remote/img/main.png"));
-    operateUI=new operate;
 
+
+    operateUI=new operate();
+    zoneform=new Zoneform();
+//    zoneform->show();
+
+//    empty_thread = new emptychild();//空线程
+//    zone = new zonedeal();//类
+//    zone->moveToThread(empty_thread);//处理数据线程移入空线程
+//    empty_thread->start();//线程启动
+
+//    connect(zoneform,SIGNAL(fileSender(QString)),zone,SLOT(loadImage_slot(QString)));
+//    qRegisterMetaType<loadInfo>("loadInfo");//注册自定义类型的槽信号
+//    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),zone,SLOT(loadInfo_slot(loadInfo)));
+
+
+    empty_thread = new emptychild();//空线程
+    newZoneform = new NewZoneForm();//类
+    newZoneform->moveToThread(empty_thread);//处理数据线程移入空线程
+    empty_thread->start();//线程启动
+
+    connect(zoneform,SIGNAL(fileSender(QString)),newZoneform,SLOT(loadImage_slot(QString)));
+    qRegisterMetaType<loadInfo>("loadInfo");//注册自定义类型的槽信号
+    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),newZoneform,SLOT(loadInfo_slot(loadInfo)));
+//    connect(newZoneform,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
 }
 
 newProject::~newProject()
@@ -121,12 +144,13 @@ void newProject::closeEvent(QCloseEvent *event)
  */
 void newProject::on_actiontest_triggered()
 {
-	empty_thread = new emptychild;//空线程
-	zone = new zonedeal;//类
-	zone->moveToThread(empty_thread);//处理数据线程移入空线程
-	empty_thread->start();//线程启动
-    connect(zone,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
-	QTimer::singleShot(0, zone, SLOT(startZone()));
+    zoneform->show();
+//    empty_thread = new emptychild();//空线程
+//    zone = new zonedeal();//类
+//	zone->moveToThread(empty_thread);//处理数据线程移入空线程
+//	empty_thread->start();//线程启动
+//    connect(zone,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
+//	QTimer::singleShot(0, zone, SLOT(startZone()));
 //    empty_thread=new emptychild;//空线程
 //    zone=new zonedeal;//类
 //    zone->moveToThread(empty_thread);//处理数据线程移入空线程
