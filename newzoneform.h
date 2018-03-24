@@ -7,7 +7,7 @@
 #include <QStack>
 #include <QString>
 #include <zonedeal.h>
-#include <zonenoisereduction.h>
+
 
 class NewZoneForm : public QObject
 {

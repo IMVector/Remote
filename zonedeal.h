@@ -162,6 +162,8 @@ private:
 	AdjancentChanin sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh, AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity);
     unsigned short *newChangeColor(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color, int numThreshold);
     void test(ImageArray testImage, int Samples, int Lines, int deleteThresould, int distanceThresould, float adjIntensity, int geoTh, int changedColorTh);
+    QImage midPointLink(QImage image, point p1, point p2, QRgb changeColor, QRgb changedColor);
+    QImage anyLine(QImage image, ImageArray testImage, AreaNodeInfo *areaInfo, int changeColorTh, int changedColorTh, int id1, int id2);
 private slots:
 	void startZone();
     void loadImage_slot(QString name);

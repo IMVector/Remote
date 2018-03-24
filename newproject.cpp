@@ -19,25 +19,28 @@ newProject::newProject(QWidget *parent) :
     zoneform=new Zoneform();
 //    zoneform->show();
 
-//    empty_thread = new emptychild();//空线程
-//    zone = new zonedeal();//类
-//    zone->moveToThread(empty_thread);//处理数据线程移入空线程
-//    empty_thread->start();//线程启动
-
-//    connect(zoneform,SIGNAL(fileSender(QString)),zone,SLOT(loadImage_slot(QString)));
-//    qRegisterMetaType<loadInfo>("loadInfo");//注册自定义类型的槽信号
-//    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),zone,SLOT(loadInfo_slot(loadInfo)));
-
-
     empty_thread = new emptychild();//空线程
-    newZoneform = new NewZoneForm();//类
-    newZoneform->moveToThread(empty_thread);//处理数据线程移入空线程
+    zone = new zonedeal();//类
+    zone->moveToThread(empty_thread);//处理数据线程移入空线程
     empty_thread->start();//线程启动
 
-    connect(zoneform,SIGNAL(fileSender(QString)),newZoneform,SLOT(loadImage_slot(QString)));
+    connect(zoneform,SIGNAL(fileSender(QString)),zone,SLOT(loadImage_slot(QString)));
     qRegisterMetaType<loadInfo>("loadInfo");//注册自定义类型的槽信号
-    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),newZoneform,SLOT(loadInfo_slot(loadInfo)));
-//    connect(newZoneform,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
+    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),zone,SLOT(loadInfo_slot(loadInfo)));
+
+
+//    empty_thread = new emptychild();//空线程
+//    newZoneform = new NewZoneForm();//类
+//    newZoneform->moveToThread(empty_thread);//处理数据线程移入空线程
+//    empty_thread->start();//线程启动
+
+//    connect(zoneform,SIGNAL(fileSender(QString)),newZoneform,SLOT(loadImage_slot(QString)));
+//    qRegisterMetaType<loadInfo>("loadInfo");//注册自定义类型的槽信号
+//    connect(zoneform,SIGNAL(zoneInfoSender(loadInfo)),newZoneform,SLOT(loadInfo_slot(loadInfo)));
+////    connect(newZoneform,SIGNAL(sendImageToUi(QImage,int)),operateUI,SLOT(getImage(QImage,int)));//子线程与UI线程通信
+
+
+
 }
 
 newProject::~newProject()
@@ -158,3 +161,16 @@ void newProject::on_actiontest_triggered()
 
 }
 
+
+void newProject::on_action_2_triggered()
+{
+    QImage image;
+    image.load("D://resources.tif");
+    cutarea=new CutArea;
+    empty_thread = new emptychild();//空线程
+    cutarea->moveToThread(empty_thread);
+    //first是要保留的颜色
+    //second是结合的颜色，保留区域中间的
+    cutarea->mCutArea(image,300,3,2);
+
+}

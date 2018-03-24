@@ -15,6 +15,7 @@
 #include <zonedeal.h>
 #include <zoneform.h>
 #include <newzoneform.h>
+#include <cutarea.h>
 
 namespace Ui {
 class newProject;
@@ -44,6 +45,7 @@ private:
     QThread *empty_thread;
     Zoneform *zoneform;
     NewZoneForm *newZoneform;
+    CutArea *cutarea;
     void closeEvent(QCloseEvent *event);
 private slots:
 
@@ -55,6 +57,7 @@ private slots:
     void on_combine_triggered();
     void on_action_triggered();
     void on_actiontest_triggered();
+    void on_action_2_triggered();
 
 signals:
 

@@ -398,13 +398,21 @@ void operate::getImage(QImage image, int status)
             create_label=true;
         }
         //显示略缩图
-        //        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
+        QImage smallimage = image.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
+
         QPixmap mp;
-        mp=mp.fromImage(image);
+        mp=mp.fromImage(smallimage);
         labelList.at(labelIndex+1)->setPixmap(mp);
-        labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
+        labelList.at(labelIndex+1)->resize(QSize(smallimage.width(),smallimage.height()));
         labelList.at(labelIndex+1)->setScaledContents(true);
         labelList.at(labelIndex+1)->show();
+//        QPixmap mp;
+//        mp=mp.fromImage(image);
+//        labelList.at(labelIndex+1)->setPixmap(mp);
+//        labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
+//        labelList.at(labelIndex+1)->setScaledContents(true);
+//        labelList.at(labelIndex+1)->show();
+
         //labelList.at(labelList.size()-1)->setPixmap(mp);
         //labelList.at(labelList.size()-1)->resize(QSize(image.width(),image.height()));
         //labelList.at(labelList.size()-1)->setScaledContents(true);

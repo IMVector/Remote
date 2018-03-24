@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>39</height>
+    <height>42</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -29,7 +29,7 @@
      <x>0</x>
      <y>0</y>
      <width>1000</width>
-     <height>23</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
@@ -68,11 +68,18 @@
     </property>
     <addaction name="actiontest"/>
    </widget>
+   <widget class="QMenu" name="menu_6">
+    <property name="title">
+     <string>区域提取</string>
+    </property>
+    <addaction name="action_2"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
    <addaction name="menu_5"/>
+   <addaction name="menu_6"/>
   </widget>
   <action name="openFileImage">
    <property name="text">
@@ -123,6 +130,11 @@
   <action name="actionload">
    <property name="text">
     <string>load</string>
+   </property>
+  </action>
+  <action name="action_2">
+   <property name="text">
+    <string>区域提取</string>
    </property>
   </action>
  </widget>

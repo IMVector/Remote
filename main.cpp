@@ -84,9 +84,9 @@ int main(int argc, char *argv[])
 #ifdef QT_NO_DEBUG
     //注册MessageHandler
     qDebug() << "release mode";
-    mylog=new Loginfo();
-    mylog->show();
-    qInstallMessageHandler(outputMessage);
+//    mylog=new Loginfo();
+//    mylog->show();
+//    qInstallMessageHandler(outputMessage);
 
 
 #else
@@ -94,9 +94,9 @@ int main(int argc, char *argv[])
 //    log_broswer = new LogBrowser();
 //    log_broswer->show();
 
-    mylog=new Loginfo();
-    mylog->show();
-    qInstallMessageHandler(outputMessage);
+//    mylog=new Loginfo();
+//    mylog->show();
+//    qInstallMessageHandler(outputMessage);
 #endif
     //打印日志到文件中
     //    qDebug("This is a debug message");

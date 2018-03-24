@@ -43,7 +43,8 @@ SOURCES += main.cpp\
     svmclassify.cpp \
     loginfo.cpp \
     zoneform.cpp \
-    newzoneform.cpp
+    newzoneform.cpp \
+    cutarea.cpp
 
 
 HEADERS  += newproject.h \
@@ -65,7 +66,8 @@ HEADERS  += newproject.h \
     svmclassify.h \
     loginfo.h \
     zoneform.h \
-    newzoneform.h
+    newzoneform.h \
+    cutarea.h
 
 
 FORMS    += newproject.ui \

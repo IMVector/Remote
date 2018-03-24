@@ -11,6 +11,7 @@ progressBar::progressBar(QWidget *parent) :
     this->setWindowTitle(QStringLiteral("任务进行中"));
     this->setWindowFlags(Qt::WindowStaysOnTopHint);//保持窗口最前
     this->setAttribute(Qt::WA_DeleteOnClose, true);
+    //区域提取
 }
 
 progressBar::~progressBar()

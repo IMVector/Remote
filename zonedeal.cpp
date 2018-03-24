@@ -557,10 +557,15 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             if (result1.data[i].ID == result2.data[j].ID&&
                     result1.data[i].linkID == result2.data[j].linkID)
             {
-                //qDebug() << QStringLiteral("成排区域") << result1.data[i].ID << result1.data[i].linkID;
-                qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
-                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
-                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
+//                //qDebug() << QStringLiteral("成排区域") << result1.data[i].ID << result1.data[i].linkID;
+//                qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
+//                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
+//                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
+
+
+                qDebug() << result1.data[i].ID <<"\t"<<result1.data[i].linkID
+                         <<"\t\t"<<result1.data[i].ID <<"\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].adjIntensity_a_b
+                        <<"\t\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].ID<<"\t"<<result1.data[i].adjIntensity_b_a;
 
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].ID], changedColorTh, 10000000);
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].linkID], changedColorTh, 10000000);
@@ -572,6 +577,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
                         image.setPixel(w, h, value);
                     }
                 }
+                //anyLine(image,testImage,everyNum,0,changedColorTh+1,result1.data[i].ID,result1.data[i].linkID);
                 //QImage myImage;
                 //myImage=image.scaled(image.width()/10,image.width()/10, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
                 //sendImageToUi(image, 2);
@@ -647,6 +653,87 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
     qDebug() << "5complete";
 }
 
+QImage zonedeal::midPointLink(QImage image,point p1,point p2,QRgb changeColor,QRgb changedColor )
+{
+    int x = p1.x, y = p1.y;
+    int a = p1.y - p2.y, b = p2.x - p1.x;
+    int cx = (b >= 0 ? 1 : (b = -b, -1));
+    int cy = (a <= 0 ? 1 : (a = -a, -1));
+    if(QColor(image.pixel(x,y)).rgba()==changeColor)
+        image.setPixel(x, y, changedColor);
+        qDebug()<<x<<y;
+
+    int d, d1, d2;
+    if (-a <= b)     // 斜率绝对值 <= 1
+    {
+        d = 2 * a + b;
+        d1 = 2 * a;
+        d2 = 2 * (a + b);
+        while(x != p2.x)
+        {
+            if (d < 0)
+            {
+                y += cy, d += d2;
+            }
+            else
+            {
+                d += d1;
+            }
+            x += cx;
+            //x,y在此处获取
+            if(QColor(image.pixel(x,y)).rgba()==changeColor)
+                image.setPixel(x, y, changedColor);
+        }
+    }
+    else                // 斜率绝对值 > 1
+    {
+        d = 2 * b + a;
+        d1 = 2 * b;
+        d2 = 2 * (a + b);
+        while(y != p2.y)
+        {
+            if(d < 0)
+            {
+                d += d1;
+            }
+            else
+            {
+                x += cx, d += d2;
+            }
+            y += cy;
+            //x,y在此处获取
+            if(QColor(image.pixel(x,y)).rgba()==changeColor)
+                image.setPixel(x, y, changedColor);
+        }
+    }
+    return image;
+}
+
+QImage zonedeal::anyLine(QImage image,ImageArray testImage,AreaNodeInfo *areaInfo,int changeColorTh,int changedColorTh,int id1,int id2)
+{
+    int R[7] = { 255,  255,    0,   0,   139,0 };
+    int G[7] = { 0,  255,    0,   255, 0 ,0 };
+    int B[7] = { 0  ,  0,  255,   0,   139   ,0 };
+
+    int Samples=testImage.Samples;
+    int Lines=testImage.Lines;
+
+    QRgb changeColor=qRgb(255,0,0);
+    QRgb changedColor= qRgb(R[changedColorTh],G[changedColorTh],B[changedColorTh]);
+
+    Area a = pointIterator(testImage, Samples, Lines, areaInfo[id1]);
+    Area b= pointIterator(testImage, Samples, Lines, areaInfo[id2]);
+
+    for(int i=0;i<a.number;i++)
+    {
+        for(int j=0;j<b.number;j++)
+        {
+            //邻接的两区域任意两点之间的连线理论上能够覆盖两区域之间的地物
+            image=midPointLink(image,a.p[i], b.p[j],changeColor,changedColor);
+        }
+    }
+    return image;
+}
 /**
  * @brief zonedeal::processResult 处理地物信息结果,以数组方式存储，生成关系的二阶复合
  * @param areaInfo
@@ -713,6 +800,12 @@ AdjancentChanin zonedeal::processResult(AreaNodeInfo *areaInfo, int nodeNum, uns
             //如果关系复合出现相同的结果，将相同的结果置为无效目的是减小时间复杂度
             if (i != j&&relation2.data[i].ID == relation2.data[j].ID&&
                     relation2.data[i].linkID == relation2.data[j].linkID)
+            {
+                relation2.data[j].ID = nodeNum + 6;//置为无效的id
+            }
+            //TODO:新加的代码为了去除重复的
+            if(i!=j&&relation2.data[i].ID==relation2.data[j].linkID&&
+                    relation2.data[i].linkID==relation2.data[j].ID)
             {
                 relation2.data[j].ID = nodeNum + 6;//置为无效的id
             }
@@ -833,7 +926,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     image.Samples = Samples;
     image.Lines = Lines;
     //WARNING:换不同地区时修改最大阈值
-    int maxThreshold = 3000;//在图中求邻接强度的两个区域的起始点之间的距离阈值（为了降低程序的时间复杂度）
+    int maxThreshold = 500;//在图中求邻接强度的两个区域的起始点之间的距离阈值（为了降低程序的时间复杂度）
     //定义矩阵，保存每个区域的边界的点到其他区域边界的点的距离小于距离阈值的数量与该区域边界周长的比值
     float ** distanceGraph = NULL;
     distanceGraph = new float*[graph->vexNum];
@@ -903,8 +996,17 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     DLinkNode *node, *tail = NULL;
     //输出所有满足距离关系的相同颜色区域的距离邻接关系
     AdjancentChanin result;
-    result.data = new AdjancentNode[graph->vexNum*graph->vexNum];
     int count1 = 0;
+    bool * flag=new bool[graph->vexNum*graph->vexNum];
+    for (int i = 0; i < graph->vexNum; i++)
+    {
+        for (int j = 0; j < graph->vexNum; j++)
+        {
+            flag[i*j]=false;
+        }
+    }
+
+    result.data = new AdjancentNode[graph->vexNum*graph->vexNum];
     for (int i = 0; i < graph->vexNum; i++)
     {
         for (int j = 0; j < graph->vexNum; j++)
@@ -944,16 +1046,22 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
                     result.data[count1].adjIntensity_b_a=distanceGraph[j][i];
                     count1++;
                 }
-                if(i!=j)
+//                if(i!=j)
+//                {
+//                    qDebug()<<i <<QStringLiteral("与")<<j<<QStringLiteral("邻接强度是")<<distanceGraph[i][j]
+//                              <<"\t\t"<<j<<QStringLiteral("与")<<i<<QStringLiteral("邻接强度是")<<distanceGraph[j][i];
+//                }
+                if(i!=j&&distanceGraph[i][j]>0&&!flag[i*j])
                 {
-                    qDebug()<<i <<QStringLiteral("与")<<j<<QStringLiteral("邻接强度是")<<distanceGraph[i][j]
-                              <<"\t\t"<<j<<QStringLiteral("与")<<i<<QStringLiteral("邻接强度是")<<distanceGraph[j][i];
+                    qDebug()<<i <<"\t"<<j<<"\t"<<distanceGraph[i][j]
+                              <<"\t\t"<<j<<"\t"<<i<<"\t"<<distanceGraph[j][i];
                 }
                 ////////////////////////////此函数从此往上测试正常//////////////////////////////////////////
                 //求出i区域与j区域的可达路径，找出其几步可达
-
             }
+            flag[i*j]=true;
         }
+
     }
 
     for (int i = 0; i < graph->vexNum; i++)
