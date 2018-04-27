@@ -16,7 +16,9 @@
 #include <zoneform.h>
 #include <newzoneform.h>
 #include <cutarea.h>
-
+#include <erodinganddilating.h>
+#include <splitjoint.h>
+#include <bolckclassification.h>
 namespace Ui {
 class newProject;
 }
@@ -46,7 +48,12 @@ private:
     Zoneform *zoneform;
     NewZoneForm *newZoneform;
     CutArea *cutarea;
+    ErodingAndDilating *ead;
+    SplitJoint *splitJoint;
+    BlockClassification *myClassfication;
+
     void closeEvent(QCloseEvent *event);
+    void classfication();
 private slots:
 
     void on_openFileImage_triggered();
@@ -58,6 +65,18 @@ private slots:
     void on_action_triggered();
     void on_actiontest_triggered();
     void on_action_2_triggered();
+
+    void on_actionEroding_triggered();
+
+    void on_actionchangeColor_triggered();
+
+    void on_actionSplitJoint_triggered();
+
+    void on_actionCorroding_triggered();
+
+    void on_actiontest_2_triggered();
+
+    void on_actioncombine_triggered();
 
 signals:
 

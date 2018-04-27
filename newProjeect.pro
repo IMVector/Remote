@@ -21,6 +21,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+#opencv库
+INCLUDEPATH += C:\opencv\opencv\build\include\opencv2 \
+               C:\opencv\opencv\build\include\opencv  \
+               C:\opencv\opencv\build\include
+LIBS +=  C:\opencv\opencv\build\x64\vc14\lib\opencv_world310d.lib \
+
+
+
 
 
 SOURCES += main.cpp\
@@ -44,7 +52,11 @@ SOURCES += main.cpp\
     loginfo.cpp \
     zoneform.cpp \
     newzoneform.cpp \
-    cutarea.cpp
+    cutarea.cpp \
+    erodinganddilating.cpp \
+    bolckclassification.cpp \
+    splitjoint.cpp \
+    postprocess.cpp
 
 
 HEADERS  += newproject.h \
@@ -67,7 +79,11 @@ HEADERS  += newproject.h \
     loginfo.h \
     zoneform.h \
     newzoneform.h \
-    cutarea.h
+    cutarea.h \
+    erodinganddilating.h \
+    bolckclassification.h \
+    splitjoint.h \
+    postprocess.h
 
 
 FORMS    += newproject.ui \

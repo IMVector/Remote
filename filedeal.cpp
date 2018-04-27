@@ -335,9 +335,9 @@ void filedeal::openFile(int r,int g,int b)
 }
 ///返回原始数据
 /**
- * @brief filedeal::openFile 传入矩形的左上顶点和右下定点
- * @param rectangle
- * @return
+ * @brief filedeal::openFile 获取文件的一小块区域（矩形区域）
+ * @param rectangle 传入矩形的左上顶点和右下顶点
+ * @return 矩形区域的所有数据（以二维数组形式返回，第一维度是矩形区域的第i个点，第二维度是该点处的所有波段值）
  */
 float ** filedeal::openFile(Points rectangle)
 {
@@ -450,8 +450,8 @@ void filedeal::visiualdraw(point p,int visiualHeight,int visiualWidth,QImage vis
     }
     //    qDebug()<<QStringLiteral("略缩图宽度：")<<scaleWidth;
     //    qDebug()<<QStringLiteral("略缩图高度：")<<scaleHeight;
-    //    QImage image=visiualImage.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节;
-    QImage image=visiualImage;
+
+
     int r=255, g=0, b=0;//用来接收颜色
     QRgb value=qRgb(r, g, b);
     visiualDrawP=p;
@@ -489,86 +489,88 @@ void filedeal::visiualdraw(point p,int visiualHeight,int visiualWidth,QImage vis
     loadPartImage(startX,startY,visiualHeight,visiualWidth,visiualImage);
     //startY,startX;//起点的样本位置
     //将一维坐标转换成二维坐标
+    ///非海岸线版本
+    QImage image=visiualImage.scaled(scaleWidth,scaleHeight, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节;
+    int x=startX*scale;
+    int y=startY*scale;
+    int w=0;
+    int viewWidth=visiualWidth*scale;
+    int viewHeight=visiualHeight*scale;
 
-//    int x=startX*scale;
-//    int y=startY*scale;
-//    int w=0;
-//    int viewWidth=visiualWidth*scale;
-//    int viewHeight=visiualHeight*scale;
+    if(x+viewWidth==scaleWidth)
+    {
+        //x开始点减小1
+        x--;
+    }
+    if(y+viewHeight==scaleHeight)
+    {
+        //y开始点减小1
+        y--;
+    }
 
-//    if(x+viewWidth==scaleWidth)
-//    {
-//        //x开始点减小1
-//        x--;
-//    }
-//    if(y+viewHeight==scaleHeight)
-//    {
-//        //y开始点减小1
-//        y--;
-//    }
+    while(w<viewWidth)
+    {
+        image.setPixel(x, y, value);
+        image.setPixel(x, y+viewHeight, value);
+        x++;
+        w++;
+    }
+    w=0;
+    x=startX*scale;
+    y=startY*scale;
+    if(x+viewWidth==scaleWidth)
+    {
+        //x开始点减小1
+        x--;
+    }
+    if(y+viewHeight==scaleHeight)
+    {
+        //y开始点减小1
+        y--;
+    }
+    while(w<viewHeight)
+    {
+        image.setPixel(x, y, value);
+        image.setPixel(x+viewWidth, y, value);
+        y++;
+        w++;
+    }
 
-//    while(w<viewWidth)
-//    {
-//        image.setPixel(x, y, value);
-//        image.setPixel(x, y+viewHeight, value);
-//        x++;
-//        w++;
-//    }
-//    w=0;
-//    x=startX*scale;
-//    y=startY*scale;
-//    if(x+viewWidth==scaleWidth)
-//    {
-//        //x开始点减小1
-//        x--;
-//    }
-//    if(y+viewHeight==scaleHeight)
-//    {
-//        //y开始点减小1
-//        y--;
-//    }
-//    while(w<viewHeight)
-//    {
-//        image.setPixel(x, y, value);
-//        image.setPixel(x+viewWidth, y, value);
-//        y++;
-//        w++;
-//    }
+    ///海岸线版本
+    //    QImage image=visiualImage;
+    //        int x=startX;
+    //        int y=startY;
+    //        int w=0;
+    //        while(w<visiualWidth)
+    //        {
+    //            for(int i=0;i<1/scale;i++)//将红框加粗
+    //            {
+    //                image.setPixel(x, y+i, value);
+    //            }
+    //            for(int i=1/scale;i>0;i--)//将红框加粗
+    //            {
+    //                image.setPixel(x, y+visiualHeight-i, value);
+    //            }
+    //            x++;
+    //            w++;
+    //        }
+    //        w=0;
+    //        x=startX;
+    //        y=startY;
+    //        while(w<visiualHeight)
+    //        {
 
-
-        int x=startX;
-        int y=startY;
-        int w=0;
-        while(w<visiualWidth)
-        {
-            for(int i=0;i<1/scale;i++)//将红框加粗
-            {
-                image.setPixel(x, y+i, value);
-            }
-            for(int i=1/scale;i>0;i--)//将红框加粗
-            {
-                image.setPixel(x, y+visiualHeight-i, value);
-            }
-            x++;
-            w++;
-        }
-        w=0;
-        x=startX;
-        y=startY;
-        while(w<visiualHeight)
-        {
-
-            for(int i=0;i<1/scale;i++)//将红框加粗
-            {
-                image.setPixel(x+i, y, value);
-            }
-            for(int i=1/scale;i>0;i--)//将红框加粗
-            {
-                image.setPixel(x+visiualWidth-i, y, value);
-            }
-            y++;
-            w++;
-        }
+    //            for(int i=0;i<1/scale;i++)//将红框加粗
+    //            {
+    //                image.setPixel(x+i, y, value);
+    //            }
+    //            for(int i=1/scale;i>0;i--)//将红框加粗
+    //            {
+    //                image.setPixel(x+visiualWidth-i, y, value);
+    //            }
+    //            y++;
+    //            w++;
+    //        }
 
     //矩形可视框的终点坐标是x=x+50,y=y+50
     //显示文件
@@ -1616,6 +1618,7 @@ void filedeal::getSvmModel(svm_model *model)
             {
                 emit setProgressValue((realLocationNum*1.0/(Samples*Lines))*100);
                 qDebug()<<(realLocationNum*1.0/(Samples*Lines))*100;
+                image.save("D://RemoteTemp//classification.tif");
             }
 
             //样本判断逻辑

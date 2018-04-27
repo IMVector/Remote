@@ -74,12 +74,36 @@
     </property>
     <addaction name="action_2"/>
    </widget>
+   <widget class="QMenu" name="menuEroding">
+    <property name="title">
+     <string>ErodingAndCorroding</string>
+    </property>
+    <addaction name="actionEroding"/>
+    <addaction name="actionCorroding"/>
+   </widget>
+   <widget class="QMenu" name="menuchangeColor">
+    <property name="title">
+     <string> PostProcessing</string>
+    </property>
+    <addaction name="actionchangeColor"/>
+    <addaction name="actionSplitJoint"/>
+    <addaction name="actioncombine"/>
+   </widget>
+   <widget class="QMenu" name="menuclassfication">
+    <property name="title">
+     <string>classfication</string>
+    </property>
+    <addaction name="actiontest_2"/>
+   </widget>
    <addaction name="menu"/>
    <addaction name="menu_2"/>
    <addaction name="menu_3"/>
    <addaction name="menu_4"/>
    <addaction name="menu_5"/>
    <addaction name="menu_6"/>
+   <addaction name="menuEroding"/>
+   <addaction name="menuchangeColor"/>
+   <addaction name="menuclassfication"/>
   </widget>
   <action name="openFileImage">
    <property name="text">
@@ -135,6 +159,36 @@
   <action name="action_2">
    <property name="text">
     <string>区域提取</string>
+   </property>
+  </action>
+  <action name="actionEroding">
+   <property name="text">
+    <string>Eroding</string>
+   </property>
+  </action>
+  <action name="actionchangeColor">
+   <property name="text">
+    <string>changeColor</string>
+   </property>
+  </action>
+  <action name="actionSplitJoint">
+   <property name="text">
+    <string>SplitJoint</string>
+   </property>
+  </action>
+  <action name="actionCorroding">
+   <property name="text">
+    <string>Corroding</string>
+   </property>
+  </action>
+  <action name="actiontest_2">
+   <property name="text">
+    <string>test</string>
+   </property>
+  </action>
+  <action name="actioncombine">
+   <property name="text">
+    <string>combine</string>
    </property>
   </action>
  </widget>

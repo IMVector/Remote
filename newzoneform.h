@@ -18,7 +18,7 @@ public:
 private:
     int deleteThresould = 5000;//最小区域点数量阈值
     int distanceThresould = 70;//距离阈值
-    float adjIntensity = 0.3;//邻接强度阈值
+    float adjIntensity = 0.30;//邻接强度阈值
     int geoTh = 2;//要找成排的地物
     int changedColorTh = 3;//更改后的颜色
     QString fileName;

@@ -129,7 +129,7 @@ public:
 private:
     int deleteThresould = 5000;//最小区域点数量阈值
     int distanceThresould = 70;//距离阈值
-    float adjIntensity = 0.3;//邻接强度阈值
+    float adjIntensity = 0.30;//邻接强度阈值
     int geoTh = 2;//要找成排的地物
     int changedColorTh = 3;//更改后的颜色
     QString fileName;
@@ -162,7 +162,7 @@ private:
 	AdjancentChanin sameColorProcess(Graph *graph, ImageArray image, int Samples, int Lines, unsigned short colorTh, AreaNodeInfo *areaInfo, unsigned int threshold, float adjIntensity);
     unsigned short *newChangeColor(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo, int color, int numThreshold);
     void test(ImageArray testImage, int Samples, int Lines, int deleteThresould, int distanceThresould, float adjIntensity, int geoTh, int changedColorTh);
-    QImage midPointLink(QImage image, point p1, point p2, QRgb changeColor, QRgb changedColor);
+    QImage midPointLink(QImage image, point p1, point p2, int changeColor, int changedColor);
     QImage anyLine(QImage image, ImageArray testImage, AreaNodeInfo *areaInfo, int changeColorTh, int changedColorTh, int id1, int id2);
 private slots:
 	void startZone();

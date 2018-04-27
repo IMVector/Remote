@@ -28,7 +28,9 @@ void CutArea::expansion(QImage image,int firstMixColor,int secondMixColor)
 
     int foot=8;//侵蚀距离
     int footmax=80;//不允许侵蚀的步长与xgo和ygo一起使用
+
     int radius=80;//不允许侵蚀的距离
+    int maxDeleteRadius=9;
     QRgb value=qRgb(255,0,0);
     int width=image.width();
     int height=image.height();
@@ -69,49 +71,37 @@ void CutArea::expansion(QImage image,int firstMixColor,int secondMixColor)
                             }
                             if(!flag)
                             {
-                                for(int i=0;i<foot;i++)
+                                for(int i=-maxDeleteRadius;i<maxDeleteRadius;i++)
                                 {
-                                    if(x+i<width&&x+i>=0&&y+i<height&&y+i>=0)
-                                        if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
-                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
-                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
-                                        {
-                                            if(x+next[i][0]>=0&&x+next[i][0]<width&&y+next[i][1]>=0&&y+next[i][1]<height)
-                                                image.setPixel(x+next[i][0],y+next[i][1],value);
-                                        }
+                                    for(int j=-maxDeleteRadius;j<maxDeleteRadius;j++)
+                                    {
+                                        if(x+i<width&&x+i>=0&&y+j<height&&y+j>=0)
+                                            if(QColor(image.pixel(x+i,y+j)).red()==R[secondMixColor]&&
+                                                    QColor(image.pixel(x+i,y+j)).green()==G[secondMixColor]&&
+                                                    QColor(image.pixel(x+i,y+j)).blue()==B[secondMixColor])
+                                            {
+                                                if(x+i>=0&&x+i<width&&y+j>=0&&y+j<height)
+                                                    image.setPixel(x+i,y+j,value);
+                                            }
+
+                                    }
                                 }
+
+                                //                                for(int i=0;i<foot;i++)
+                                //                                {
+                                //                                    if(x+i<width&&x+i>=0&&y+i<height&&y+i>=0)
+                                //                                        if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
+                                //                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
+                                //                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
+                                //                                        {
+                                //                                            if(x+next[i][0]>=0&&x+next[i][0]<width&&y+next[i][1]>=0&&y+next[i][1]<height)
+                                //                                                image.setPixel(x+next[i][0],y+next[i][1],value);
+                                //                                        }
+                                //                                }
+
                             }
                         }
                 }
-
-
-                //                bool flag=false;
-
-                //                for(int i=0;i<footmax;i++)
-                //                {
-                //                    if(x+xgo[i]<width&&x+xgo[i]>=0&&y+ygo[i]<height&&y+ygo[i]>=0)
-                //                    if(QColor(image.pixel(x+xgo[i],y+ygo[i])).red()==R[firstMixColor]&&
-                //                            QColor(image.pixel(x+xgo[i],y+ygo[i])).green()==G[firstMixColor]&&
-                //                            QColor(image.pixel(x+xgo[i],y+ygo[i])).blue()==B[firstMixColor])
-                //                    {
-                //                        flag=true;
-                //                        break;
-                //                    }
-                //                }
-                //                if(!flag)
-                //                {
-                //                    for(int i=0;i<foot;i++)
-                //                    {
-                //
-                //                        if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
-                //                                QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
-                //                                QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
-                //                        {
-                //                            image.setPixel(x+next[i][0],y+next[i][1],value);
-                //                        }
-                //                    }
-                //                }
-
 
             }
 
@@ -154,56 +144,36 @@ void CutArea::expansion(QImage image,int firstMixColor,int secondMixColor)
                             }
                             if(!flag)
                             {
-                                for(int i=0;i<foot;i++)
+                                for(int i=-maxDeleteRadius;i<maxDeleteRadius;i++)
                                 {
-                                    if(x+i<width&&x+i>=0&&y+i<height&&y+i>=0)
-                                        if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
-                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
-                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
-                                        {
-                                            if(x+next[i][0]>=0&&x+next[i][0]<width&&y+next[i][1]>=0&&y+next[i][1]<height)
-                                                image.setPixel(x+next[i][0],y+next[i][1],value);
-                                        }
+                                    for(int j=-maxDeleteRadius;j<maxDeleteRadius;j++)
+                                    {
+                                        if(x+i<width&&x+i>=0&&y+j<height&&y+j>=0)
+                                            if(QColor(image.pixel(x+i,y+j)).red()==R[secondMixColor]&&
+                                                    QColor(image.pixel(x+i,y+j)).green()==G[secondMixColor]&&
+                                                    QColor(image.pixel(x+i,y+j)).blue()==B[secondMixColor])
+                                            {
+                                                if(x+i>=0&&x+i<width&&y+j>=0&&y+j<height)
+                                                    image.setPixel(x+i,y+j,value);
+                                            }
+
+                                    }
                                 }
+                                //                                for(int i=0;i<foot;i++)
+                                //                                {
+                                //                                    if(x+i<width&&x+i>=0&&y+i<height&&y+i>=0)
+                                //                                        if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
+                                //                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
+                                //                                                QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
+                                //                                        {
+                                //                                            if(x+next[i][0]>=0&&x+next[i][0]<width&&y+next[i][1]>=0&&y+next[i][1]<height)
+                                //                                                image.setPixel(x+next[i][0],y+next[i][1],value);
+                                //                                        }
+                                //                                }
                             }
                         }
                 }
             }
-            //            if(QColor(image.pixel(x,y)).red()==255&&
-            //                    QColor(image.pixel(x,y)).green()==255&&
-            //                    QColor(image.pixel(x,y)).blue()==255)
-            //            {
-
-            //                bool flag=false;
-
-            //                for(int i=0;i<footmax;i++)
-            //                {
-            //                    if(x+xgo[i]<width&&y+ygo[i]<height)
-            //                        if(QColor(image.pixel(x+xgo[i],y+ygo[i])).red()==R[firstMixColor]&&
-            //                                QColor(image.pixel(x+xgo[i],y+ygo[i])).green()==G[firstMixColor]&&
-            //                                QColor(image.pixel(x+xgo[i],y+ygo[i])).blue()==B[firstMixColor])
-            //                        {
-            //                            flag=true;
-            //                            break;
-            //                        }
-            //                }
-            //                if(!flag)
-            //                {
-            //                    for(int i=0;i<foot;i++)
-            //                    {
-            //                        if(x+xgo[i]<width&&y+ygo[i]<height)
-            //                            if(QColor(image.pixel(x+next[i][0],y+next[i][1])).red()==R[secondMixColor]&&
-            //                                    QColor(image.pixel(x+next[i][0],y+next[i][1])).green()==G[secondMixColor]&&
-            //                                    QColor(image.pixel(x+next[i][0],y+next[i][1])).blue()==B[secondMixColor])
-            //                            {
-            //                                if(x+next[i][0]>=0&&x+next[i][0]<width&&y+next[i][1]>=0&&y+next[i][1]<height)
-            //                                    image.setPixel(x+next[i][0],y+next[i][1],value);
-            //                            }
-            //                    }
-            //                }
-
-
-            //            }
 
         }
     }
@@ -287,7 +257,7 @@ void CutArea::cut(QImage image,int mradius,int firstMixColor,int secondMixColor)
     }
 
 
-   qDebug()<<QStringLiteral("裁切开始50%");
+    qDebug()<<QStringLiteral("裁切开始50%");
 
     for( j=hNumber;j>=0;j--)
     {

@@ -22,7 +22,7 @@ void zonedeal::loadInfo_slot(loadInfo info)
     geoTh=info.geoTh;
     changedColorTh=info.changedTh;
     //输入一个图片地址
-    //D:\\file6(2).tif
+    //D:\\qttest\\file6(2).tif
     QImage image;
     image.load(fileName);
 
@@ -30,7 +30,11 @@ void zonedeal::loadInfo_slot(loadInfo info)
     if (!image.isNull())
     {
         main(image,deleteThresould,distanceThresould,adjIntensity,geoTh,changedColorTh);
-        image.save("D:\\originfile.tif");
+        QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+        QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+        QString fileStr="D:\\qttest\\originfile"+str+".tif";
+        image.save(fileStr);
+        //image.save("D:\\qttest\\originfile.tif");
     }
     else
     {
@@ -66,51 +70,7 @@ void zonedeal::loadInfo_slot(loadInfo info)
     //    //    test(imageArray, 8, 4);
     //    test(imageArray, 15, 15);
 }
-///**
-// * @brief zonedeal::lowPoint利用腐蚀算法处理图像
-// */
-//void zonedeal::lowPoint(ImageArray testImage)
-//{
 
-//    int yRoad[80] = {-4,-4,-4,-4,-4,-4,-4,-4,-4,-3,-3,-3,-3,-3,-3,-3,-3,-3,-2,-2,-2,-2,-2,-2,-2,-2,-2,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0,
-//                     1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4};
-//    int xRoad[80] = {-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,1,2,3,4,-4,-3,-2,-1,0,1,
-//                     2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4,-4,-3,-2,-1,0,1,2,3,4};
-//    //所有界限找出
-//    //进行降噪
-//    unsigned short *footFlag=new unsigned short[testImage.Samples*testImage.Lines];
-//    for(int i=0;i<Samples*Lines;i++)
-//    {
-//        footFlag[i]=0;
-//    }
-
-//    int flag=42;
-//    for(int time=0;time<=1;time++)
-//    {
-//        for(int h=5;h<Lines-5;h++)
-//        {
-//            for(int w=5;w<Samples-5;w++)
-//            {
-//                int diw[4]={0,0,0,0},x_,y_;
-//                for(int f=0 ; f<80 ; f++)
-//                {
-//                    x_ = w+xRoad[f];
-//                    y_ = h+yRoad[f];
-//                    diw[footFlag[y_*Samples+x_]]++;
-//                    if(diw[footFlag[y_*Samples+x_]]==flag)
-//                    {
-//                        footFlag[h*Samples+w] = footFlag[y_*Samples+x_];
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    for(int i=0;i<Samples*Lines;i++)
-//    {
-
-//    }
-
-//}
 void zonedeal::main(QImage image,int deleteThresould,int distanceThresould,float adjIntensity,int geoTh,int changedColorTh)
 {
     int R[7] = { 255,  255,    0,   0,   139,0 };
@@ -166,6 +126,8 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
 
     int NodeNumber = 0;//节点数量
     bool colorChangeFlag = false;//颜色更改flag判断是否进行了降噪如果进行了降噪处理就要重新统计每个地物块的信息
+    testImage.Samples = Samples;
+    testImage.Lines = Lines;
 
     //给所有区域分配不同id分配内存
     testImage.id = new unsigned short[Samples*Lines];
@@ -211,6 +173,18 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
                 //qDebug()<<QStringLiteral("修改前的颜色")<<everyNum[i].colorTh<<QStringLiteral("修改后的颜色")<<color;
             }
         }
+
+        QImage image(Samples, Lines, QImage::Format_RGB32);
+        for (int h = 0; h < Lines; h++)
+        {
+            for (int w = 0; w < Samples; w++)
+            {
+                QRgb value = qRgb(R[testImage.colorTh[h*Samples + w]], G[testImage.colorTh[h*Samples + w]], B[testImage.colorTh[h*Samples + w]]);
+                image.setPixel(w, h, value);
+            }
+        }
+        image.save("D:\\qttest\\file1.tif");
+
         delete[] everyNum;
         everyNum = NULL;
         everyNum = countEveryNumber(testImage, Samples, Lines);
@@ -226,9 +200,14 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             image.setPixel(w, h, value);
         }
     }
-
-    image.save("D:\\file.tif");
-    qDebug() << QStringLiteral("降噪完成");
+    {
+        //image.save("D:\\qttest\\file.tif");
+        QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+        QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+        QString fileStr="D:\\qttest\\file"+str+".tif";
+        image.save(fileStr);
+        qDebug() << QStringLiteral("降噪完成");
+    }
 
     //对变色后的区域重新统计每个区域的信息
     //everyNum = countEveryNumber(testImage, Samples, Lines);
@@ -248,22 +227,22 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         everyNum[i].cycle = calAreaCycle(testImage.colorTh, Samples, Lines, a, everyNum[i]);
         qDebug() << QStringLiteral("区域") << i<< QStringLiteral("的周长是") << everyNum[i].cycle;
         //qDebug() << QStringLiteral("区域") << i << QStringLiteral("原来的数量是：") << everyNum[i].number << QStringLiteral("新求的数量是：") << a.number << QStringLiteral("的周长是") << everyNum[i].cycle << everyNum[i].startX << everyNum[i].startY;
-        //if (everyNum[i].number != a.number)
-        //{
-        //testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[i], 5, 10000000);
-        //for (int h = 0; h < Lines; h++)
-        //{
-        //for (int w = 0; w < Samples; w++)
-        //{
-        //QRgb value = qRgb(R[testImage.colorTh[h*Samples + w]], G[testImage.colorTh[h*Samples + w]], B[testImage.colorTh[h*Samples + w]]);
-        //image.setPixel(w, h, value);
-        //}
-        //}
-        //image.save("D:\\new1.tif");
-        //qDebug() << everyNum[i].ID << everyNum[i].startX << everyNum[i].startY << everyNum[i].number << a.number;
-        //qDebug() << QStringLiteral("错误，前后不一致");
-        //return;
-        //}
+        if (everyNum[i].number != a.number)
+        {
+            //testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[i], 5, 10000000);
+            //for (int h = 0; h < Lines; h++)
+            //{
+            //for (int w = 0; w < Samples; w++)
+            //{
+            //QRgb value = qRgb(R[testImage.colorTh[h*Samples + w]], G[testImage.colorTh[h*Samples + w]], B[testImage.colorTh[h*Samples + w]]);
+            //image.setPixel(w, h, value);
+            //}
+            //}
+            //image.save("D:\\qttest\\new1.tif");
+            //qDebug() << everyNum[i].ID << everyNum[i].startX << everyNum[i].startY << everyNum[i].number << a.number;
+            qDebug() << QStringLiteral("错误，前后不一致");
+            //return;
+        }
 
 
         //for (int j = 0; j < a.number; j++)
@@ -292,6 +271,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         delete[] a.p;
         a.p = NULL;
     }
+    qDebgu()<<QStringLiteral("计算所有区域的邻接地物以及邻接数量完成");
     ////////////////////////////////////////////////////////////////////////
     //    //求最短距离
     //    //距离表
@@ -369,6 +349,8 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             node->next = NULL;
 
             qDebug() << QStringLiteral("当前节点") << adjancentGraph.headChain[i].ID << QStringLiteral("的右邻接是") << node->ID;
+            //if(everyNum[adjancentGraph.headChain[i].ID].colorTh==geoTh){}
+            //everyNum[node->ID].colorTh;
 
             if (adjancentGraph.headChain[i].firstNode == NULL)
             {
@@ -393,6 +375,9 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             node->next = NULL;
 
             qDebug() << QStringLiteral("当前节点") << adjancentGraph.headChain[i].ID << QStringLiteral("的下邻接是") << node->ID;
+            //if(everyNum[adjancentGraph.headChain[i].ID].colorTh==geoTh){}
+            //everyNum[node->ID].colorTh;
+
             if (adjancentGraph.headChain[i].firstNode == NULL)
             {
                 adjancentGraph.headChain[i].firstNode = node;
@@ -404,8 +389,8 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
                 tail = node;
             }
         }
-
     }
+    qDebug()<<QStringLiteral("邻接表存储完成");
     //////////////////////////////////////////////////////////////
 
     //    //将右邻接和下邻接两个网关系变成一个网关系
@@ -542,14 +527,16 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
     //    direction[3]=1;
     //    getRoad(&adjancentGraph,0,9,direction);
 
-
+    qDebug()<<QStringLiteral("开始计算邻接强度");
     AdjancentChanin result1 = sameColorProcess(&adjancentGraph, testImage, Samples
                                                , Lines, geoTh, everyNum, distanceThresould, adjIntensity);
-    qDebug() << "1complete";
-
+    qDebug() <<QStringLiteral("邻接强度计算完毕");
+    qDebug() <<QStringLiteral("开始搜索二步可达");
     AdjancentChanin result2 = processResult(everyNum, NodeNumber, geoTh);
 
-    qDebug() << "2complete";
+    qDebug() <<QStringLiteral("搜索二步可达完毕");
+    bool imageFlag=false;
+    QImage mImage;
     for (int i = 0; i < result1.number; i++)
     {
         for (int j = 0; j < result2.number; j++)
@@ -557,15 +544,21 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             if (result1.data[i].ID == result2.data[j].ID&&
                     result1.data[i].linkID == result2.data[j].linkID)
             {
-//                //qDebug() << QStringLiteral("成排区域") << result1.data[i].ID << result1.data[i].linkID;
-//                qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
-//                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
-//                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
+                //qDebug() << QStringLiteral("成排区域") << result1.data[i].ID << result1.data[i].linkID;
+                //qDebug() <<QStringLiteral("区域") << result1.data[i].ID <<QStringLiteral("与区域")<<result1.data[i].linkID<< QStringLiteral("是成排的")
+                //                        <<"\t\t"<<result1.data[i].ID <<QStringLiteral("与")<<result1.data[i].linkID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_a_b
+                //                       <<"\t\t"<<result1.data[i].linkID<<QStringLiteral("与")<<result1.data[i].ID<<QStringLiteral("邻接强度是")<<result1.data[i].adjIntensity_b_a;
 
 
                 qDebug() << result1.data[i].ID <<"\t"<<result1.data[i].linkID
                          <<"\t\t"<<result1.data[i].ID <<"\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].adjIntensity_a_b
                         <<"\t\t"<<result1.data[i].linkID<<"\t"<<result1.data[i].ID<<"\t"<<result1.data[i].adjIntensity_b_a;
+
+
+                if(!imageFlag)
+                {
+                    mImage=image;
+                }
 
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].ID], changedColorTh, 10000000);
                 testImage.colorTh = newChangeColor(testImage, Samples, Lines, everyNum[result1.data[i].linkID], changedColorTh, 10000000);
@@ -577,7 +570,12 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
                         image.setPixel(w, h, value);
                     }
                 }
-                //anyLine(image,testImage,everyNum,0,changedColorTh+1,result1.data[i].ID,result1.data[i].linkID);
+
+
+                //                imageFlag=true;
+                //                mImage=anyLine(mImage,testImage,everyNum,0,changedColorTh+1,result1.data[i].ID,result1.data[i].linkID);
+                //                mImage.save("D://abc.tif");
+
                 //QImage myImage;
                 //myImage=image.scaled(image.width()/10,image.width()/10, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);//平滑缩放保留细节
                 //sendImageToUi(image, 2);
@@ -599,13 +597,19 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             image.setPixel(w, h, value);
         }
     }
+    {
+        QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
+        QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
+        QString fileStr="D:\\qttest\\new"+str+".tif";
+        image.save(fileStr);
+    }
+    //    image.save("D:\\qttest\\new.tif");
 
-    image.save("D:\\new.tif");
     //    delete[] rNet;
     //    rNet=NULL;
     //    delete[] dNet;
     //    dNet=NULL;
-    qDebug() << "3complete";
+    qDebug() << QStringLiteral("邻接区域查找完毕，准备清理工作");
 
     for (int i = 0; i < NodeNumber; i++)
     {
@@ -627,7 +631,6 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         //        everyNum[i].rAdjIntensity=NULL;
         //        everyNum[i].dAdjIntensity=NULL;
     }
-    qDebug() << "4complete";
 
     delete[] everyNum;
     everyNum = NULL;
@@ -649,19 +652,29 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
     delete[] testImage.id;
     testImage.id = NULL;
 
+    qDebug() <<QStringLiteral("清理完成");
 
-    qDebug() << "5complete";
 }
 
-QImage zonedeal::midPointLink(QImage image,point p1,point p2,QRgb changeColor,QRgb changedColor )
+QImage zonedeal::midPointLink(QImage image,point p1,point p2,int changeColor,int changedColor )
 {
+    int R[7] = { 255,  255,    0,   0,   139,0 };
+    int G[7] = { 0,  255,    0,   255, 0 ,0 };
+    int B[7] = { 0  ,  0,  255,   0,   139   ,0 };
+    QRgb qchangedColor=qRgb(R[changedColor],G[changedColor],B[changedColor]);
+
     int x = p1.x, y = p1.y;
     int a = p1.y - p2.y, b = p2.x - p1.x;
     int cx = (b >= 0 ? 1 : (b = -b, -1));
     int cy = (a <= 0 ? 1 : (a = -a, -1));
-    if(QColor(image.pixel(x,y)).rgba()==changeColor)
-        image.setPixel(x, y, changedColor);
-        qDebug()<<x<<y;
+
+    if(QColor(image.pixel(x,y)).red()==R[changeColor]&&
+            QColor(image.pixel(x,y)).green()==G[changeColor]&&
+            QColor(image.pixel(x,y)).blue()==B[changeColor])
+    {
+        image.setPixel(x, y, qchangedColor);
+    }
+
 
     int d, d1, d2;
     if (-a <= b)     // 斜率绝对值 <= 1
@@ -681,8 +694,13 @@ QImage zonedeal::midPointLink(QImage image,point p1,point p2,QRgb changeColor,QR
             }
             x += cx;
             //x,y在此处获取
-            if(QColor(image.pixel(x,y)).rgba()==changeColor)
-                image.setPixel(x, y, changedColor);
+
+            if(QColor(image.pixel(x,y)).red()==R[changeColor]&&
+                    QColor(image.pixel(x,y)).green()==G[changeColor]&&
+                    QColor(image.pixel(x,y)).blue()==B[changeColor])
+            {
+                image.setPixel(x, y, qchangedColor);
+            }
         }
     }
     else                // 斜率绝对值 > 1
@@ -702,8 +720,13 @@ QImage zonedeal::midPointLink(QImage image,point p1,point p2,QRgb changeColor,QR
             }
             y += cy;
             //x,y在此处获取
-            if(QColor(image.pixel(x,y)).rgba()==changeColor)
-                image.setPixel(x, y, changedColor);
+
+            if(QColor(image.pixel(x,y)).red()==R[changeColor]&&
+                    QColor(image.pixel(x,y)).green()==G[changeColor]&&
+                    QColor(image.pixel(x,y)).blue()==B[changeColor])
+            {
+                image.setPixel(x, y, qchangedColor);
+            }
         }
     }
     return image;
@@ -718,9 +741,6 @@ QImage zonedeal::anyLine(QImage image,ImageArray testImage,AreaNodeInfo *areaInf
     int Samples=testImage.Samples;
     int Lines=testImage.Lines;
 
-    QRgb changeColor=qRgb(255,0,0);
-    QRgb changedColor= qRgb(R[changedColorTh],G[changedColorTh],B[changedColorTh]);
-
     Area a = pointIterator(testImage, Samples, Lines, areaInfo[id1]);
     Area b= pointIterator(testImage, Samples, Lines, areaInfo[id2]);
 
@@ -729,9 +749,12 @@ QImage zonedeal::anyLine(QImage image,ImageArray testImage,AreaNodeInfo *areaInf
         for(int j=0;j<b.number;j++)
         {
             //邻接的两区域任意两点之间的连线理论上能够覆盖两区域之间的地物
-            image=midPointLink(image,a.p[i], b.p[j],changeColor,changedColor);
+            image=midPointLink(image,a.p[i], b.p[j],changeColorTh,changedColorTh);
         }
     }
+    delete [] a.p;
+    delete [] b.p;
+
     return image;
 }
 /**
@@ -1046,11 +1069,11 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
                     result.data[count1].adjIntensity_b_a=distanceGraph[j][i];
                     count1++;
                 }
-//                if(i!=j)
-//                {
-//                    qDebug()<<i <<QStringLiteral("与")<<j<<QStringLiteral("邻接强度是")<<distanceGraph[i][j]
-//                              <<"\t\t"<<j<<QStringLiteral("与")<<i<<QStringLiteral("邻接强度是")<<distanceGraph[j][i];
-//                }
+                //                if(i!=j)
+                //                {
+                //                    qDebug()<<i <<QStringLiteral("与")<<j<<QStringLiteral("邻接强度是")<<distanceGraph[i][j]
+                //                              <<"\t\t"<<j<<QStringLiteral("与")<<i<<QStringLiteral("邻接强度是")<<distanceGraph[j][i];
+                //                }
                 if(i!=j&&distanceGraph[i][j]>0&&!flag[i*j])
                 {
                     qDebug()<<i <<"\t"<<j<<"\t"<<distanceGraph[i][j]
@@ -1382,13 +1405,13 @@ void zonedeal::deepIterater(Graph *graph)
  */
 void zonedeal::getRoad(Graph *graph, int start, int end, unsigned short *roadDirection)
 {
-    deleteFile("D:\\stack.txt");
-    deleteFile("D:\\stackReverse.txt");
-    findEveryPatch(graph, start, end, "D:\\stack.txt");
-    findEveryPatch(graph, end, start, "D:\\stackReverse.txt");
-    //fileStackRead("D:\\stack.txt",roadDirection,graph);
-    //fileStackRead("D:\\stackReverse.txt",roadDirection,graph);
-    fileStackMinRead("D:\\stack.txt");
+    deleteFile("D:\\qttest\\stack.txt");
+    deleteFile("D:\\qttest\\stackReverse.txt");
+    findEveryPatch(graph, start, end, "D:\\qttest\\stack.txt");
+    findEveryPatch(graph, end, start, "D:\\qttest\\stackReverse.txt");
+    //fileStackRead("D:\\qttest\\stack.txt",roadDirection,graph);
+    //fileStackRead("D:\\qttest\\stackReverse.txt",roadDirection,graph);
+    fileStackMinRead("D:\\qttest\\stack.txt");
 }
 /**
  * @brief zonedeal::deleteFile 删除给定路径的文件
@@ -1730,6 +1753,7 @@ int zonedeal::adjancentColor(ImageArray image, int Samples, int Lines, AreaNodeI
             }
             else
             {
+
                 if (image.colorTh[y*Samples + x] != nodeInfo.colorTh)//满足条件则是边界点
                 {
                     color[image.colorTh[y*Samples+x]]++;
@@ -2198,7 +2222,7 @@ unsigned short int * zonedeal::changeColor(unsigned short int *imageArray, int S
             {
                 continue;
             }
-            //            qDebug()<<nx<<ny;
+            //qDebug()<<nx<<ny;
             //满足条件跳往下一个移动点
             if (imageArray[ny*Samples + nx] == nodeinfo.colorTh
                     &&footFlag[ny*Samples + nx] == 0)
