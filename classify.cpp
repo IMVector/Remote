@@ -30,6 +30,11 @@ classify::classify()
 {
 
 }
+classify::~classify()
+{
+   delete[]root;
+   delete[]quee;
+}
 ////data:样本区域点
 /// number:样本区域点数量
 void classify::getdata_from_ui(simples data, int number)

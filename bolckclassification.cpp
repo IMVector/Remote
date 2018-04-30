@@ -11,15 +11,15 @@ void BlockClassification::start(QString path)
     //QImage image=relativeClssfication(data,Samples,Lines,Band);
     //QImage image=newClassification(data,Samples,Lines,Band);
     //QImage image=landFishAreaJudge(data,Samples,Lines,Band);
-    //QImage imageLand=getLand(data,Samples,Lines,Band);
-    QImage image=judge(data,Samples,Lines,Band);
+    QImage imageLand=getLand(data,Samples,Lines,Band);
+//    QImage image=judge(data,Samples,Lines,Band);
     {
         QDateTime Systemtime = QDateTime::currentDateTime();//获取系统现在的时间
         QString str = Systemtime.toString("yyyy_MM_dd_hh_mm_ss"); //设置显示格式
-        QString fileStr="D:\\qttest\\blockClassfication"+str+".tif";
-        image.save(fileStr);
-        //        QString landStr="D:\\qttest\\land"+str+".tif";
-        //        imageLand.save(landStr);
+//        QString fileStr="D:\\qttest\\blockClassfication"+str+".tif";
+//        image.save(fileStr);
+                QString landStr="D:\\qttest\\land"+str+".tif";
+                imageLand.save(landStr);
     }
 }
 
@@ -341,7 +341,7 @@ typeCountArray BlockClassification::blockJudgeCount(typeCountArray numArray,floa
 QImage BlockClassification::getLand(float** data,int Samples,int Lines,int Band)
 {
     QImage image(Samples,Lines,QImage::Format_RGB32);
-    QRgb rgb_red=qRgb(255,0,0);
+    QRgb rgb_black=qRgb(0,0,0);
     QRgb rgb_white=qRgb(255,255,255);
 
     for(int w=0;w<Samples;w++)
@@ -350,7 +350,7 @@ QImage BlockClassification::getLand(float** data,int Samples,int Lines,int Band)
         {
             if(data[2][h*Samples+w]>=200)
             {
-                image.setPixel(w,h,rgb_red);
+                image.setPixel(w,h,rgb_black);
             }
             else
             {

@@ -34,6 +34,11 @@ filedeal::filedeal()
     visiualDrawP.x=0;
     visiualDrawP.y=0;
 }
+filedeal::~filedeal()
+{
+    delete[]tempPoint;
+    delete[]areaPoint;
+}
 
 ///获取图像波段和文件信息
 void filedeal::openPathFile(QString fileName)

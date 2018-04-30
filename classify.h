@@ -80,8 +80,10 @@ class classify : public QObject
 private:
 
 
+
 public:
     classify();
+    ~classify();
     void thismain();
     void DeleteTree(Tree T);
     void removeCharacteristics(Feature characteristics[]);

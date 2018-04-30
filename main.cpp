@@ -2,8 +2,7 @@
 #include <QApplication>
 #include <loginfo.h>
 #include <opencv.hpp>
-using namespace cv;
-//#include <vld.h>
+#include <vld.h>
 
 //QPointer<Loginfo> mylog;
 using namespace std;
@@ -64,6 +63,7 @@ void outputMessage(QtMsgType type, const QMessageLogContext &context, const QStr
         emit mylog->sendMsg(message);
     }
 }
+
 void fillHole(const Mat srcBw, Mat &dstBw)
 {
     Size m_Size = srcBw.size();
@@ -77,6 +77,7 @@ void fillHole(const Mat srcBw, Mat &dstBw)
 
     dstBw = srcBw | (~cutImg);
 }
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -95,22 +96,6 @@ int main(int argc, char *argv[])
     //    path.replace("/","\\");
     //    path.append("\\image\\blue.css");
     //////////////////////////////////////主题结束///////////////////////////////////////////
-
-
-    ///////
-
-    //    Mat img=cv::imread("D:\\fishArea\\left.tif");
-    //    Mat gray;
-    //    cv::cvtColor(img, gray, CV_RGB2GRAY);
-    //    Mat bw;
-    //    cv::threshold(gray, bw, 0, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
-    //    Mat bwFill;
-    //    fillHole(bw, bwFill);
-    //    imshow("填充前", gray);
-    //    imshow("填充后", bwFill);
-    //    cv::imwrite("D:\\fishArea\\left1.tif",bwFill);
-
-    ///////
 
 
 #ifdef QT_NO_DEBUG

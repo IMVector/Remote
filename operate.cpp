@@ -25,26 +25,26 @@ operate::operate(QWidget *parent) :
     this->setMaximumSize(320,520);
     this->setMinimumSize(320,520);
     this->setWindowTitle(QStringLiteral("遥感系统"));
-    empty_thread=new emptychild;//空线程
-    fileDeal=new filedeal;//类
+    empty_thread=new emptychild();//空线程
+    fileDeal=new filedeal();//类
     fileDeal->moveToThread(empty_thread);//处理数据线程移入空线程
     empty_thread->start();//线程启动
 
-    emptySortThread=new emptychild;//空线程
-    mySort=new classify;
+    emptySortThread=new emptychild();//空线程
+    mySort=new classify();
     mySort->moveToThread(emptySortThread);
     emptySortThread->start();
 
-    choiceSample=new MyDialog;
+    choiceSample=new MyDialog();
     initShowBandWidget();//初始化要显示波段的面板
     initCombox();//初始化combox控件
     choiceSample->setWindowFlags(Qt::WindowStaysOnTopHint);
 
     //    imageFile *file=new imageFile;
 
-    seaLine=new sealine;
+    seaLine=new sealine();
 
-    Sqlsever=new database;//数据库文件浏览
+    Sqlsever=new database();//数据库文件浏览
 
     ui->startSortBtn->setEnabled(false);
 
@@ -118,6 +118,17 @@ operate::operate(QWidget *parent) :
 operate::~operate()
 {
     delete ui;
+
+    delete[]Point;
+    delete[]p;
+
+    delete[] fileDeal;
+    delete[] mySort;
+    delete[] choiceSample;
+    delete[] seaLine;
+    delete[] Sqlsever;
+//    delete[] emptySortThread;
+//    delete[] empty_thread;
 }
 /**
  * @brief operate::findSeaLine 找海岸线UI
@@ -406,12 +417,12 @@ void operate::getImage(QImage image, int status)
         labelList.at(labelIndex+1)->resize(QSize(smallimage.width(),smallimage.height()));
         labelList.at(labelIndex+1)->setScaledContents(true);
         labelList.at(labelIndex+1)->show();
-//        QPixmap mp;
-//        mp=mp.fromImage(image);
-//        labelList.at(labelIndex+1)->setPixmap(mp);
-//        labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
-//        labelList.at(labelIndex+1)->setScaledContents(true);
-//        labelList.at(labelIndex+1)->show();
+        //        QPixmap mp;
+        //        mp=mp.fromImage(image);
+        //        labelList.at(labelIndex+1)->setPixmap(mp);
+        //        labelList.at(labelIndex+1)->resize(QSize(image.width(),image.height()));
+        //        labelList.at(labelIndex+1)->setScaledContents(true);
+        //        labelList.at(labelIndex+1)->show();
 
         //labelList.at(labelList.size()-1)->setPixmap(mp);
         //labelList.at(labelList.size()-1)->resize(QSize(image.width(),image.height()));

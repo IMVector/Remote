@@ -130,7 +130,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
     testImage.Lines = Lines;
 
     //给所有区域分配不同id分配内存
-    testImage.id = new unsigned short[Samples*Lines];
+    testImage.id = new unsigned int[Samples*Lines];
     AreaNodeInfo *everyNum = countEveryNumber(testImage, Samples, Lines);
     colorChangeFlag=true;//开启降噪
     qDebug() << QStringLiteral("第一次统计完成");
@@ -187,6 +187,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
 
         delete[] everyNum;
         everyNum = NULL;
+
         everyNum = countEveryNumber(testImage, Samples, Lines);
     }
     QImage image(Samples, Lines, QImage::Format_RGB32);
@@ -226,6 +227,7 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         Area a = pointIterator(testImage, Samples, Lines, everyNum[i]);
         everyNum[i].cycle = calAreaCycle(testImage.colorTh, Samples, Lines, a, everyNum[i]);
         qDebug() << QStringLiteral("区域") << i<< QStringLiteral("的周长是") << everyNum[i].cycle;
+
         //qDebug() << QStringLiteral("区域") << i << QStringLiteral("原来的数量是：") << everyNum[i].number << QStringLiteral("新求的数量是：") << a.number << QStringLiteral("的周长是") << everyNum[i].cycle << everyNum[i].startX << everyNum[i].startY;
         if (everyNum[i].number != a.number)
         {
@@ -240,10 +242,10 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
             //}
             //image.save("D:\\qttest\\new1.tif");
             //qDebug() << everyNum[i].ID << everyNum[i].startX << everyNum[i].startY << everyNum[i].number << a.number;
-            qDebug() << QStringLiteral("错误，前后不一致");
+            qDebug() << QStringLiteral("错误，前后不一致,ERROR");
             //return;
         }
-
+        everyNum[i] = rightOrDownLink(testImage, Samples, Lines, everyNum[i], a);//经过这一步，右邻接区域，以及邻接数量全部求出
 
         //for (int j = 0; j < a.number; j++)
         //{
@@ -252,26 +254,27 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         delete[] a.p;
         a.p = NULL;
     }
-    for (int i = 0; everyNum[i].number != 0; i++)//计算所有区域的邻接地物以及邻接数量
-    {
-        Area a = pointIterator(testImage, Samples, Lines, everyNum[i]);
-        everyNum[i] = rightOrDownLink(testImage, Samples, Lines, everyNum[i], a);//经过这一步，右邻接区域，以及邻接数量全部求出
-        //        everyNum[i].rAdjIntensity=new float[everyNum[i].rLinkNum];
-        //        everyNum[i].dAdjIntensity=new float[everyNum[i].dLinkNum];
-        //        for(int j=0;j<everyNum[i].rLinkNum;j++)//计算右邻接强度
-        //        {
-        //            everyNum[i].rAdjIntensity[j]=everyNum[i].rAdjacentNum[j]*1.0/everyNum[i].cycle;
-        //            qDebug()<<QStringLiteral("右邻接强度是")<<everyNum[i].rAdjIntensity[j];
-        //        }
-        //        for(int j=0;j<everyNum[i].dLinkNum;j++)//计算下邻接强度
-        //        {
-        //            everyNum[i].dAdjIntensity[j]=everyNum[i].dAdjacentNum[j]*1.0/everyNum[i].cycle;
-        //            qDebug()<<QStringLiteral("下邻接强度是")<<everyNum[i].dAdjIntensity[j];
-        //        }
-        delete[] a.p;
-        a.p = NULL;
-    }
-    qDebgu()<<QStringLiteral("计算所有区域的邻接地物以及邻接数量完成");
+    //整合到上一步去了所以注释掉了
+    //    for (int i = 0; everyNum[i].number != 0; i++)//计算所有区域的邻接地物以及邻接数量
+    //    {
+    //        Area a = pointIterator(testImage, Samples, Lines, everyNum[i]);
+    //        everyNum[i] = rightOrDownLink(testImage, Samples, Lines, everyNum[i], a);//经过这一步，右邻接区域，以及邻接数量全部求出
+    //        //        everyNum[i].rAdjIntensity=new float[everyNum[i].rLinkNum];
+    //        //        everyNum[i].dAdjIntensity=new float[everyNum[i].dLinkNum];
+    //        //        for(int j=0;j<everyNum[i].rLinkNum;j++)//计算右邻接强度
+    //        //        {
+    //        //            everyNum[i].rAdjIntensity[j]=everyNum[i].rAdjacentNum[j]*1.0/everyNum[i].cycle;
+    //        //            qDebug()<<QStringLiteral("右邻接强度是")<<everyNum[i].rAdjIntensity[j];
+    //        //        }
+    //        //        for(int j=0;j<everyNum[i].dLinkNum;j++)//计算下邻接强度
+    //        //        {
+    //        //            everyNum[i].dAdjIntensity[j]=everyNum[i].dAdjacentNum[j]*1.0/everyNum[i].cycle;
+    //        //            qDebug()<<QStringLiteral("下邻接强度是")<<everyNum[i].dAdjIntensity[j];
+    //        //        }
+    //        delete[] a.p;
+    //        a.p = NULL;
+    //    }
+    qDebug()<<QStringLiteral("计算所有区域的邻接地物以及邻接数量完成");
     ////////////////////////////////////////////////////////////////////////
     //    //求最短距离
     //    //距离表
@@ -626,15 +629,16 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
         everyNum[i].dAdjacentNum = NULL;
         everyNum[i].downColorTh = NULL;
         everyNum[i].rightColorTh = NULL;
-        //        delete[] everyNum[i].rAdjIntensity;
-        //        delete[] everyNum[i].dAdjIntensity;
-        //        everyNum[i].rAdjIntensity=NULL;
-        //        everyNum[i].dAdjIntensity=NULL;
+        //delete[] everyNum[i].rAdjIntensity;
+        //delete[] everyNum[i].dAdjIntensity;
+        //everyNum[i].rAdjIntensity=NULL;
+        //everyNum[i].dAdjIntensity=NULL;
     }
+    qDebug() << QStringLiteral("清理工作1");
 
     delete[] everyNum;
     everyNum = NULL;
-
+    qDebug() << QStringLiteral("清理工作2");
     //for (int i = 0; i < NodeNumber; i++)
     //{
     //	delete[] adjancentGraph.headChain[i].firstNode;
@@ -642,13 +646,13 @@ void zonedeal::test(ImageArray testImage, int Samples, int Lines,
     //}
     delete[] adjancentGraph.headChain;
     adjancentGraph.headChain = NULL;
-
+    qDebug() << QStringLiteral("清理工作3");
     delete[] result1.data;
     result1.data = NULL;
-
+    qDebug() << QStringLiteral("清理工作4");
     delete[] result2.data;
     result2.data = NULL;
-
+    qDebug() << QStringLiteral("清理工作5");
     delete[] testImage.id;
     testImage.id = NULL;
 
@@ -957,6 +961,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     {
         distanceGraph[i] = new float[graph->vexNum];
     }
+    qDebug()<<QStringLiteral("1正常");
 
     for (int i = 0; i < graph->vexNum; i++)
     {
@@ -1006,7 +1011,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
             edgePoint1.p = NULL;
         }
     }
-
+    qDebug()<<QStringLiteral("2正常");
     //为同一地物距离邻接图分配内存
     DGraph dGraph;
     dGraph.headChain = new DHeadNode[graph->vexNum];
@@ -1016,6 +1021,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
         dGraph.headChain[i].isVisited = false;
         dGraph.headChain[i].firstNode = NULL;
     }
+    qDebug()<<QStringLiteral("3正常");
     DLinkNode *node, *tail = NULL;
     //输出所有满足距离关系的相同颜色区域的距离邻接关系
     AdjancentChanin result;
@@ -1028,6 +1034,7 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
             flag[i*j]=false;
         }
     }
+    qDebug()<<QStringLiteral("4正常");
 
     result.data = new AdjancentNode[graph->vexNum*graph->vexNum];
     for (int i = 0; i < graph->vexNum; i++)
@@ -1086,12 +1093,14 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
         }
 
     }
+    qDebug()<<QStringLiteral("5正常");
 
     for (int i = 0; i < graph->vexNum; i++)
     {
         delete[] distanceGraph[i];
         distanceGraph[i] = NULL;
     }
+    qDebug()<<QStringLiteral("6正常");
     delete[]  distanceGraph;
     distanceGraph = NULL;
     //for (int i = 0; i < graph->vexNum; i++)
@@ -1101,9 +1110,8 @@ AdjancentChanin zonedeal::sameColorProcess(Graph *graph, ImageArray image, int S
     //}
     delete[] dGraph.headChain;
     dGraph.headChain = NULL;
-
+    qDebug()<<QStringLiteral("7正常");
     result.number = count1;
-
     return result;
 }
 /**
@@ -2024,14 +2032,15 @@ AreaNodeInfo* zonedeal::countEveryNumber(ImageArray imageArray, int Samples, int
     stake = NULL;
     delete[] footFlag;
     footFlag = NULL;
+
     AreaNodeInfo *buffer = new AreaNodeInfo[everyNum.size()];
     memcpy(buffer, &everyNum[0], everyNum.size() * sizeof(AreaNodeInfo));
     //清空QVector中的所有元素并释放内存
     everyNum.clear();
     QVector<AreaNodeInfo>().swap(everyNum);
     return buffer;//返回地物信息表
-    //        delete[] everyNum;
-    //    everyNum=NULL;
+    //delete[] everyNum;
+    //everyNum=NULL;
 }
 
 /**
@@ -2304,7 +2313,7 @@ int zonedeal::calAreaCycle(unsigned short int *imageArray, int Samples, int Line
             cycle++;
             continue;
         }
-        if (stake.p[i].y + 1 < Lines)//判断是否是边界点，保证数组不越界
+        if ((int)(stake.p[i].y + 1) < Lines)//判断是否是边界点，保证数组不越界
         {
             if (imageArray[((stake.p[i].y + 1)*Samples + stake.p[i].x)] != nodeinfo.colorTh)//满足条件则是边界点
             {
@@ -2317,7 +2326,7 @@ int zonedeal::calAreaCycle(unsigned short int *imageArray, int Samples, int Line
             cycle++;
             continue;
         }
-        if (stake.p[i].x + 1 < Samples)//判断是否是边界点，保证数组不越界
+        if ((int)(stake.p[i].x + 1) < Samples)//判断是否是边界点，保证数组不越界
         {
             if (imageArray[(stake.p[i].y*Samples + stake.p[i].x + 1)] != nodeinfo.colorTh)//满足条件则是边界点
             {
@@ -2331,7 +2340,6 @@ int zonedeal::calAreaCycle(unsigned short int *imageArray, int Samples, int Line
             continue;
         }
     }
-    //    qDebug()<<QStringLiteral("周长计算完成")<<cycle;
     return cycle;
 }
 bool zonedeal::getRALLink(ImageArray imageArray, int Samples, int Lines, AreaNodeInfo nodeinfo)

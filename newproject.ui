@@ -88,6 +88,7 @@
     <addaction name="actionchangeColor"/>
     <addaction name="actionSplitJoint"/>
     <addaction name="actioncombine"/>
+    <addaction name="actiondeleteArea"/>
    </widget>
    <widget class="QMenu" name="menuclassfication">
     <property name="title">
@@ -189,6 +190,11 @@
   <action name="actioncombine">
    <property name="text">
     <string>combine</string>
+   </property>
+  </action>
+  <action name="actiondeleteArea">
+   <property name="text">
+    <string>deleteArea</string>
    </property>
   </action>
  </widget>

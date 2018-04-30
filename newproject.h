@@ -19,6 +19,8 @@
 #include <erodinganddilating.h>
 #include <splitjoint.h>
 #include <bolckclassification.h>
+#include <postprocess.h>
+
 namespace Ui {
 class newProject;
 }
@@ -51,6 +53,7 @@ private:
     ErodingAndDilating *ead;
     SplitJoint *splitJoint;
     BlockClassification *myClassfication;
+    PostProcess *postProcess;
 
     void closeEvent(QCloseEvent *event);
     void classfication();
@@ -77,6 +80,8 @@ private slots:
     void on_actiontest_2_triggered();
 
     void on_actioncombine_triggered();
+
+    void on_actiondeleteArea_triggered();
 
 signals:
 

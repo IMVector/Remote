@@ -24,6 +24,7 @@ class filedeal : public QObject
     Q_OBJECT
 public:
     filedeal();
+    ~filedeal();
 
 private:
     svmclassify *classify;
@@ -78,6 +79,7 @@ private:
     void seaLineGet(QImage partImage, int *seaColor, int *landColor);
     float **openFile(Points rectangle);
     void newGetAimData(Points rectangle, float **data);
+
 
 private slots:
     //    void seaLineGet(int *seaColor, int *landColor);

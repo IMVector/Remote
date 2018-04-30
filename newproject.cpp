@@ -44,12 +44,22 @@ newProject::newProject(QWidget *parent) :
     splitJoint=new SplitJoint();
     ead=new ErodingAndDilating();
     myClassfication=new BlockClassification();
+    postProcess=new PostProcess();
 
 }
 
 newProject::~newProject()
 {
     delete ui;
+    delete[] operateUI;
+    delete[] zoneform;
+    delete[] zone;
+    delete[] splitJoint;
+    delete[] ead;
+    delete[] myClassfication;
+    delete[] postProcess;
+
+//    delete[] empty_thread;
 }
 
 void newProject::on_openFileImage_triggered()//文件路径打开文件
@@ -186,7 +196,7 @@ void newProject::on_actionEroding_triggered()
 {
 
     qDebug()<<"erosion Start";
-    QRgb changeColor=qRgb(0,0,0);
+    QRgb changeColor=qRgb(0,0,255);
     for(int i=0;i<1;i++)
     {
         QImage image=ead->expend("D://erosion//erosionComplete.tif",changeColor);
@@ -200,14 +210,14 @@ void newProject::on_actionEroding_triggered()
  */
 void newProject::on_actionCorroding_triggered()
 {
-     qDebug()<<"corrode Start";
-    QRgb changeColor=qRgb(0,0,0);
+    qDebug()<<"corrode Start";
+    QRgb changeColor=qRgb(0,0,255);
     for(int i=0;i<1;i++)
     {
         QImage image=ead->corrode("D://erosion//erosionComplete.tif",changeColor);
         image.save("D://erosion//erosionComplete.tif");
     }
-      qDebug()<<"corrode complete";
+    qDebug()<<"corrode complete";
 
 }
 /**
@@ -282,4 +292,9 @@ void newProject::on_actioncombine_triggered()
     orignal2.load("D:\\test\\im2.tif");
     QImage image=splitJoint->combine(orignal,orignal2);
     image.save("D:\\test\\aaaaaa.tif");
+}
+
+void newProject::on_actiondeleteArea_triggered()
+{
+     postProcess->loadImage("D:\\test\\aaaaa.tif");
 }

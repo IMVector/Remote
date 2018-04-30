@@ -187,7 +187,7 @@ void NewZoneForm::test(ImageArray testImage, int Samples, int Lines,
     bool colorChangeFlag = false;//颜色更改flag判断是否进行了降噪如果进行了降噪处理就要重新统计每个地物块的信息
 
     //给所有区域分配不同id分配内存
-    testImage.id = new unsigned short[Samples*Lines];
+    testImage.id = new unsigned int[Samples*Lines];
     AreaNodeInfo *everyNum = countEveryNumber(testImage, Samples, Lines);
     colorChangeFlag=true;//开启降噪
     qDebug() << QStringLiteral("第一次统计完成");

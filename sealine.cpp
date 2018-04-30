@@ -2,7 +2,8 @@
 #include "ui_sealine.h"
 
 #include <qlistview.h>
-
+int *seaColor=new int[5];
+int *landColor=new int[5];
 sealine::sealine(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::sealine)
@@ -18,9 +19,10 @@ sealine::sealine(QWidget *parent) :
 sealine::~sealine()
 {
     delete ui;
+    delete[]seaColor;
+    delete[]landColor;
 }
-int *seaColor=new int[5];
-int *landColor=new int[5];
+
 void sealine::initStyle()
 {
     ui->comboBox->setStyleSheet("QComboBox QAbstractItemView::item{height:20px;}");

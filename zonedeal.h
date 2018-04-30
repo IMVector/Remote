@@ -117,8 +117,8 @@ typedef struct {
 typedef struct {
     unsigned short Samples;
     unsigned short Lines;
-	unsigned short int *id;
-	unsigned short int *colorTh;
+    unsigned int *id;
+    unsigned short *colorTh;
 }ImageArray;
 class zonedeal :public QObject
 {
