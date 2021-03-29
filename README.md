@@ -1,4 +1,14 @@
 #  Remote遥感图像处理程序
+![image](https://user-images.githubusercontent.com/20250697/112808203-541e2080-90ab-11eb-9c77-244b45091375.png)
+![image](https://user-images.githubusercontent.com/20250697/112808226-597b6b00-90ab-11eb-8235-ac2c2e4d0d9e.png)
+![image](https://user-images.githubusercontent.com/20250697/112808247-5e401f00-90ab-11eb-82ed-14a1f6e70c70.png)
+![image](https://user-images.githubusercontent.com/20250697/112808262-6304d300-90ab-11eb-859b-7a12ac1b82a9.png)
+![image](https://user-images.githubusercontent.com/20250697/112808298-6bf5a480-90ab-11eb-9dab-2f3fdcfc09ad.png)
+![image](https://user-images.githubusercontent.com/20250697/112808284-68621d80-90ab-11eb-8b41-c125ac6bfb19.png)
+![image](https://user-images.githubusercontent.com/20250697/112808315-7021c200-90ab-11eb-9ef6-4319e3aba6fd.png)
+![image](https://user-images.githubusercontent.com/20250697/112808335-76b03980-90ab-11eb-811f-aaa0d4f8cb06.png)
+![image](https://user-images.githubusercontent.com/20250697/112808343-79ab2a00-90ab-11eb-9cf4-d1a0716cea2f.png)
+
 # 海冰分类
 ## 原图
 ![区分前](https://user-images.githubusercontent.com/20250697/112807469-854a2100-90aa-11eb-952c-ffe1360ebb4c.png)
